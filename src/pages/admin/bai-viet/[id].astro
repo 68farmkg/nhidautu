@@ -1,0 +1,96 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+import PreviewPane from '../../../components/PreviewPane.astro';
+import { first, run, nowIso, slugify, fromLocalInput, toLocalInput, CATS } from '../../../lib/util';
+const db = Astro.locals.runtime.env.DB;
+const id = Astro.params.id === 'moi' ? 0 : Number(Astro.params.id);
+let p: any = id ? await first(db, 'SELECT * FROM posts WHERE id=?', id) : null;
+if (id && !p) return Astro.redirect('/admin/bai-viet');
+let msg = '';
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const title = String(f.get('title') || '').trim();
+  const image = String(f.get('image') || '').trim();
+  if (!title) msg = 'Hãy nhập tiêu đề.';
+  else if (image && !/^https:\/\//i.test(image)) msg = 'Link ảnh phải bắt đầu bằng https://';
+  else {
+    const status = String(f.get('status') || 'draft');
+    let at = fromLocalInput(String(f.get('published_at') || ''));
+    if (status === 'published' && !at) at = nowIso();
+    let slug = slugify(String(f.get('slug') || '') || title);
+    const dup = await first(db, 'SELECT id FROM posts WHERE slug=? AND id<>?', slug, id);
+    if (dup) slug += '-' + Date.now().toString(36);
+    const vals = [slug, title, String(f.get('summary') || ''), String(f.get('content') || ''), String(f.get('category') || 'thi-truong'), String(f.get('tickers') || '').toUpperCase(), image, String(f.get('image_kw') || '').trim(), String(f.get('image_hint') || '').trim(), status, at || null];
+    if (id) {
+      await run(db, 'UPDATE posts SET slug=?,title=?,summary=?,content=?,category=?,tickers=?,image=?,image_kw=?,image_hint=?,status=?,published_at=? WHERE id=?', ...vals, id);
+      return Astro.redirect(`/admin/bai-viet/${id}?saved=1`);
+    }
+    const r = await run(db, 'INSERT INTO posts (slug,title,summary,content,category,tickers,image,image_kw,image_hint,status,published_at,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)', ...vals, nowIso());
+    return Astro.redirect(`/admin/bai-viet/${r.meta.last_row_id}?saved=1`);
+  }
+  p = { ...(p || {}), title, summary: String(f.get('summary') || ''), content: String(f.get('content') || ''), category: String(f.get('category') || ''), tickers: String(f.get('tickers') || ''), image, image_kw: String(f.get('image_kw') || ''), image_hint: String(f.get('image_hint') || ''), status: String(f.get('status') || 'draft') };
+}
+const v = p || { title: '', slug: '', summary: '', content: '', category: 'thi-truong', tickers: '', image: '', image_kw: '', image_hint: '', status: 'draft', published_at: '' };
+const saved = Astro.url.searchParams.get('saved');
+const aiVia = Astro.url.searchParams.get('ai');
+const left = ((v.content || '').match(/\[ảnh cần:[^\]]*\]/gi) || []).length;
+const kw = encodeURIComponent((v.image_kw || v.title || '').trim());
+---
+<Admin title={id ? 'Sửa bài' : 'Bài mới'} active="posts">
+  <h1>{id ? 'Sửa bài viết' : 'Bài viết mới'}</h1>
+  {saved && <div class="msg">Đã lưu.</div>}
+  {aiVia && <div class="msg">AI ({aiVia}) đã viết bản nháp này. Hãy đọc, kiểm tra số liệu, thêm ảnh rồi chuyển trạng thái sang “Đăng”.</div>}
+  {msg && <div class="msg err">{msg}</div>}
+  <form method="post" class="box">
+    <label for="title">Tiêu đề</label><input id="title" type="text" name="title" value={v.title} required />
+    <label for="summary">Tóm tắt (hiện ở danh sách và Google)</label><textarea id="summary" name="summary" style="min-height:70px">{v.summary}</textarea>
+    <div class="row2">
+      <div><label for="category">Chuyên mục</label>
+        <select id="category" name="category">{Object.entries(CATS).map(([k, n]) => <option value={k} selected={v.category === k}>{n}</option>)}</select></div>
+      <div><label for="tickers">Mã liên quan (cách nhau dấu phẩy)</label><input id="tickers" type="text" name="tickers" value={v.tickers} placeholder="TCB, VIC, FPT" /></div>
+    </div>
+
+    <div class="msg" style="background:#eef6ff;color:#0b4a8f">
+      <b>Tìm ảnh ở trang khác</b>
+      {v.image_hint && <div>AI gợi ý: {v.image_hint}</div>}
+      <div style="margin-top:6px">
+        <a class="btn ghost" target="_blank" rel="noopener" href={`https://unsplash.com/s/photos/${kw}`}>Unsplash</a>
+        <a class="btn ghost" target="_blank" rel="noopener" href={`https://www.pexels.com/search/${kw}/`}>Pexels</a>
+        <a class="btn ghost" target="_blank" rel="noopener" href={`https://pixabay.com/images/search/${kw}/`}>Pixabay</a>
+      </div>
+      <div class="meta">Mở ảnh ưng ý, nhấn giữ (điện thoại) hoặc bấm chuột phải (máy tính) vào ảnh, chọn “Sao chép địa chỉ hình ảnh”, rồi dán vào ô Link ảnh bên dưới. Nên dùng ảnh miễn phí bản quyền từ 3 trang trên.</div>
+    </div>
+    <div class="row2">
+      <div><label for="image">Link ảnh đại diện (https://…)</label><input id="image" type="text" name="image" value={v.image} placeholder="https://images.unsplash.com/..." /></div>
+      <div><label for="image_kw">Từ khóa tìm ảnh (tiếng Anh)</label><input id="image_kw" type="text" name="image_kw" value={v.image_kw} placeholder="stock market chart" /></div>
+    </div>
+    <input type="hidden" name="image_hint" value={v.image_hint} />
+    {v.image && <img src={v.image} alt="" referrerpolicy="no-referrer" style="max-height:140px;border-radius:8px;margin-top:8px" />}
+
+    <label for="content">Nội dung</label>
+    {left > 0 && <div class="msg err">Còn {left} chỗ cần ảnh trong bài, dạng <code>[ẢNH CẦN: …]</code>. Thay mỗi chỗ bằng <code>[ảnh:https://link-anh]</code>, hoặc xóa dòng đó nếu không cần (khách không nhìn thấy các dòng này).</div>}
+    <textarea id="content" name="content" style="min-height:360px">{v.content}</textarea>
+    <p class="meta">Cách viết: dòng bắt đầu bằng <code>## </code> là đề mục · <code>- </code> là gạch đầu dòng · các đoạn cách nhau một dòng trống · ảnh trong bài: <code>[ảnh:https://link-anh]</code> đặt trên một dòng riêng.</p>
+
+    <div class="row2">
+      <div><label for="slug">Đường dẫn (để trống sẽ tự tạo)</label><input id="slug" type="text" name="slug" value={v.slug || ''} /></div>
+      <div><label for="status">Trạng thái</label>
+        <select id="status" name="status">
+          <option value="draft" selected={v.status === 'draft'}>Nháp</option>
+          <option value="pending" selected={v.status === 'pending'}>Chờ duyệt</option>
+          <option value="published" selected={v.status === 'published'}>Đăng</option>
+        </select></div>
+    </div>
+    <label for="published_at">Ngày giờ đăng (giờ Việt Nam; để trống = đăng ngay; chọn tương lai = hẹn giờ)</label>
+    <input id="published_at" type="datetime-local" name="published_at" value={toLocalInput(v.published_at)} />
+    <p><button class="btn" type="submit">Lưu bài viết</button> {v.slug && v.status === 'published' && <a class="btn ghost" href={`/bai-viet/${v.slug}`} target="_blank">Xem bài</a>}</p>
+  </form>
+  <div class="box" style="margin-top:14px"><h3>Xem trước bài viết</h3><p class="meta">Xem đúng như khách thấy trên máy tính hoặc điện thoại (chưa cần lưu).</p><PreviewPane /></div>
+  <script is:inline>
+    (function () {
+      var form = document.querySelector('form.box'), root = document.getElementById('pv');
+      var pv = NhipPreview(root, function () { return { kind: 'post', title: form.title.value, content: form.content.value, image: form.image.value, category: form.category.value }; });
+      var done = false; new IntersectionObserver(function (e) { if (e[0].isIntersecting && !done) { done = true; pv.load(); } }).observe(root);
+    })();
+  </script>
+</Admin>

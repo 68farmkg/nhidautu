@@ -1,0 +1,49 @@
+---
+import Admin from '../../../../layouts/Admin.astro';
+import { all, first, run, nowIso, fmtDate } from '../../../../lib/util';
+const db = Astro.locals.runtime.env.DB;
+const U: any = (Astro.locals as any).user || { name: 'Quản trị' };
+const id = Number(Astro.params.id) || 0;
+const conv: any = await first(db, 'SELECT * FROM conversations WHERE id=?', id);
+if (!conv) return Astro.redirect('/admin/hop-thu');
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData(); const act = String(f.get('act'));
+  if (act === 'reply') {
+    const body = String(f.get('body') || '').trim().slice(0, 1000);
+    if (body) { await run(db, "INSERT INTO chat_msgs (conv_id,role,body,by,created_at) VALUES (?, 'admin', ?, ?, ?)", id, body, U.name || '', nowIso());
+      await run(db, "UPDATE conversations SET last_at=?,unread_admin=0,status=CASE WHEN status='new' THEN 'processing' ELSE status END WHERE id=?", nowIso(), id); }
+  }
+  if (act === 'status') { const s = String(f.get('status')); if (['new', 'processing', 'done'].includes(s)) await run(db, 'UPDATE conversations SET status=? WHERE id=?', s, id); }
+  if (act === 'note') await run(db, 'UPDATE conversations SET note=? WHERE id=?', String(f.get('note') || '').slice(0, 2000), id);
+  if (act === 'delete') { await run(db, 'DELETE FROM chat_msgs WHERE conv_id=?', id); await run(db, 'DELETE FROM conversations WHERE id=?', id); return Astro.redirect('/admin/hop-thu'); }
+  return Astro.redirect(`/admin/hop-thu/chat/${id}`);
+}
+await run(db, 'UPDATE conversations SET unread_admin=0 WHERE id=?', id);
+const msgs = await all(db, 'SELECT id,role,body,by,created_at FROM chat_msgs WHERE conv_id=? ORDER BY id LIMIT 500', id);
+const lastId = msgs.length ? msgs[msgs.length - 1].id : 0;
+const SL: Record<string, string> = { new: 'Mới', processing: 'Đang xử lý', done: 'Đã xong' };
+---
+<Admin title="Chat khách" active="msg">
+  <div class="pagehead"><h1>{conv.name || 'Khách'} <span class={`st ${conv.status}`}>{SL[conv.status] || conv.status}</span></h1><a class="btn ghost sm" href="/admin/hop-thu">← Hộp thư</a></div>
+  <p class="meta">Bắt đầu {fmtDate(conv.created_at)}{conv.page ? ` · từ trang ${conv.page}` : ''}{conv.email ? ` · ${conv.email}` : ''}</p>
+  <div class="thread" id="th">
+    {msgs.map((m) => <div class={`th-m ${m.role === 'admin' ? 'a' : 'v'}`}>{m.body}<small>{m.role === 'admin' ? (m.by || 'Nhân viên') : (conv.name || 'Khách')} · {fmtDate(m.created_at)}</small></div>)}
+  </div>
+  <form method="post" class="reply"><input type="hidden" name="act" value="reply" /><textarea name="body" id="rb" placeholder="Nhập trả lời…" maxlength="1000" required></textarea><button class="btn" type="submit">Gửi</button></form>
+  <div class="box" style="margin-top:14px"><b>Trạng thái</b>
+    <div class="acts" style="margin-top:8px">{Object.entries(SL).map(([k, n]) => <form method="post" class="inline"><input type="hidden" name="act" value="status" /><input type="hidden" name="status" value={k} /><button class={`btn sm ${conv.status === k ? '' : 'ghost'}`} type="submit">{n}</button></form>)}</div>
+    <form method="post"><input type="hidden" name="act" value="note" /><label for="nt">Ghi chú nội bộ (khách không thấy)</label><textarea id="nt" name="note" style="min-height:70px">{conv.note}</textarea><p><button class="btn ghost sm" type="submit">Lưu ghi chú</button></p></form>
+    <form method="post" onsubmit="return confirm('Xóa cuộc trò chuyện này?')"><input type="hidden" name="act" value="delete" /><button class="btn red sm" type="submit">Xóa cuộc trò chuyện</button></form></div>
+  <script is:inline define:vars={{ CID: id, LAST: lastId, VNAME: conv.name || 'Khách' }}>
+    (function () {
+      var th = document.getElementById('th'), last = LAST; th.scrollTop = th.scrollHeight;
+      function add(m) { var d = document.createElement('div'); d.className = 'th-m ' + (m.role === 'admin' ? 'a' : 'v'); d.appendChild(document.createTextNode(m.body)); var s = document.createElement('small'); s.textContent = (m.role === 'admin' ? 'Nhân viên' : VNAME) + ' · vừa xong'; d.appendChild(s); th.appendChild(d); th.scrollTop = th.scrollHeight; }
+      setInterval(function () {
+        if (document.hidden) return;
+        fetch('/admin/chat-poll?id=' + CID + '&after=' + last, { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+          (d.msgs || []).forEach(function (m) { if (m.id > last) last = m.id; if (m.role === 'visitor') add(m); });
+        }).catch(function () {});
+      }, 5000);
+    })();
+  </script>
+</Admin>

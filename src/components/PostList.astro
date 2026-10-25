@@ -1,0 +1,24 @@
+---
+import PostCard from './PostCard.astro';
+import { all, nowIso } from '../lib/util';
+const { cat = '', q = '', page = 1 } = Astro.props;
+const db = Astro.locals.runtime.env.DB;
+const per = 12;
+const where = ["status='published'", 'published_at <= ?'];
+const args: any[] = [nowIso()];
+if (cat) { where.push('category = ?'); args.push(cat); }
+if (q) { where.push('(title LIKE ? OR summary LIKE ? OR tickers LIKE ?)'); const l = `%${q}%`; args.push(l, l, l); }
+const rows = await all(db, `SELECT id,slug,title,summary,image,category,published_at FROM posts WHERE ${where.join(' AND ')} ORDER BY published_at DESC LIMIT ${per + 1} OFFSET ${(page - 1) * per}`, ...args);
+const more = rows.length > per;
+const posts = rows.slice(0, per);
+const base = Astro.url.pathname;
+const qs = (n: number) => `${base}?${q ? 'q=' + encodeURIComponent(q) + '&' : ''}trang=${n}`;
+---
+<div class="box">
+  {posts.length === 0 && <p>Chưa có bài viết phù hợp.</p>}
+  {posts.map((p) => <PostCard p={p} />)}
+  <div class="pager">
+    <span>{page > 1 && <a class="btn ghost" href={qs(page - 1)}>← Trang trước</a>}</span>
+    <span>{more && <a class="btn ghost" href={qs(page + 1)}>Trang sau →</a>}</span>
+  </div>
+</div>

@@ -1,0 +1,85 @@
+---
+import Admin from '../../layouts/Admin.astro';
+import { icon, ICONS, ICON_LABELS } from '../../lib/icons';
+import { all, run, CATS } from '../../lib/util';
+import { LOCS } from '../../lib/site';
+const db = Astro.locals.runtime.env.DB;
+const loc = Object.keys(LOCS).includes(Astro.url.searchParams.get('loc') || '') ? Astro.url.searchParams.get('loc')! : 'header';
+let err = '';
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const L = String(f.get('loc'));
+  if (Object.keys(LOCS).includes(L)) {
+    let items: any[] = []; try { items = JSON.parse(String(f.get('items') || '[]')); } catch { /* bỏ */ }
+    try {
+      await run(db, 'DELETE FROM nav_items WHERE loc=?', L);
+      let parent = 0, n = 0;
+      for (const it of items.slice(0, 60)) {
+        const label = String(it.label || '').trim().slice(0, 60); if (!label) continue;
+        const sub = !!it.sub && parent > 0 && L !== 'bottom';
+        const r = await run(db, 'INSERT INTO nav_items (loc,label,url,icon,parent_id,sort,target,device) VALUES (?,?,?,?,?,?,?,?)', L, label, String(it.url || '#').trim().slice(0, 300), ICONS[it.icon] ? it.icon : '', sub ? parent : 0, ++n, it.blank ? '_blank' : '', ['all', 'pc', 'mobile'].includes(it.device) ? it.device : 'all');
+        if (!sub) parent = r.meta.last_row_id as number;
+      }
+      return Astro.redirect(`/admin/menu?loc=${L}&saved=1`);
+    } catch (e: any) { err = 'Lỗi lưu: ' + (e?.message || e) + '. Đã chạy nang-cap-2.sql chưa?'; }
+  }
+}
+let rows: any[] = []; let pages: any[] = [];
+try { rows = await all(db, 'SELECT * FROM nav_items WHERE loc=? ORDER BY sort,id', loc); pages = await all(db, "SELECT slug,title FROM pages WHERE is_template=0 AND status='published'"); } catch { err = err || 'Chưa có bảng menu. Hãy chạy nang-cap-2.sql.'; }
+const idx = new Map(rows.map((r) => [r.id, r]));
+const items = rows.map((r) => ({ label: r.label, url: r.url, icon: r.icon, device: r.device, blank: r.target === '_blank', sub: !!r.parent_id }));
+const links: [string, string][] = [['/', 'Trang chủ'], ['/thi-truong', 'Thị trường'], ['/tin-tuc', 'Tin tức'], ['/lien-he', 'Liên hệ'], ['/tim-kiem', 'Tìm kiếm'], ...Object.entries(CATS).map(([k, n]) => [`/chuyen-muc/${k}`, n] as [string, string]), ...pages.map((p) => [`/${p.slug}`, 'Trang: ' + p.title] as [string, string])];
+const J = (o: any) => JSON.stringify(o).replace(/</g, '\\u003c');
+---
+<Admin title="Menu & chân trang" active="menu">
+  <div class="pagehead"><h1>Menu & chân trang</h1></div>
+  {Astro.url.searchParams.get('saved') && <div class="msg">Đã lưu menu.</div>}{err && <div class="msg err">{err}</div>}
+  <div class="tabs">{Object.entries(LOCS).map(([k, n]) => <a href={`/admin/menu?loc=${k}`} class={loc === k ? 'on' : ''}>{n}</a>)}</div>
+  <p class="meta">
+    {loc === 'header' && 'Hiện trên thanh đầu trang của máy tính. Dòng có tích “Menu con” sẽ xổ xuống dưới mục phía trên nó.'}
+    {loc === 'mobile' && 'Hiện trong ngăn kéo khi bấm nút ☰ trên điện thoại. Nếu để trống sẽ dùng lại Menu trên cùng.'}
+    {loc === 'bottom' && 'Thanh nút cố định ở đáy màn hình điện thoại (nên 4–5 mục, có biểu tượng). Nút “Menu” luôn được thêm ở cuối.'}
+    {loc.startsWith('footer') && 'Danh sách liên kết ở chân trang. Tiêu đề cột đặt tại Cài đặt website.'}
+  </p>
+  <form method="post" id="mf">
+    <input type="hidden" name="loc" value={loc} /><input type="hidden" name="items" id="items" />
+    <div id="rows"></div>
+    <datalist id="lk">{links.map(([u, n]) => <option value={u}>{n}</option>)}</datalist>
+    <div class="savebar"><button type="button" class="btn ghost ic-b" id="add"><Fragment set:html={icon('plus', 16)} />Thêm mục</button><button class="btn" type="submit">Lưu menu</button></div>
+  </form>
+  <script is:inline type="application/json" id="mi" set:html={J(items)}></script>
+  <script is:inline type="application/json" id="mic" set:html={J(Object.keys(ICONS).map((k) => [k, ICON_LABELS[k] || k]))}></script>
+  <script is:inline define:vars={{ loc }}>
+    (function () {
+      var items = JSON.parse(document.getElementById('mi').textContent), ics = JSON.parse(document.getElementById('mic').textContent);
+      var box = document.getElementById('rows'), isBottom = loc === 'bottom', isFooter = loc.indexOf('footer') === 0, isHeader = loc === 'header';
+      function el(t, a) { var e = document.createElement(t); for (var k in a) { if (k === 'text') e.textContent = a[k]; else e.setAttribute(k, a[k]); } return e; }
+      function inp(it, k, ph, list) { var i = el('input', { type: 'text', placeholder: ph }); i.value = it[k] || ''; if (list) i.setAttribute('list', 'lk'); i.addEventListener('input', function () { it[k] = i.value; }); return i; }
+      function sel(it, k, opts) { var s = el('select'); opts.forEach(function (o) { var op = el('option', { value: o[0], text: o[1] }); if ((it[k] || '') === o[0]) op.selected = true; s.appendChild(op); }); s.addEventListener('change', function () { it[k] = s.value; }); return s; }
+      function chk(it, k, txt) { var l = el('label', { class: 'chk' }), c = el('input', { type: 'checkbox' }); c.checked = !!it[k]; c.addEventListener('change', function () { it[k] = c.checked; draw(); }); l.appendChild(c); l.appendChild(el('span', { text: txt })); return l; }
+      function btn(t, fn, cls) { var b = el('button', { type: 'button', class: 'ib ' + (cls || ''), title: t, 'aria-label': t, text: t }); b.addEventListener('click', fn); return b; }
+      function draw() {
+        box.innerHTML = '';
+        items.forEach(function (it, i) {
+          var r = el('div', { class: 'mrow' + (it.sub && !isBottom && !isFooter ? ' sub' : '') });
+          r.appendChild(inp(it, 'label', 'Tên hiển thị')); r.appendChild(inp(it, 'url', '/duong-dan hoặc https://…', true));
+          if (!isFooter) r.appendChild(sel(it, 'icon', [['', 'Không biểu tượng']].concat(ics))); else r.appendChild(el('span'));
+          r.appendChild(sel(it, 'device', [['all', 'Mọi thiết bị'], ['pc', 'Chỉ máy tính'], ['mobile', 'Chỉ điện thoại']]));
+          var ac = el('div', { class: 'acts' });
+          ac.appendChild(btn('↑', function () { if (i > 0) { items.splice(i - 1, 0, items.splice(i, 1)[0]); draw(); } }));
+          ac.appendChild(btn('↓', function () { if (i < items.length - 1) { items.splice(i + 1, 0, items.splice(i, 1)[0]); draw(); } }));
+          ac.appendChild(btn('✕', function () { items.splice(i, 1); draw(); }, 'red'));
+          r.appendChild(ac);
+          var ex = el('div', { style: 'grid-column:1/-1;display:flex;gap:16px;flex-wrap:wrap' });
+          ex.appendChild(chk(it, 'blank', 'Mở tab mới'));
+          if (isHeader || loc === 'mobile') ex.appendChild(chk(it, 'sub', 'Menu con (của mục phía trên)'));
+          r.appendChild(ex); box.appendChild(r);
+        });
+        if (!items.length) box.appendChild(el('div', { class: 'box', text: 'Chưa có mục nào. Bấm “Thêm mục”.' }));
+      }
+      document.getElementById('add').addEventListener('click', function () { items.push({ label: '', url: '/', icon: isBottom ? 'home' : '', device: 'all' }); draw(); });
+      document.getElementById('mf').addEventListener('submit', function () { document.getElementById('items').value = JSON.stringify(items); });
+      draw();
+    })();
+  </script>
+</Admin>

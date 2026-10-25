@@ -1,0 +1,66 @@
+---
+import Admin from '../../layouts/Admin.astro';
+import { CATALOG, loadSettings, keyOf, ask } from '../../lib/ai';
+import { run } from '../../lib/util';
+const env = Astro.locals.runtime.env;
+const db = env.DB;
+let msg = '', ok = true;
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const old = await loadSettings(db);
+  let i = 0;
+  for (const p of CATALOG) {
+    i++;
+    const o = old[p.id];
+    const typed = String(f.get('key_' + p.id) || '').trim();
+    const key = f.get('clr_' + p.id) ? '' : (typed || o?.api_key || '');
+    const enabled = f.get('en_' + p.id) ? 1 : 0;
+    const model = String(f.get('model_' + p.id) || '').trim();
+    const base = String(f.get('base_' + p.id) || '').trim();
+    const pr = Number(f.get('pr_' + p.id)) || i * 10;
+    await run(db, `INSERT INTO ai_settings (id,enabled,api_key,model,base,priority) VALUES (?,?,?,?,?,?)
+      ON CONFLICT(id) DO UPDATE SET enabled=excluded.enabled,api_key=excluded.api_key,model=excluded.model,base=excluded.base,priority=excluded.priority`,
+      p.id, enabled, key, model, base, pr);
+  }
+  msg = 'Đã lưu cài đặt.';
+  const t = String(f.get('test') || '');
+  if (t) {
+    try {
+      const r = await ask(env, db, { system: 'Bạn là trợ lý.', user: 'Trả lời đúng một từ: OK', provider: t });
+      msg = `Kết nối ${CATALOG.find((x) => x.id === t)?.name} thành công. AI trả lời: “${r.text.slice(0, 60)}”`;
+    } catch (e: any) { ok = false; msg = 'Đã lưu, nhưng thử kết nối lỗi: ' + (e?.message || e); }
+  }
+}
+const st = await loadSettings(db);
+---
+<Admin title="Cài đặt AI" active="aiset">
+  <h1>Cài đặt AI (API)</h1>
+  <p class="meta">Bật nhà AI nào bạn có API key và dán key vào. Khi viết bài ở chế độ “Tự động”, hệ thống thử lần lượt các nhà đã bật theo số ưu tiên (số nhỏ chạy trước); nhà nào lỗi hoặc hết hạn mức thì tự chuyển sang nhà kế tiếp. Key chỉ lưu trong cơ sở dữ liệu của bạn và không hiện lại sau khi lưu. Nhà có chữ “free” có gói miễn phí.</p>
+  {msg && <div class={`msg ${ok ? '' : 'err'}`}>{msg}</div>}
+  <form method="post">
+    {CATALOG.map((p, i) => {
+      const s = st[p.id];
+      const has = !!keyOf(env, p.id, s);
+      return (
+        <details class="box" style="margin-bottom:8px" open={!!s?.enabled}>
+          <summary style="cursor:pointer"><b>{p.name}</b> {s?.enabled ? <span class="st published">Đang bật</span> : <span class="st">Tắt</span>} {has ? <span class="st">Đã có key</span> : <span class="st pending">Chưa có key</span>}</summary>
+          <label><input type="checkbox" name={`en_${p.id}`} checked={!!s?.enabled} style="width:auto" /> Bật nhà này</label>
+          <label for={`key_${p.id}`}>API key {p.link && <span class="meta">(lấy tại {p.link})</span>}</label>
+          <input id={`key_${p.id}`} type="password" name={`key_${p.id}`} placeholder={has ? 'Đã lưu. Để trống nếu giữ nguyên' : 'Dán API key vào đây'} autocomplete="off" />
+          {s?.api_key && <label><input type="checkbox" name={`clr_${p.id}`} style="width:auto" /> Xóa key đã lưu</label>}
+          <div class="row2">
+            <div><label for={`model_${p.id}`}>Model {p.model && <span class="meta">(mặc định: {p.model})</span>}</label>
+              <input id={`model_${p.id}`} type="text" name={`model_${p.id}`} value={s?.model || ''} placeholder={p.model || 'Tên model'} /></div>
+            <div><label for={`pr_${p.id}`}>Ưu tiên (số nhỏ chạy trước)</label>
+              <input id={`pr_${p.id}`} type="number" name={`pr_${p.id}`} value={s?.priority ?? (i + 1) * 10} /></div>
+          </div>
+          {p.custom && <div><label for="base_custom">Địa chỉ API (kết thúc bằng /v1, ví dụ https://api.example.com/v1)</label>
+            <input id="base_custom" type="text" name="base_custom" value={s?.base || ''} /></div>}
+          <p><button class="btn ghost" type="submit" name="test" value={p.id}>Lưu và thử kết nối</button></p>
+        </details>
+      );
+    })}
+    <p><button class="btn" type="submit">Lưu tất cả</button></p>
+  </form>
+  <p class="meta">Không dùng được từ website: LM Studio, Ollama chạy trên máy và YourAI Gateway cục bộ, vì Cloudflare không truy cập được máy cá nhân của bạn.</p>
+</Admin>

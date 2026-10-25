@@ -1,0 +1,37 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+import { all, run, CATS, fmtDate } from '../../../lib/util';
+const db = Astro.locals.runtime.env.DB;
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  if (f.get('act') === 'delete') await run(db, 'DELETE FROM posts WHERE id=?', Number(f.get('id')));
+  return Astro.redirect('/admin/bai-viet');
+}
+const st = Astro.url.searchParams.get('st') || '';
+const rows = await all(db, `SELECT id,title,category,status,published_at,created_at FROM posts ${st ? 'WHERE status=?' : ''} ORDER BY created_at DESC LIMIT 100`, ...(st ? [st] : []));
+const label: Record<string, string> = { draft: 'Nháp', pending: 'Chờ duyệt', published: 'Đã đăng' };
+---
+<Admin title="Bài viết" active="posts">
+  <h1>Bài viết</h1>
+  <p>
+    <a class="btn" href="/admin/bai-viet/moi">Viết bài mới</a>
+    <a class="btn ghost" href="/admin/bai-viet">Tất cả</a>
+    <a class="btn ghost" href="/admin/bai-viet?st=pending">Chờ duyệt</a>
+    <a class="btn ghost" href="/admin/bai-viet?st=draft">Nháp</a>
+    <a class="btn ghost" href="/admin/bai-viet?st=published">Đã đăng</a>
+  </p>
+  <div class="box scroll"><table class="t">
+    <thead><tr><th>Tiêu đề</th><th>Chuyên mục</th><th>Trạng thái</th><th>Ngày đăng</th><th></th></tr></thead>
+    <tbody>
+      {rows.map((r) => (
+        <tr>
+          <td><a href={`/admin/bai-viet/${r.id}`}><b>{r.title}</b></a></td>
+          <td>{CATS[r.category] || r.category}</td>
+          <td><span class={`st ${r.status}`}>{label[r.status] || r.status}</span></td>
+          <td>{fmtDate(r.published_at)}</td>
+          <td><form method="post" class="inline" onsubmit="return confirm('Xóa bài này?')"><input type="hidden" name="act" value="delete" /><input type="hidden" name="id" value={r.id} /><button class="btn red" type="submit">Xóa</button></form></td>
+        </tr>
+      ))}
+    </tbody>
+  </table></div>
+</Admin>

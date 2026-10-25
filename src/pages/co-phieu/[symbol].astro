@@ -1,0 +1,37 @@
+---
+import Slot from '../../components/Slot.astro';
+import Base from '../../layouts/Base.astro';
+import PostCard from '../../components/PostCard.astro';
+import { all, first, nowIso, fmtNum, fmtPct, fmtDate } from '../../lib/util';
+const db = Astro.locals.runtime.env.DB;
+const sym = (Astro.params.symbol || '').toUpperCase();
+const q = await first(db, 'SELECT * FROM quotes WHERE symbol=?', sym);
+if (!q) return new Response('Không tìm thấy mã', { status: 404 });
+const news = await all(db, "SELECT id,slug,title,summary,image,category,published_at FROM posts WHERE status='published' AND published_at <= ? AND (',' || REPLACE(UPPER(tickers),' ','') || ',') LIKE ? ORDER BY published_at DESC LIMIT 8", nowIso(), `%,${sym},%`);
+const tvSymbol = `${q.exchange || 'HOSE'}:${sym.replace('-', '')}`;
+---
+<Base title={`${sym} - ${q.name}`} active="thi-truong">
+  <div class="wrap" style="margin-top:20px">
+    <h1>{sym} <small class="meta">{q.name}</small></h1>
+    <div class="box">
+      <b style="font-size:30px">{fmtNum(q.price)}</b>
+      <span class={q.change_pct >= 0 ? 'up' : 'down'} style="font-size:18px;margin-left:10px">{fmtPct(q.change_pct)}</span>
+      <div class="meta">{q.exchange} · {q.sector} · Cập nhật {fmtDate(q.updated_at)}</div>
+    </div>
+    <div class="grid">
+      <div class="box"><h2>Biểu đồ giá</h2>
+        <div id="tv" style="height:420px"></div>
+        <script is:inline src="https://s3.tradingview.com/tv.js"></script>
+        <script is:inline define:vars={{ tvSymbol }}>
+          if (window.TradingView) new TradingView.widget({ container_id: 'tv', symbol: tvSymbol, interval: 'D', theme: 'light', locale: 'vi_VN', autosize: true, timezone: 'Asia/Ho_Chi_Minh', hide_side_toolbar: true });
+        </script>
+        <p class="meta">Biểu đồ do TradingView cung cấp, dữ liệu có thể chậm. Nếu biểu đồ trống, mã này chưa được TradingView hỗ trợ miễn phí.</p>
+      </div>
+      <div class="box"><h2>Tin liên quan</h2>
+        {news.length === 0 && <p>Chưa có tin về mã này.</p>}
+        {news.map((p) => <PostCard p={p} />)}
+      </div>
+    </div>
+  </div>
+<Slot name="stock.bottom" />
+</Base>

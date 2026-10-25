@@ -1,0 +1,6 @@
+---
+import { renderBlocks, type Block } from '../lib/blocks';
+const { blocks = [] } = Astro.props as { blocks: Block[] };
+const html = await renderBlocks(blocks, { db: Astro.locals.runtime.env.DB });
+---
+<div class="wrap" set:html={html}></div>

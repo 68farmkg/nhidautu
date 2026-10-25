@@ -1,0 +1,69 @@
+---
+import Admin from '../../layouts/Admin.astro';
+import { all, run, nowIso, fmtDate } from '../../lib/util';
+import { refreshQuotes, fetchInfo } from '../../lib/market';
+const db = Astro.locals.runtime.env.DB;
+let note = '', bad = false;
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const acts = f.getAll('act').map(String);
+  const act = acts.includes('delete') ? 'delete' : acts[0];
+  if (act === 'refresh') {
+    const r = await refreshQuotes(db);
+    bad = r.fail > 0;
+    note = `Đã cập nhật ${r.ok} mã.` + (r.fail ? ` Lỗi ${r.fail} mã: ${r.errors.slice(0, 5).join('; ')}` : '');
+  } else if (act === 'quick') {
+    const code = String(f.get('code') || '').trim().toUpperCase().replace(/[^A-Z0-9.]/g, '').slice(0, 12);
+    if (code) {
+      const info = await fetchInfo(code);
+      await run(db, "INSERT OR IGNORE INTO quotes (symbol,name,kind,exchange,sector,updated_at) VALUES (?,?,'stock',?,?,?)", code, info?.name || code, info?.exchange || 'HOSE', info?.sector || '', nowIso());
+      const r = await refreshQuotes(db, code);
+      bad = !r.ok;
+      note = r.ok ? `Đã thêm ${code}.` : `Đã thêm ${code} nhưng chưa lấy được giá (${r.errors[0] || ''}).`;
+    }
+  } else {
+    const sym = String(f.get('symbol') || '').trim().toUpperCase().slice(0, 20);
+    if (act === 'delete' && sym) await run(db, 'DELETE FROM quotes WHERE symbol=?', sym);
+    if ((act === 'save' || act === 'new') && sym) {
+      const n = (k: string) => Number(String(f.get(k) || '0').replace(',', '.')) || 0;
+      await run(db, `INSERT INTO quotes (symbol,name,kind,exchange,sector,price,change_pct,volume,updated_at) VALUES (?,?,?,?,?,?,?,?,?)
+        ON CONFLICT(symbol) DO UPDATE SET name=excluded.name,kind=excluded.kind,exchange=excluded.exchange,sector=excluded.sector,price=excluded.price,change_pct=excluded.change_pct,volume=excluded.volume,updated_at=excluded.updated_at`,
+        sym, String(f.get('name') || sym), String(f.get('kind') || 'stock'), String(f.get('exchange') || 'HOSE'), String(f.get('sector') || ''), n('price'), n('change_pct'), String(f.get('volume') || ''), nowIso());
+    }
+    return Astro.redirect('/admin/thi-truong');
+  }
+}
+const rows = await all(db, "SELECT * FROM quotes ORDER BY kind, symbol");
+const last = rows.map((r) => r.updated_at).filter(Boolean).sort().pop();
+---
+<Admin title="Số liệu thị trường" active="market">
+  <h1>Số liệu thị trường</h1>
+  {note && <div class={`msg ${bad ? 'err' : ''}`}>{note}</div>}
+  <div class="box">
+    <form method="post" style="display:inline"><input type="hidden" name="act" value="refresh" /><button class="btn" type="submit">Cập nhật giá ngay (VNDirect)</button></form>
+    <span class="meta"> Lần cập nhật gần nhất: {fmtDate(last)}. Khi có người xem web, giá cũng tự cập nhật (tối đa 5 phút một lần).</span>
+    <form method="post" class="row2" style="grid-template-columns:1fr auto;align-items:end;margin-top:10px">
+      <input type="hidden" name="act" value="quick" />
+      <div><label for="code">Thêm nhanh mã cổ phiếu (tự lấy tên, sàn, ngành, giá)</label><input id="code" type="text" name="code" placeholder="VCB" maxlength="12" /></div>
+      <button class="btn" type="submit">Thêm mã</button>
+    </form>
+  </div>
+  <p class="meta">Giá hiển thị theo đơn vị nguồn trả về (cổ phiếu thường tính theo nghìn đồng). Bạn vẫn có thể sửa tay từng dòng bên dưới. Loại “index” là chỉ số (hiện ở dải trên cùng): VN-INDEX, HNX-INDEX, UPCOM-INDEX, VN30.</p>
+  <div class="box scroll">
+    {[...rows, null].map((r) => (
+      <form method="post" class="row2" style="grid-template-columns:repeat(9,minmax(70px,1fr));gap:6px;margin-bottom:8px;min-width:900px">
+        <input type="hidden" name="act" value={r ? 'save' : 'new'} />
+        <input type="text" name="symbol" value={r?.symbol || ''} placeholder="Mã" readonly={!!r} />
+        <input type="text" name="name" value={r?.name || ''} placeholder="Tên" />
+        <select name="kind"><option value="stock" selected={r?.kind !== 'index'}>stock</option><option value="index" selected={r?.kind === 'index'}>index</option></select>
+        <input type="text" name="exchange" value={r?.exchange || 'HOSE'} placeholder="Sàn" />
+        <input type="text" name="sector" value={r?.sector || ''} placeholder="Ngành" />
+        <input type="text" name="price" value={r?.price ?? ''} placeholder="Giá" />
+        <input type="text" name="change_pct" value={r?.change_pct ?? ''} placeholder="% (vd 1.25)" />
+        <input type="text" name="volume" value={r?.volume || ''} placeholder="Khối lượng" />
+        <span><button class="btn" type="submit">{r ? 'Lưu' : 'Thêm'}</button>
+          {r && <button class="btn red" type="submit" name="act" value="delete">Xóa</button>}</span>
+      </form>
+    ))}
+  </div>
+</Admin>

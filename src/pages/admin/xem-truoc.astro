@@ -1,0 +1,32 @@
+---
+// Nhận dữ liệu đang soạn (chưa lưu) và dựng đúng giao diện thật để xem trước.
+import Base from '../../layouts/Base.astro';
+import Blocks from '../../components/Blocks.astro';
+import { renderContent, CATS, fmtDate, first } from '../../lib/util';
+import { cleanBlocks, parseBlocks, activeDefs, defsToMap } from '../../lib/blocks';
+
+let d: any = {};
+try { d = await Astro.request.json(); } catch { /* rỗng */ }
+const kind = d.kind === 'post' ? 'post' : 'page';
+const isAdmin = ((Astro.locals as any).user?.role || 'admin') === 'admin';
+let old: any[] = [];
+if (!isAdmin && Number(d.page_id)) { try { old = parseBlocks((await first(Astro.locals.runtime.env.DB, 'SELECT blocks FROM pages WHERE id=?', Number(d.page_id)))?.blocks); } catch { /* */ } }
+const blocks = cleanBlocks(d.blocks, { admin: isAdmin, old, defs: defsToMap(await activeDefs(Astro.locals.runtime.env.DB)) });
+---
+{kind === 'page' ? (
+  <Base title={d.title || 'Xem trước'} hideHeader={d.show_header === false} hideFooter={d.show_footer === false}>
+    <Blocks blocks={blocks} />
+  </Base>
+) : (
+  <Base title={d.title || 'Xem trước'}>
+    <div class="wrap">
+      <article class="art">
+        <div class="crumb">Trang chủ / {CATS[d.category] || d.category}</div>
+        <h1>{d.title}</h1>
+        <div class="meta">{fmtDate(new Date().toISOString())}</div>
+        {d.image && /^https:\/\//i.test(d.image) && <img class="cover" src={d.image} alt="" referrerpolicy="no-referrer" />}
+        <div class="body" set:html={renderContent(String(d.content || ''))} />
+      </article>
+    </div>
+  </Base>
+)}

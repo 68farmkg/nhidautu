@@ -1,0 +1,13 @@
+---
+import { icon } from '../lib/icons';
+---
+<div class="pv" id="pv">
+  <div class="pv-bar">
+    <button type="button" data-dev="pc" class="on"><Fragment set:html={icon('desktop', 16)} />Máy tính</button>
+    <button type="button" data-dev="m"><Fragment set:html={icon('mobile', 16)} />Điện thoại</button>
+    <button type="button" data-reload>Làm mới</button>
+    <span class="pv-info"></span>
+  </div>
+  <div class="pv-stage"><iframe title="Xem trước" sandbox="allow-scripts allow-same-origin allow-popups"></iframe></div>
+</div>
+<script is:inline src="/preview.js"></script>

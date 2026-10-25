@@ -1,0 +1,16 @@
+{
+  "id": "loi-chao", "name": "Lời chào & Khối giới thiệu", "version": "1.0", "api": 2,
+  "description": "Gói ZIP mẫu: thanh chào đầu trang chủ và khối \"Lời chào\" cho trình dựng trang.",
+  "author": "Nhịp Đầu Tư", "category": "Giao diện", "icon": "message",
+  "permissions": ["frontend.slots", "frontend.blocks", "admin.menu"],
+  "settings": [
+    { "k": "text", "label": "Câu chào", "type": "text", "def": "Chúc bạn một ngày giao dịch hiệu quả!" },
+    { "k": "color", "label": "Màu chữ", "type": "color", "def": "#0c4a43" }
+  ],
+  "slots": [{ "id": "greet", "slot": "home.top", "label": "Câu chào đầu trang chủ", "pages": "/",
+    "template": "<div class=\"greet\">{{text}}</div>", "css": ".greet{padding:10px 16px;text-align:center;font-weight:600;color:#0c4a43;background:#e6f6ee}" }],
+  "blocks": [{ "type": "hello", "label": "Lời chào", "icon": "message", "group": "Nội dung",
+    "fields": [{ "k": "who", "label": "Gửi tới", "def": "bạn" }, { "k": "note", "label": "Ghi chú", "type": "textarea" }],
+    "template": "<div class=\"hi\"><b>Xin chào {{who}}!</b><p>{{note}}</p></div>", "css": ".hi{padding:14px;border:1px solid #d0d5dd;border-radius:10px}" }],
+  "adminPages": [{ "id": "about", "title": "Giới thiệu", "template": "<h3>Lời chào</h3><p>Câu chào hiện tại: <b>{{text}}</b></p><p>Đổi trong Tiện ích & plugin → Cấu hình.</p>" }]
+}

@@ -1,0 +1,12 @@
+---
+import { CATS, fmtDate } from '../lib/util';
+const { p, big = false } = Astro.props;
+---
+<a class={`pc ${big ? 'big' : ''}`} href={`/bai-viet/${p.slug}`}>
+  <div class="im">{p.image && <img src={p.image} alt="" loading="lazy" referrerpolicy="no-referrer" />}</div>
+  <div>
+    <h3>{p.title}</h3>
+    {p.summary && <p>{p.summary}</p>}
+    <div class="meta"><span class="tag">{CATS[p.category] || p.category}</span>{fmtDate(p.published_at)}</div>
+  </div>
+</a>

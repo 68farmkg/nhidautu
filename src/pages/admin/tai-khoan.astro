@@ -1,0 +1,26 @@
+---
+import Admin from '../../layouts/Admin.astro';
+import { first, run } from '../../lib/util';
+import { hashPw, verifyPw } from '../../lib/auth';
+import { ROLES } from '../../lib/perm';
+const db = Astro.locals.runtime.env.DB;
+const U: any = (Astro.locals as any).user || { uid: 0, role: 'admin', name: '' };
+let err = '', ok = '';
+if (Astro.request.method === 'POST' && U.uid > 0) {
+  const f = await Astro.request.formData(); const cur = String(f.get('cur') || ''), nw = String(f.get('nw') || '');
+  const u: any = await first(db, 'SELECT pass FROM users WHERE id=?', U.uid);
+  if (!u || !(await verifyPw(cur, u.pass))) err = 'Mật khẩu hiện tại chưa đúng.';
+  else if (nw.length < 8) err = 'Mật khẩu mới tối thiểu 8 ký tự.';
+  else { await run(db, 'UPDATE users SET pass=? WHERE id=?', await hashPw(nw), U.uid); ok = 'Đã đổi mật khẩu.'; }
+}
+---
+<Admin title="Tài khoản của tôi" active="acct">
+  <div class="pagehead"><h1>Tài khoản của tôi</h1></div>
+  <div class="box"><p><b>{U.name || 'Chủ website'}</b> · vai trò: {ROLES[U.role] || U.role}</p>
+    {U.uid === 0 ? <p class="meta">Bạn đăng nhập bằng mật khẩu chủ website. Muốn đổi mật khẩu này, sửa biến ADMIN_PASSWORD trong Cloudflare (Settings &gt; Variables and Secrets) rồi Retry deployment.</p> : (<>
+      {err && <div class="msg err">{err}</div>}{ok && <div class="msg">{ok}</div>}
+      <form method="post"><label for="c">Mật khẩu hiện tại</label><input id="c" type="password" name="cur" required autocomplete="current-password" />
+        <label for="n">Mật khẩu mới (tối thiểu 8 ký tự)</label><input id="n" type="password" name="nw" required autocomplete="new-password" />
+        <p><button class="btn" type="submit">Đổi mật khẩu</button></p></form></>)}
+    <p><a class="btn ghost" href="/admin/logout">Đăng xuất</a></p></div>
+</Admin>

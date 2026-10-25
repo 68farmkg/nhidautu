@@ -1,0 +1,8 @@
+---
+import Base from '../layouts/Base.astro';
+import PostList from '../components/PostList.astro';
+const page = Math.max(1, Number(Astro.url.searchParams.get('trang')) || 1);
+---
+<Base title="Tin tức" active="tin-tuc">
+  <div class="wrap" style="margin-top:20px"><h1>Tin tức</h1><PostList page={page} /></div>
+</Base>

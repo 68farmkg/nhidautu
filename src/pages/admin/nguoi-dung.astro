@@ -1,0 +1,60 @@
+---
+import Admin from '../../layouts/Admin.astro';
+import { all, first, run, nowIso, fmtDate } from '../../lib/util';
+import { hashPw } from '../../lib/auth';
+import { ROLES } from '../../lib/perm';
+const db = Astro.locals.runtime.env.DB;
+let err = '', ok = '';
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData(); const act = String(f.get('act')); const id = Number(f.get('id')) || 0;
+  const role = Object.keys(ROLES).includes(String(f.get('role'))) ? String(f.get('role')) : 'editor';
+  try {
+    if (act === 'add') {
+      const un = String(f.get('username') || '').trim().toLowerCase(), pw = String(f.get('password') || '');
+      if (!/^[a-z0-9._-]{3,30}$/.test(un)) err = 'Tên đăng nhập 3-30 ký tự: chữ thường không dấu, số, dấu . _ -';
+      else if (pw.length < 8) err = 'Mật khẩu tối thiểu 8 ký tự.';
+      else if (await first(db, 'SELECT id FROM users WHERE username=?', un)) err = 'Tên đăng nhập đã có người dùng.';
+      else { await run(db, 'INSERT INTO users (username,name,pass,role,active,created_at) VALUES (?,?,?,?,1,?)', un, String(f.get('name') || '').trim().slice(0, 60) || un, await hashPw(pw), role, nowIso()); ok = `Đã tạo tài khoản ${un}.`; }
+    }
+    if (act === 'role' && id) { await run(db, 'UPDATE users SET role=?,name=? WHERE id=?', role, String(f.get('name') || '').trim().slice(0, 60), id); ok = 'Đã cập nhật.'; }
+    if (act === 'toggle' && id) { await run(db, 'UPDATE users SET active=1-active WHERE id=?', id); ok = 'Đã đổi trạng thái.'; }
+    if (act === 'pw' && id) {
+      const pw = String(f.get('password') || '');
+      if (pw.length < 8) err = 'Mật khẩu mới tối thiểu 8 ký tự.'; else { await run(db, 'UPDATE users SET pass=? WHERE id=?', await hashPw(pw), id); ok = 'Đã đặt lại mật khẩu.'; }
+    }
+    if (act === 'delete' && id) { await run(db, 'DELETE FROM users WHERE id=?', id); ok = 'Đã xóa.'; }
+  } catch (e: any) { err = 'Lỗi: ' + (e?.message || e) + '. Bạn đã chạy nang-cap-3.sql chưa?'; }
+}
+let rows: any[] = [];
+try { rows = await all(db, 'SELECT id,username,name,role,active,last_login FROM users ORDER BY id'); } catch { err = err || 'Chưa có bảng người dùng. Hãy chạy nang-cap-3.sql trong D1 Console.'; }
+---
+<Admin title="Người dùng & quyền" active="users">
+  <div class="pagehead"><h1>Người dùng & quyền</h1></div>
+  {err && <div class="msg err">{err}</div>}{ok && <div class="msg">{ok}</div>}
+  <div class="box"><h3>Các vai trò</h3>
+    {Object.entries(ROLES).map(([k, v]) => <p style="margin:4px 0"><b>{k}</b>: {v}</p>)}
+    <p class="meta">Chủ website đăng nhập bằng mật khẩu ADMIN_PASSWORD (để trống tên đăng nhập), luôn có toàn quyền. Biên tập viên không được thêm hoặc sửa khối “Mã HTML tự do” và “Tiện ích đã tạo” (bảo vệ website khỏi mã độc).</p></div>
+  <div class="cards" style="margin-top:14px">
+    {rows.length === 0 && !err && <div class="box">Chưa có người dùng nào ngoài chủ website.</div>}
+    {rows.map((u) => (
+      <div class="box">
+        <b>{u.username}</b> <span class={`st ${u.active ? 'published' : ''}`}>{u.active ? 'Đang hoạt động' : 'Đã khóa'}</span>
+        <span class="meta"> · đăng nhập gần nhất: {u.last_login ? fmtDate(u.last_login) : 'chưa'}</span>
+        <form method="post" class="row2" style="margin-top:8px"><input type="hidden" name="act" value="role" /><input type="hidden" name="id" value={u.id} />
+          <div><label>Tên hiển thị</label><input type="text" name="name" value={u.name} /></div>
+          <div><label>Vai trò</label><select name="role">{Object.entries(ROLES).map(([k, v]) => <option value={k} selected={u.role === k}>{k}</option>)}</select></div>
+          <div><button class="btn sm" type="submit">Lưu</button></div></form>
+        <div class="acts" style="margin-top:8px">
+          <form method="post" class="inline"><input type="hidden" name="act" value="toggle" /><input type="hidden" name="id" value={u.id} /><button class="btn ghost sm" type="submit">{u.active ? 'Khóa' : 'Mở khóa'}</button></form>
+          <form method="post" class="inline"><input type="hidden" name="act" value="pw" /><input type="hidden" name="id" value={u.id} /><input type="password" name="password" placeholder="Mật khẩu mới (≥8)" style="width:170px;display:inline-block" autocomplete="new-password" /> <button class="btn ghost sm" type="submit">Đặt lại</button></form>
+          <form method="post" class="inline" onsubmit="return confirm('Xóa người dùng này?')"><input type="hidden" name="act" value="delete" /><input type="hidden" name="id" value={u.id} /><button class="btn red sm" type="submit">Xóa</button></form>
+        </div>
+      </div>
+    ))}
+  </div>
+  <div class="box" style="margin-top:14px"><h3>Thêm người dùng</h3>
+    <form method="post"><input type="hidden" name="act" value="add" />
+      <div class="row2"><div><label for="nu">Tên đăng nhập</label><input id="nu" type="text" name="username" required autocapitalize="none" /></div><div><label for="nn">Tên hiển thị</label><input id="nn" type="text" name="name" /></div></div>
+      <div class="row2"><div><label for="nr">Vai trò</label><select id="nr" name="role">{Object.entries(ROLES).map(([k, v]) => <option value={k}>{v}</option>)}</select></div><div><label for="np">Mật khẩu (tối thiểu 8 ký tự)</label><input id="np" type="password" name="password" required autocomplete="new-password" /></div></div>
+      <p><button class="btn" type="submit">Tạo tài khoản</button></p></form></div>
+</Admin>

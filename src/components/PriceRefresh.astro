@@ -1,0 +1,9 @@
+<script is:inline>
+  (function () {
+    try {
+      fetch('/api/cap-nhat-gia', { method: 'POST' }).then(function (r) { return r.json(); }).then(function (j) {
+        if (j && j.updated && !sessionStorage.getItem('nhip_pr')) { sessionStorage.setItem('nhip_pr', '1'); location.reload(); }
+      }).catch(function () {});
+    } catch (e) {}
+  })();
+</script>

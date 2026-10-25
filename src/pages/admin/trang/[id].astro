@@ -1,0 +1,114 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+import PreviewPane from '../../../components/PreviewPane.astro';
+import { first, all, run, nowIso, slugify, fmtDate } from '../../../lib/util';
+import { clientDefsAsync, parseBlocks, cleanBlocks, activeDefs, defsToMap } from '../../../lib/blocks';
+import { blockDefs, emit } from '../../../lib/px/registry';
+import { TEMPLATES } from '../../../lib/templates';
+import { ICONS, icon } from '../../../lib/icons';
+const db = Astro.locals.runtime.env.DB;
+const isAdmin = ((Astro.locals as any).user?.role || 'admin') === 'admin';
+const id = Astro.params.id === 'moi' ? 0 : Number(Astro.params.id);
+const RESERVED = ['admin', 'api', 'bai-viet', 'chuyen-muc', 'co-phieu', 'thi-truong', 'tin-tuc', 'tim-kiem', 'lien-he', 'favicon.svg', 'preview.js', 'builder.js', 'chat.js', '_astro'];
+let msg = '', page: any = null;
+if (id) { page = await first(db, 'SELECT * FROM pages WHERE id=?', id); if (!page) return Astro.redirect('/admin/trang'); }
+
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const title = String(f.get('title') || '').trim();
+  let blocksJson = '[]';
+  try { blocksJson = JSON.stringify(cleanBlocks(JSON.parse(String(f.get('blocks') || '[]')), { admin: isAdmin, old: page ? parseBlocks(page.blocks) : [], defs: defsToMap(await activeDefs(db)), known: defsToMap(await blockDefs(db, false) as any) })); } catch { blocksJson = '[]'; }
+  if (!title) msg = 'Hãy nhập tên trang.';
+  else if (blocksJson.length > 700000) msg = 'Trang quá lớn (hơn 700 KB). Hãy tách thành nhiều trang.';
+  else {
+    let slug = slugify(String(f.get('slug') || '') || title);
+    if (RESERVED.includes(slug)) slug += '-trang';
+    const dup = await first(db, 'SELECT id FROM pages WHERE slug=? AND id<>?', slug, id);
+    if (dup) slug += '-' + Date.now().toString(36);
+    const v = [slug, title, blocksJson, String(f.get('status') === 'published' ? 'published' : 'draft'), f.get('is_template') ? 1 : 0, f.get('show_header') ? 1 : 0, f.get('show_footer') ? 1 : 0,
+      String(f.get('seo_title') || '').slice(0, 120), String(f.get('seo_desc') || '').slice(0, 300), String(f.get('seo_image') || '').trim()];
+    if (id) {
+      await run(db, 'INSERT INTO revisions (ref,ref_id,title,data,created_at) VALUES (?,?,?,?,?)', 'page', id, page.title, page.blocks, nowIso());
+      await run(db, "DELETE FROM revisions WHERE ref='page' AND ref_id=? AND id NOT IN (SELECT id FROM revisions WHERE ref='page' AND ref_id=? ORDER BY id DESC LIMIT 20)", id, id);
+      await emit(db, 'page.saved', { id, slug });
+      await run(db, 'UPDATE pages SET slug=?,title=?,blocks=?,status=?,is_template=?,show_header=?,show_footer=?,seo_title=?,seo_desc=?,seo_image=?,updated_at=? WHERE id=?', ...v, nowIso(), id);
+      return Astro.redirect(`/admin/trang/${id}?saved=1`);
+    }
+    const r = await run(db, 'INSERT INTO pages (slug,title,blocks,status,is_template,show_header,show_footer,seo_title,seo_desc,seo_image,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)', ...v, nowIso(), nowIso());
+    return Astro.redirect(`/admin/trang/${r.meta.last_row_id}?saved=1`);
+  }
+}
+// nội dung khởi tạo
+let blocks = page ? parseBlocks(page.blocks) : [];
+const mau = Astro.url.searchParams.get('mau'), tu = Number(Astro.url.searchParams.get('tu')) || 0, rev = Number(Astro.url.searchParams.get('rev')) || 0;
+let init: any = page || { title: '', slug: '', status: 'draft', is_template: 0, show_header: 1, show_footer: 1, seo_title: '', seo_desc: '', seo_image: '' };
+if (!id && mau && TEMPLATES[mau]) { blocks = TEMPLATES[mau].make(); init = { ...init, title: mau === 'trong' ? '' : TEMPLATES[mau].name }; }
+if (!id && tu) { const t = await first(db, 'SELECT * FROM pages WHERE id=? AND is_template=1', tu); if (t) { blocks = parseBlocks(t.blocks); init = { ...init, title: t.title + ' (mới)' }; } }
+let revNote = '';
+if (id && rev) { const r = await first(db, "SELECT * FROM revisions WHERE id=? AND ref='page' AND ref_id=?", rev, id); if (r) { blocks = parseBlocks(r.data); revNote = `Đang xem bản cũ lúc ${fmtDate(r.created_at)}. Bấm Lưu để dùng bản này.`; } }
+const revs = id ? await all(db, "SELECT id,created_at FROM revisions WHERE ref='page' AND ref_id=? ORDER BY id DESC LIMIT 10", id) : [];
+const defsJson = JSON.stringify(await clientDefsAsync(db)).replace(/</g, '\\u003c');
+const blocksInit = JSON.stringify(blocks).replace(/</g, '\\u003c');
+const iconMap = JSON.stringify(Object.fromEntries(Object.keys(ICONS).map((k) => [k, icon(k, 18)]))).replace(/</g, '\\u003c');
+---
+<Admin title={id ? 'Sửa trang' : 'Trang mới'} active="pages">
+  <form method="post" id="pf">
+    <div class="pagehead"><h1>{id ? 'Sửa trang' : 'Trang mới'}</h1>
+      {page && page.status === 'published' && <a class="btn ghost sm" href={`/${page.slug}`} target="_blank">Xem trang thật</a>}</div>
+    {Astro.url.searchParams.get('saved') && <div class="msg">Đã lưu.</div>}
+    {msg && <div class="msg err">{msg}</div>}{revNote && <div class="msg">{revNote}</div>}
+    <div class="box"><label for="title" style="margin-top:0">Tên trang</label><input id="title" type="text" name="title" value={init.title} required /></div>
+
+    <div class="tabs" style="margin-top:12px" id="tabs">
+      <button type="button" class="on" data-t="edit">Soạn</button><button type="button" data-t="pv">Xem trước</button><button type="button" data-t="set">Cài đặt & SEO</button>
+    </div>
+
+    <section data-p="edit">
+      <div id="bl-list"></div>
+      <p><button type="button" class="btn ic-b" id="add1"><Fragment set:html={icon('plus', 18)} />Thêm khối</button></p>
+    </section>
+    <section data-p="pv" style="display:none"><PreviewPane /></section>
+    <section data-p="set" style="display:none" class="box">
+      <div class="row2">
+        <div><label for="slug">Đường dẫn (để trống sẽ tự tạo)</label><input id="slug" type="text" name="slug" value={init.slug} /></div>
+        <div><label for="status">Trạng thái</label><select id="status" name="status"><option value="draft" selected={init.status !== 'published'}>Nháp</option><option value="published" selected={init.status === 'published'}>Đăng</option></select></div>
+      </div>
+      <label class="chk"><input type="checkbox" name="show_header" checked={!!init.show_header} />Hiện thanh menu trên cùng</label>
+      <label class="chk"><input type="checkbox" name="show_footer" checked={!!init.show_footer} />Hiện chân trang</label>
+      <label class="chk"><input type="checkbox" name="is_template" checked={!!init.is_template} />Lưu làm “trang mẫu” (không hiện ra website, dùng để tạo trang mới)</label>
+      <label for="seo_title">Tiêu đề SEO (Google)</label><input id="seo_title" type="text" name="seo_title" value={init.seo_title} />
+      <label for="seo_desc">Mô tả SEO</label><textarea id="seo_desc" name="seo_desc" style="min-height:70px">{init.seo_desc}</textarea>
+      <label for="seo_image">Ảnh chia sẻ (https://…)</label><input id="seo_image" type="text" name="seo_image" value={init.seo_image} />
+      {revs.length > 0 && <><label>Lịch sử sửa (10 bản gần nhất)</label><div class="acts">{revs.map((r) => <a class="btn ghost sm" href={`/admin/trang/${id}?rev=${r.id}`}>{fmtDate(r.created_at)}</a>)}</div></>}
+    </section>
+    <input type="hidden" name="blocks" id="blocks" value="[]" />
+    <div class="savebar"><button class="btn" type="submit">Lưu trang</button><button type="button" class="btn ghost" id="add2">+ Khối</button></div>
+  </form>
+  <div class="sheet-bg" id="sheet"><div class="sheet"><h3 style="margin:0 0 4px">Chọn khối để thêm</h3><div class="pal"></div></div></div>
+  <script is:inline type="application/json" id="defs" set:html={defsJson}></script>
+  <script is:inline type="application/json" id="binit" set:html={blocksInit}></script>
+  <script is:inline type="application/json" id="icons" set:html={iconMap}></script>
+  <script is:inline src="/builder.js"></script>
+  <script is:inline define:vars={{ IS_ADMIN: isAdmin, PAGE_ID: id }}>
+    (function () {
+      var $ = function (s) { return document.querySelector(s); };
+      var defs = JSON.parse($('#defs').textContent), icons = JSON.parse($('#icons').textContent), init = JSON.parse($('#binit').textContent);
+      var dirty = false, pv = null;
+      var B = NhipBuilder({ defs: defs, blocks: init, icons: icons, list: $('#bl-list'), addBtn: [$('#add1'), $('#add2')], sheet: $('#sheet'), isAdmin: IS_ADMIN, onChange: function () { dirty = true; } });
+      function data() {
+        var f = $('#pf');
+        return { kind: 'page', page_id: PAGE_ID, title: $('#title').value, blocks: B.get(), show_header: f.show_header.checked, show_footer: f.show_footer.checked };
+      }
+      $('#pf').addEventListener('submit', function () { $('#blocks').value = JSON.stringify(B.get()); dirty = false; });
+      window.addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+      document.querySelectorAll('#tabs button').forEach(function (t) {
+        t.addEventListener('click', function () {
+          var k = t.getAttribute('data-t');
+          document.querySelectorAll('#tabs button').forEach(function (x) { x.classList.toggle('on', x === t); });
+          document.querySelectorAll('[data-p]').forEach(function (p) { p.style.display = p.getAttribute('data-p') === k ? '' : 'none'; });
+          if (k === 'pv') { if (!pv) pv = NhipPreview($('#pv'), data); pv.load(); }
+        });
+      });
+    })();
+  </script>
+</Admin>

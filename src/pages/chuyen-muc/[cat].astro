@@ -1,0 +1,11 @@
+---
+import Base from '../../layouts/Base.astro';
+import PostList from '../../components/PostList.astro';
+import { CATS } from '../../lib/util';
+const { cat } = Astro.params;
+if (!cat || !CATS[cat]) return Astro.redirect('/tin-tuc');
+const page = Math.max(1, Number(Astro.url.searchParams.get('trang')) || 1);
+---
+<Base title={CATS[cat]} active={cat}>
+  <div class="wrap" style="margin-top:20px"><h1>{CATS[cat]}</h1><PostList cat={cat} page={page} /></div>
+</Base>

@@ -1,0 +1,9 @@
+---
+import Base from '../layouts/Base.astro';
+import PostList from '../components/PostList.astro';
+const q = (Astro.url.searchParams.get('q') || '').trim().slice(0, 60);
+const page = Math.max(1, Number(Astro.url.searchParams.get('trang')) || 1);
+---
+<Base title={`Tìm: ${q}`}>
+  <div class="wrap" style="margin-top:20px"><h1>Kết quả cho “{q}”</h1><PostList q={q} page={page} /></div>
+</Base>

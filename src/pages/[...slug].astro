@@ -1,0 +1,14 @@
+---
+import Base from '../layouts/Base.astro';
+import Blocks from '../components/Blocks.astro';
+import { first } from '../lib/util';
+import { parseBlocks } from '../lib/blocks';
+const db = Astro.locals.runtime.env.DB;
+const slug = (Astro.params.slug || '').replace(/\/+$/, '');
+let page: any = null;
+try { page = await first(db, "SELECT * FROM pages WHERE slug=? AND status='published' AND is_template=0", slug); } catch { /* chưa chạy nang-cap-2.sql */ }
+if (!page) return new Response('Không tìm thấy trang', { status: 404 });
+---
+<Base title={page.seo_title || page.title} description={page.seo_desc} image={page.seo_image} hideHeader={!page.show_header} hideFooter={!page.show_footer}>
+  <Blocks blocks={parseBlocks(page.blocks)} />
+</Base>

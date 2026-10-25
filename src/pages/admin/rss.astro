@@ -1,0 +1,56 @@
+---
+import Admin from '../../layouts/Admin.astro';
+import { FEEDS, getFeed } from '../../lib/rss';
+import { CATS, fmtDate } from '../../lib/util';
+import { CATALOG, loadSettings, keyOf } from '../../lib/ai';
+import { generateDraft } from '../../lib/draft';
+const env = Astro.locals.runtime.env;
+const db = env.DB;
+let err = '';
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  try {
+    const r = await generateDraft(env, db, {
+      topic: String(f.get('title') || '').slice(0, 300),
+      cat: String(f.get('category') || 'thi-truong'),
+      note: `Tiêu đề gốc: ${f.get('title')}\nTóm tắt gốc: ${f.get('desc')}\nBáo: ${f.get('source')}`,
+      provider: String(f.get('provider') || 'auto'),
+      sourceUrl: String(f.get('link') || ''), sourceName: String(f.get('source') || ''), rewrite: true,
+    });
+    return Astro.redirect(`/admin/bai-viet/${r.id}?ai=${encodeURIComponent(r.via)}`);
+  } catch (e: any) { err = 'Không viết được: ' + (e?.message || e); }
+}
+const src = Astro.url.searchParams.get('src') || 'cafef-ck';
+let items: any[] = [], ferr = '';
+try { items = await getFeed(src in FEEDS ? src : 'cafef-ck', 25, 12000); } catch (e: any) { ferr = 'Không đọc được nguồn này (' + (e?.message || e) + '). Thử nguồn khác.'; }
+const st = await loadSettings(db);
+const ready = CATALOG.filter((p) => st[p.id]?.enabled && keyOf(env, p.id, st[p.id]));
+---
+<Admin title="Tin RSS" active="rss">
+  <h1>Tin RSS các báo</h1>
+  <p class="meta">Chọn nguồn, xem tin mới, bấm “Viết lại bằng AI” để tạo bản nháp (kèm link nguồn). Chỉ dùng tiêu đề và tóm tắt trong RSS; bài viết được viết lại bằng lời mới. Hãy đọc và kiểm tra kỹ trước khi đăng.</p>
+  {ready.length === 0 && <div class="msg err">Chưa có nhà AI nào được bật. <a href="/admin/cai-dat-ai"><b>Vào Cài đặt AI</b></a>.</div>}
+  {err && <div class="msg err">{err}</div>}
+  {ferr && <div class="msg err">{ferr}</div>}
+  <form method="get" class="box">
+    <label for="src">Nguồn tin</label>
+    <select id="src" name="src" onchange="this.form.submit()">
+      {Object.entries(FEEDS).map(([k, v]) => <option value={k} selected={k === src}>{v.name}</option>)}
+    </select>
+    <noscript><button class="btn" type="submit">Xem</button></noscript>
+  </form>
+  {items.map((i) => (
+    <div class="box" style="margin-top:10px">
+      <a href={i.link} target="_blank" rel="noopener nofollow"><b>{i.title}</b></a>
+      <div class="meta">{i.source} · {(i.date && !isNaN(+new Date(i.date)) ? fmtDate(new Date(i.date).toISOString()) : '')}</div>
+      {i.desc && <p style="margin:6px 0;font-size:14px">{i.desc}</p>}
+      <form method="post" class="row2" style="grid-template-columns:1fr 1fr auto;align-items:end">
+        <input type="hidden" name="title" value={i.title} /><input type="hidden" name="desc" value={i.desc} />
+        <input type="hidden" name="link" value={i.link} /><input type="hidden" name="source" value={i.source} />
+        <div><label>Chuyên mục</label><select name="category">{Object.entries(CATS).map(([k, n]) => <option value={k}>{n}</option>)}</select></div>
+        <div><label>Dùng AI</label><select name="provider"><option value="auto">Tự động</option>{ready.map((p) => <option value={p.id}>{p.name}</option>)}</select></div>
+        <button class="btn" type="submit">Viết lại bằng AI</button>
+      </form>
+    </div>
+  ))}
+</Admin>

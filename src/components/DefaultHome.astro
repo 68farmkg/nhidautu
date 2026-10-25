@@ -1,0 +1,80 @@
+---
+import Slot from './Slot.astro';
+import Base from '../layouts/Base.astro';
+import NewsFeed from '../components/NewsFeed.astro';
+import PriceRefresh from '../components/PriceRefresh.astro';
+import PostCard from '../components/PostCard.astro';
+import { all, nowIso, fmtNum, fmtPct } from '../lib/util';
+const db = Astro.locals.runtime.env.DB;
+const idx = await all(db, "SELECT * FROM quotes WHERE kind='index' ORDER BY rowid LIMIT 4");
+const stocks = await all(db, "SELECT * FROM quotes WHERE kind='stock' ORDER BY change_pct DESC LIMIT 6");
+const posts = await all(db, "SELECT id,slug,title,summary,image,category,published_at FROM posts WHERE status='published' AND published_at <= ? ORDER BY published_at DESC LIMIT 9", nowIso());
+const top = posts[0];
+const rest = posts.slice(1);
+---
+<Base active="home">
+<Slot name="home.top" />
+  <section class="hero">
+    <div class="wrap">
+      <h1>Đồng hành cùng bạn trên hành trình đầu tư thông minh</h1>
+      <p>Cập nhật thị trường nhanh chóng · Phân tích chuyên sâu · Kiến thức thực tiễn</p>
+      <form action="/tim-kiem" method="get">
+        <input type="search" name="q" placeholder="Tìm kiếm mã cổ phiếu, bài viết, phân tích…" aria-label="Tìm kiếm" />
+        <button type="submit">Tìm</button>
+      </form>
+    </div>
+  </section>
+  <div class="wrap">
+    <div class="idx">
+      {idx.map((i) => (
+        <a class="c" href={`/co-phieu/${i.symbol}`}>
+          <small>{i.name}</small>
+          <b>{fmtNum(i.price)}</b>
+          <span class={i.change_pct >= 0 ? 'up' : 'down'} style="filter:brightness(1.5)">{fmtPct(i.change_pct)}</span>
+        </a>
+      ))}
+    </div>
+
+    <div class="grid">
+      <div>
+        {top ? (
+          <div class="box"><h2>Tin nổi bật <a href="/tin-tuc">Xem tất cả</a></h2>
+            <PostCard p={top} big />
+          </div>
+        ) : <div class="box"><p>Chưa có bài viết. Hãy đăng bài đầu tiên trong trang quản trị.</p></div>}
+        {rest.length > 0 && (
+          <div class="box" style="margin-top:20px"><h2>Mới cập nhật</h2>
+            {rest.map((p) => <PostCard p={p} />)}
+          </div>
+        )}
+      </div>
+      <aside>
+        <div class="box"><h2>Top cổ phiếu quan tâm <a href="/thi-truong">Xem thêm</a></h2>
+          <table class="t">
+            <tbody>
+              {stocks.map((s) => (
+                <tr><td><a href={`/co-phieu/${s.symbol}`}><b>{s.symbol}</b></a></td>
+                  <td class="r">{fmtNum(s.price)}</td>
+                  <td class={`r ${s.change_pct >= 0 ? 'up' : 'down'}`}>{fmtPct(s.change_pct)}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <NewsFeed />
+        <div class="studio" style="margin-top:20px">
+          <h3>Nhịp AI Content Studio</h3>
+          <div>Tự động nghiên cứu · Sáng tạo nội dung · Xuất bản thông minh</div>
+          <ul><li>Tìm kiếm chủ đề hot</li><li>Viết bài bằng AI chất lượng</li><li>Duyệt trước khi đăng</li></ul>
+        </div>
+        <div class="box" style="margin-top:20px"><h2>Chuyên mục</h2>
+          <div class="tools">
+            <a href="/thi-truong">Thị trường</a><a href="/chuyen-muc/doanh-nghiep">Doanh nghiệp</a>
+            <a href="/chuyen-muc/phan-tich">Phân tích</a><a href="/chuyen-muc/kien-thuc">Kiến thức</a>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+  <PriceRefresh />
+<Slot name="home.bottom" />
+</Base>

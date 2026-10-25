@@ -1,0 +1,43 @@
+---
+import Base from '../layouts/Base.astro';
+import { nowIso, run } from '../lib/util';
+import { allow, ipOf } from '../lib/ratelimit';
+import { notify } from '../lib/notify';
+import { getSite } from '../lib/site';
+const db = Astro.locals.runtime.env.DB;
+const SITE = await getSite(db);
+let ok = false, err = '';
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const name = String(f.get('name') || '').trim().slice(0, 100);
+  const email = String(f.get('email') || '').trim().slice(0, 150);
+  const phone = String(f.get('phone') || '').trim().slice(0, 30);
+  const body = String(f.get('body') || '').trim().slice(0, 3000);
+  if (f.get('website')) { ok = true; }
+  else if (!name || !body || !email.includes('@')) err = 'Hãy nhập họ tên, email hợp lệ và nội dung.';
+  else if (!(await allow(db, 'contact:' + ipOf(Astro.request), 5, 3600))) err = 'Bạn gửi quá nhiều lần. Vui lòng thử lại sau.';
+  else {
+    await run(db, 'INSERT INTO messages (name,email,phone,body,created_at) VALUES (?,?,?,?,?)', name, email, phone, body, nowIso()); ok = true;
+    notify(Astro.locals, `✉️ Liên hệ mới từ ${name} (${email}${phone ? ', ' + phone : ''}): ${body}\n${Astro.url.origin}/admin/hop-thu?kenh=lh`);
+  }
+}
+---
+<Base title="Liên hệ" active="lien-he">
+  <div class="wrap grid" style="margin-top:20px">
+    <div class="box"><h2>Liên hệ với chúng tôi</h2>
+      {ok && <div class="msg">Đã gửi. Chúng tôi sẽ phản hồi sớm.</div>}
+      {err && <div class="msg err">{err}</div>}
+      <form method="post">
+        <label for="name">Họ và tên</label><input id="name" type="text" name="name" required />
+        <label for="email">Email</label><input id="email" type="email" name="email" required />
+        <label for="phone">Số điện thoại</label><input id="phone" type="text" name="phone" />
+        <label for="body">Nội dung</label><textarea id="body" name="body" required></textarea>
+        <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true" />
+        <p><button class="btn" type="submit">Gửi liên hệ</button></p>
+      </form>
+    </div>
+    <div class="box"><h3>Thông tin liên hệ</h3>
+      <p>Hotline: {SITE.hotline}<br />Email: {SITE.email}<br />Địa chỉ: {SITE.address}</p>
+    </div>
+  </div>
+</Base>

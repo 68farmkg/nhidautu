@@ -1,0 +1,7 @@
+---
+import { renderSlot } from '../lib/px/registry';
+const { name } = Astro.props as { name: string };
+let html = '';
+try { html = await renderSlot(Astro.locals.runtime.env.DB, name, Astro.url); } catch { /* plugin lỗi không làm hỏng trang */ }
+---
+{html && <Fragment set:html={html} />}

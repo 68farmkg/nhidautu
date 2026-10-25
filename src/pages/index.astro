@@ -1,0 +1,20 @@
+---
+import Base from '../layouts/Base.astro';
+import Slot from '../components/Slot.astro';
+import Blocks from '../components/Blocks.astro';
+import DefaultHome from '../components/DefaultHome.astro';
+import { getSite } from '../lib/site';
+import { first } from '../lib/util';
+import { parseBlocks } from '../lib/blocks';
+const db = Astro.locals.runtime.env.DB;
+const S = await getSite(db);
+let page: any = null;
+if (S.home_page) { try { page = await first(db, "SELECT * FROM pages WHERE slug=? AND status='published' AND is_template=0", S.home_page); } catch { /* chưa có bảng */ } }
+---
+{page ? (
+  <Base title={page.seo_title || page.title} description={page.seo_desc} image={page.seo_image} hideHeader={!page.show_header} hideFooter={!page.show_footer}>
+    <Slot name="home.top" />
+    <Blocks blocks={parseBlocks(page.blocks)} />
+    <Slot name="home.bottom" />
+  </Base>
+) : <DefaultHome />}

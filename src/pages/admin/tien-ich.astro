@@ -1,0 +1,241 @@
+---
+import Admin from '../../layouts/Admin.astro';
+import { icon } from '../../lib/icons';
+import { all, first, run, nowIso, fmtDate } from '../../lib/util';
+import { PERMS, SLOTS } from '../../lib/px/manifest';
+import { readZip, sha256 } from '../../lib/px/zip';
+import { isReady, listEntries, getEntry, getSettings, slotList, savePlacement, installOrActivate, deactivate, uninstall, saveSettings,
+  stagePackage, upgradePackage, rollbackPackage, pagesUsing, logPx, bust } from '../../lib/px/registry';
+const db = Astro.locals.runtime.env.DB;
+const actor = ((Astro.locals as any).user?.name || 'admin') as string;
+const Q = Astro.url.searchParams;
+const go = (q: string, m = '', bad = false) => Astro.redirect(`/admin/tien-ich?${q}${m ? '&m=' + encodeURIComponent(m.slice(0, 300)) : ''}${bad ? '&e=1' : ''}`);
+const ready = await isReady(db);
+
+// ===== Xử lý thao tác (POST). Quyền quản trị đã kiểm tra ở middleware; CSRF cũng chặn ở middleware. =====
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData(); const act = String(f.get('act') || ''); const pid = String(f.get('pid') || '');
+  const agree = !!f.get('agree'); const back = `tab=${String(f.get('tab') || 'dc')}${pid ? '&p=' + encodeURIComponent(pid) : ''}`;
+  try {
+    if (act === 'install' || act === 'activate') {
+      const e = await getEntry(db, pid); if (!e) return go(back, 'Không tìm thấy plugin', true);
+      const r = await installOrActivate(db, pid, actor, agree ? e.declared : []); return go(`tab=dc&p=${pid}`, r.msg, !r.ok);
+    }
+    if (act === 'deactivate') { const r = await deactivate(db, pid, actor, !!f.get('force')); return go(back, r.msg, !r.ok); }
+    if (act === 'uninstall') { const r = await uninstall(db, pid, actor, !!f.get('purge')); return go(r.ok ? 'tab=ch' : back, r.msg, !r.ok); }
+    if (act === 'upgrade') { const e = await getEntry(db, pid); const r = await upgradePackage(db, pid, actor, agree ? (e?.staged_perms || []) : []); return go(back, r.msg, !r.ok); }
+    if (act === 'rollback') { const r = await rollbackPackage(db, pid, actor); return go(back, r.msg, !r.ok); }
+    if (act === 'settings') { const r = await saveSettings(db, pid, f, actor); return go(back, r.msg, !r.ok); }
+    if (act === 'placement') {
+      const sl = await slotList(db, (await getEntry(db, pid))!);
+      for (const s of sl) await savePlacement(db, pid, s.id, !!f.get('en_' + s.id), Number(f.get('so_' + s.id)) || 0, String(f.get('pg_' + s.id) || ''), actor);
+      return go(back, 'Đã lưu vị trí hiển thị.');
+    }
+    if (act === 'upload') {
+      const file = f.get('zip') as File | null;
+      if (!file || typeof file === 'string' || !file.size) return go('tab=zip', 'Hãy chọn tệp .zip', true);
+      if (file.size > 2_000_000) return go('tab=zip', 'Gói quá lớn (tối đa 2 MB)', true);
+      let files: Record<string, string>; try { files = await readZip(await file.arrayBuffer()); } catch (x: any) { return go('tab=zip', 'ZIP không hợp lệ: ' + (x?.message || x), true); }
+      const r = await stagePackage(db, files, await sha256(Object.values(files).join('\n')), actor);
+      if (!r.ok) return go('tab=zip', r.msg + (r.errors?.length ? ' — ' + r.errors.join('; ') : ''), true);
+      return go(`tab=ch&p=${r.id}`, 'Gói hợp lệ. Hãy xem quyền yêu cầu rồi bấm cài đặt.');
+    }
+    // ----- tiện ích HTML/CSS/JS tự tạo -----
+    const id = Number(f.get('id')) || 0;
+    if (act === 'wdelete') { await run(db, 'DELETE FROM widgets WHERE id=?', id); return go('tab=wd', 'Đã xóa tiện ích.'); }
+    if (act === 'wdup') { const w = await first(db, 'SELECT name,code,vars FROM widgets WHERE id=?', id); if (w) { const r = await run(db, 'INSERT INTO widgets (name,code,vars,created_at) VALUES (?,?,?,?)', w.name + ' (bản sao)', w.code, w.vars, nowIso()); return go(`tab=wd&id=${r.meta.last_row_id}`, 'Đã nhân bản.'); } }
+    if (act === 'wsave') {
+      const name = String(f.get('name') || '').trim().slice(0, 100) || 'Tiện ích mới', code = String(f.get('code') || '').slice(0, 100000);
+      const mode = f.get('mode') === 'sandbox' ? 'sandbox' : 'inline', hh = Math.min(1200, Math.max(40, Number(f.get('height')) || 300));
+      const vars = String(f.get('vars') || '').split('\n').filter((l) => !/^\s*_(mode|height)\s*=/.test(l)).join('\n').trim() + `\n_mode=${mode}\n_height=${hh}`;
+      if (id) {
+        const old = await first(db, 'SELECT name,code,vars FROM widgets WHERE id=?', id);
+        if (old) { await run(db, 'INSERT INTO revisions (ref,ref_id,title,data,created_at) VALUES (?,?,?,?,?)', 'widget', id, old.name, JSON.stringify(old), nowIso()); await run(db, "DELETE FROM revisions WHERE ref='widget' AND ref_id=? AND id NOT IN (SELECT id FROM revisions WHERE ref='widget' AND ref_id=? ORDER BY id DESC LIMIT 15)", id, id); }
+        await run(db, 'UPDATE widgets SET name=?,code=?,vars=? WHERE id=?', name, code, vars.trim(), id); return go(`tab=wd&id=${id}`, 'Đã lưu (bản cũ được giữ trong lịch sử).');
+      }
+      const r = await run(db, 'INSERT INTO widgets (name,code,vars,created_at) VALUES (?,?,?,?)', name, code, vars.trim(), nowIso()); return go(`tab=wd&id=${r.meta.last_row_id}`, 'Đã tạo tiện ích.');
+    }
+  } catch (e: any) { return go(back, 'Lỗi: ' + (e?.message || e), true); }
+  return go('tab=dc');
+}
+
+// ===== Dữ liệu hiển thị =====
+const tab = String(Q.get('tab') || (Q.get('id') || Q.get('moi') ? 'wd' : 'tq'));
+const sel = Q.get('p') || '';
+const entries = await listEntries(db);
+const inst = entries.filter((e) => e.installed), store = entries.filter((e) => !e.installed);
+const stats = { all: entries.length, inst: inst.length, on: inst.filter((e) => e.active).length, off: inst.filter((e) => !e.active).length, upd: inst.filter((e) => e.hasUpdate).length, warn: inst.filter((e) => ['failed', 'incompatible'].includes(e.status)).length };
+const SL: Record<string, string> = { active: 'Đang hoạt động', inactive: 'Đã tắt', failed: 'Cài đặt thất bại', incompatible: 'Không tương thích', installing: 'Đang cài', uninstalling: 'Đang gỡ', available: 'Chưa cài', uninstalled: 'Chưa cài' };
+const cur = sel ? await getEntry(db, sel) : null;
+const qs = (Q.get('q') || '').toLowerCase().trim(), qc = Q.get('cat') || '';
+const cats = [...new Set(entries.map((e) => e.category))].sort();
+const shown = store.filter((e) => (!qs || (e.name + e.desc + e.id).toLowerCase().includes(qs)) && (!qc || e.category === qc));
+let cfg: Record<string, string> = {}, slots: any[] = [], logs: any[] = [], used = 0;
+if (cur) { cfg = await getSettings(db, cur); slots = await slotList(db, cur); used = await pagesUsing(db, cur); try { logs = await all(db, 'SELECT * FROM plugin_logs WHERE plugin_id=? ORDER BY id DESC LIMIT 15', cur.id); } catch { /* chưa có bảng */ } }
+if (tab === 'nk') { try { logs = await all(db, 'SELECT * FROM plugin_logs ORDER BY id DESC LIMIT 60'); } catch { logs = []; } }
+let ws: any[] = [], werr = '';
+if (tab === 'wd') { try { ws = await all(db, 'SELECT id,name FROM widgets ORDER BY id DESC'); } catch { werr = 'Chưa có bảng tiện ích. Hãy chạy nang-cap-2.sql.'; } }
+const eid = Number(Q.get('id')) || 0, wmode = Q.get('moi');
+let w: any = eid ? await first(db, 'SELECT * FROM widgets WHERE id=?', eid).catch(() => null) : wmode ? { id: 0, name: '', code: '', vars: '' } : null;
+let wrevs: any[] = []; let wMode = 'inline', wH = 300;
+if (w) {
+  const rv = Number(Q.get('rev')) || 0;
+  if (rv && w.id) { const r = await first(db, "SELECT data FROM revisions WHERE id=? AND ref='widget' AND ref_id=?", rv, w.id); try { const d = JSON.parse(r?.data || '{}'); w = { ...w, name: d.name ?? w.name, code: d.code ?? w.code, vars: d.vars ?? w.vars }; } catch { /* bỏ */ } }
+  if (w.id) wrevs = await all(db, "SELECT id,created_at FROM revisions WHERE ref='widget' AND ref_id=? ORDER BY id DESC LIMIT 15", w.id).catch(() => []);
+  const vl = String(w.vars || '').split('\n'); wMode = /^\s*_mode\s*=\s*sandbox/m.test(w.vars || '') ? 'sandbox' : 'inline'; wH = Number((vl.find((l) => /^\s*_height\s*=/.test(l)) || '').split('=')[1]) || 300;
+  w = { ...w, vars: vl.filter((l) => !/^\s*_(mode|height)\s*=/.test(l)).join('\n').trim() };
+}
+const msg = Q.get('m') || '', bad = !!Q.get('e');
+const TABS: [string, string][] = [['tq', 'Tổng quan'], ['dc', `Đã cài (${stats.inst})`], ['ch', 'Cửa hàng'], ['zip', 'Tải gói ZIP'], ['nk', 'Nhật ký'], ['wd', 'Tiện ích HTML']];
+const tagCss = (e: any) => (e.active ? '' : 'background:#f2f4f7;color:#475467');
+---
+<Admin title="Tiện ích & plugin" active="tools">
+  <style is:global>
+    .pxs{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}.pxs .box{padding:12px}.pxs b{font-size:24px;display:block}
+    .pxc{display:grid;gap:10px}.pxi{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px;display:grid;gap:8px}
+    .pxi .h{display:flex;gap:10px;align-items:flex-start}.pxi .h>span:first-child{flex:none;width:38px;height:38px;border-radius:10px;background:#e6f6ee;color:var(--green-d);display:grid;place-items:center}
+    .pxi .h b{display:block}.pxi p{margin:0;color:var(--muted);font-size:14px}.pxrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .pxt{width:100%;font-size:14px;border-collapse:collapse}.pxt td{padding:7px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+    .pxok{color:var(--green-d)}.pxno{color:#b42318}
+  </style>
+  <div class="pagehead"><h1>Tiện ích & plugin</h1></div>
+  {!ready && <div class="msg err">Chưa chạy <code>nang-cap-4.sql</code> trong D1 Console. Website vẫn chạy như cũ (mọi plugin có sẵn đang bật), nhưng chưa thể bật/tắt, cài gói ZIP hay xem nhật ký.</div>}
+  {msg && <div class={'msg' + (bad ? ' err' : '')}>{msg}</div>}
+  <nav class="tabs">{TABS.map(([k, l]) => <a href={`/admin/tien-ich?tab=${k}`} class={tab === k ? 'on' : ''}>{l}</a>)}</nav>
+
+  {tab === 'tq' && (<>
+    <div class="pxs">
+      <div class="box"><small>Tổng plugin</small><b>{stats.all}</b></div><div class="box"><small>Đang hoạt động</small><b>{stats.on}</b></div>
+      <div class="box"><small>Đã tắt</small><b>{stats.off}</b></div><div class="box"><small>Có bản cập nhật</small><b>{stats.upd}</b></div><div class="box"><small>Cần chú ý</small><b style={stats.warn ? 'color:#b42318' : ''}>{stats.warn}</b></div>
+    </div>
+    <div class="box"><h3>Thao tác nhanh</h3><div class="pxrow"><a class="btn sm" href="/admin/tien-ich?tab=ch">Khám phá & cài plugin</a><a class="btn ghost sm" href="/admin/tien-ich?tab=zip">Tải gói ZIP</a><a class="btn ghost sm" href="/admin/tien-ich?tab=wd">Tạo tiện ích HTML</a><a class="btn ghost sm" href="/admin/tien-ich?tab=nk">Nhật ký</a></div>
+      <p class="meta">Hai loại plugin: <b>plugin mã nguồn</b> (thư mục <code>src/plugins/</code>, cần build/deploy khi thêm mới nhưng bật/tắt/cấu hình ngay trong Admin) và <b>gói ZIP khai báo</b> (cài ngay, không deploy, không chạy mã máy chủ).</p></div>
+    {stats.warn > 0 && <div class="box" style="margin-top:12px"><h3>Cần chú ý</h3>{inst.filter((e) => ['failed', 'incompatible'].includes(e.status)).map((e) => <p><a href={`/admin/tien-ich?tab=dc&p=${e.id}`}><b>{e.name}</b></a> — {e.error || SL[e.status]}</p>)}</div>}
+  </>)}
+
+  {(tab === 'dc' || tab === 'ch') && cur && (
+    <div class="box" style="margin-bottom:12px">
+      <div class="pxrow" style="justify-content:space-between"><h3 style="margin:0"><Fragment set:html={icon(cur.icon, 18)} /> {cur.name} <span class="meta">v{cur.version}</span></h3><span class="tag" style={tagCss(cur)}>{SL[cur.status] || cur.status}</span></div>
+      <p>{cur.desc}</p>
+      <p class="meta">Tác giả: {cur.author} · Loại: {cur.runtime === 'builtin' ? 'Plugin mã nguồn' : 'Gói ZIP khai báo'} · Danh mục: {cur.category} · Id: {cur.id}{cur.caps.length ? ' · Cung cấp: ' + cur.caps.join(', ') : ''}</p>
+      {cur.error && <div class="msg err">{cur.error}</div>}
+      {cur.requires.length > 0 && <p class="meta">Cần plugin: {cur.requires.join(', ')}</p>}
+      <h4 style="margin:12px 0 4px">Quyền plugin yêu cầu</h4>
+      {cur.declared.length ? <ul style="margin:0 0 8px;padding-left:18px;font-size:14px">{cur.declared.map((p) => <li>{PERMS[p] || p} <span class="meta">({p}){cur.granted.includes(p) ? ' ✓ đã cấp' : ''}</span></li>)}</ul> : <p class="meta">Không yêu cầu quyền đặc biệt.</p>}
+      {used > 0 && <p class="meta">{used} trang đang dùng khối của plugin này.</p>}
+      <form method="post" class="pxrow" style="margin-top:8px"><input type="hidden" name="pid" value={cur.id} /><input type="hidden" name="tab" value={tab} />
+        {!cur.installed && (<>
+          {cur.declared.length > 0 && <label class="chk"><input type="checkbox" name="agree" value="1" required />Tôi đã xem và đồng ý cấp các quyền trên</label>}
+          <button class="btn" name="act" value="install" disabled={!ready}>Cài đặt & kích hoạt</button></>)}
+        {cur.installed && !cur.active && <button class="btn" name="act" value="activate">Kích hoạt</button>}
+        {cur.installed && cur.active && <button class="btn ghost" name="act" value="deactivate">Tắt (giữ dữ liệu)</button>}
+        {cur.installed && cur.active && used > 0 && <label class="chk"><input type="checkbox" name="force" value="1" />Xác nhận tắt dù có trang đang dùng</label>}
+        {cur.installed && !cur.active && (<>
+          <label class="chk"><input type="checkbox" name="purge" value="1" />Xóa luôn dữ liệu của plugin</label>
+          <button class="btn red sm" name="act" value="uninstall" onclick="return confirm('Gỡ cài đặt plugin này? Nếu chọn xóa dữ liệu thì không khôi phục được.')">Gỡ cài đặt</button></>)}
+        {cur.runtime === 'package' && cur.installed && cur.hasUpdate && (<>
+          <label class="chk"><input type="checkbox" name="agree" value="1" />Đồng ý quyền của bản mới</label>
+          <button class="btn sm" name="act" value="upgrade">Nâng cấp lên v{cur.staged_version}</button></>)}
+        {cur.runtime === 'package' && cur.installed && cur.prev_version && <button class="btn ghost sm" name="act" value="rollback" onclick="return confirm('Quay lại phiên bản trước?')">Quay lại v{cur.prev_version}</button>}
+      </form>
+      {cur.runtime === 'builtin' && !cur.installed && <p class="meta">Plugin này nằm trong mã nguồn. Cài đặt chỉ bật nó và chạy migration dữ liệu của chính nó.</p>}
+    </div>
+  )}
+
+  {tab === 'dc' && cur && cur.installed && (<>
+    {cur.settings.length > 0 && (
+      <div class="box" style="margin-bottom:12px"><h3>Cấu hình</h3>
+        <form method="post"><input type="hidden" name="act" value="settings" /><input type="hidden" name="pid" value={cur.id} /><input type="hidden" name="tab" value="dc" />
+          {cur.settings.map((f) => (<>
+            {f.type === 'check' ? <label class="chk"><input type="checkbox" name={'s_' + f.k} value="1" checked={cfg[f.k] === '1'} />{f.label}</label> : <label>{f.label}</label>}
+            {f.type === 'textarea' && <textarea name={'s_' + f.k}>{cfg[f.k]}</textarea>}
+            {f.type === 'select' && <select name={'s_' + f.k}>{(f.options || []).map(([v, l]) => <option value={v} selected={cfg[f.k] === v}>{l}</option>)}</select>}
+            {(f.type === 'text' || f.type === 'number' || f.type === 'color' || !f.type) && <input type={f.type === 'number' ? 'number' : 'text'} name={'s_' + f.k} value={cfg[f.k]} />}
+            {f.hint && <div class="meta">{f.hint}</div>}</>))}
+          <p class="meta">Không nhập API key hoặc mật khẩu ở đây. Khóa bí mật phải đặt trong Cloudflare (Settings → Variables and Secrets).</p>
+          <p><button class="btn">Lưu cấu hình</button></p></form></div>
+    )}
+    {slots.length > 0 && (
+      <div class="box" style="margin-bottom:12px"><h3>Vị trí hiển thị trên website</h3>
+        <form method="post"><input type="hidden" name="act" value="placement" /><input type="hidden" name="pid" value={cur.id} /><input type="hidden" name="tab" value="dc" />
+          {slots.map((s) => (<div class="pxi" style="margin-bottom:8px"><label class="chk"><input type="checkbox" name={'en_' + s.id} value="1" checked={s.enabled} /><b>{s.label}</b></label>
+            <span class="meta">Vị trí: {SLOTS[s.slot] || s.slot}</span>
+            <label>Thứ tự (số nhỏ hiện trước)</label><input type="number" name={'so_' + s.id} value={s.sort} />
+            <label>Chỉ hiện ở trang (để trống = mọi trang; ví dụ <code>/, /bai-viet/*</code>)</label><input type="text" name={'pg_' + s.id} value={s.pagesCfg} /></div>))}
+          <p><button class="btn">Lưu vị trí</button></p></form></div>
+    )}
+    {((cur.builtin?.admin) || (cur.manifest?.adminPages.length ?? 0) > 0) && <p><a class="btn ghost" href={`/admin/p/${cur.id}`}>Mở trang quản trị của plugin</a></p>}
+    {logs.length > 0 && <div class="box scroll"><h3>Nhật ký plugin</h3><table class="pxt"><tbody>{logs.map((l) => <tr><td>{fmtDate(l.created_at)}</td><td><b>{l.action}</b><br /><span class="meta">{l.detail} {l.actor && '· ' + l.actor}</span></td></tr>)}</tbody></table></div>}
+  </>)}
+
+  {tab === 'dc' && !cur && (
+    <div class="pxc">{inst.length === 0 && <p class="meta">Chưa có plugin nào được cài.</p>}
+      {inst.map((e) => (
+        <div class="pxi"><div class="h"><span set:html={icon(e.icon, 20)}></span><div style="flex:1"><b>{e.name} <span class="meta">v{e.version}</span></b><p>{e.desc}</p></div><span class="tag" style={tagCss(e)}>{SL[e.status] || e.status}</span></div>
+          <div class="pxrow"><span class="meta">{e.runtime === 'builtin' ? 'Mã nguồn' : 'Gói ZIP'}{e.caps.length ? ' · ' + e.caps.join(', ') : ''}{e.hasUpdate ? ' · có bản mới' : ''}</span></div>
+          <div class="pxrow"><a class="btn sm" href={`/admin/tien-ich?tab=dc&p=${e.id}`}>Cấu hình / Chi tiết</a>
+            {e.active && (e.builtin?.admin || (e.manifest?.adminPages.length ?? 0) > 0) && <a class="btn ghost sm" href={`/admin/p/${e.id}`}>Mở</a>}
+            <form method="post" class="inline"><input type="hidden" name="pid" value={e.id} /><input type="hidden" name="tab" value="dc" />
+              {e.active ? <button class="btn ghost sm" name="act" value="deactivate">Tắt</button> : <button class="btn sm" name="act" value="activate">Kích hoạt</button>}</form></div></div>
+      ))}</div>
+  )}
+
+  {tab === 'ch' && !cur && (<>
+    <form method="get" class="pxrow" style="margin-bottom:12px"><input type="hidden" name="tab" value="ch" /><input type="search" name="q" value={Q.get('q') || ''} placeholder="Tìm plugin…" style="flex:1;min-width:150px" />
+      <select name="cat" style="width:auto"><option value="">Mọi danh mục</option>{cats.map((c) => <option value={c} selected={qc === c}>{c}</option>)}</select><button class="btn sm">Lọc</button></form>
+    <div class="pxc">{shown.length === 0 && <div class="box"><p>Chưa có plugin nào để cài.</p><p class="meta">Cửa hàng hiện lấy từ: (1) plugin mã nguồn chưa bật trong <code>src/plugins/</code>, (2) gói ZIP bạn đã tải lên. Chưa có kho từ xa; khi có kho do bạn kiểm soát có thể nối vào đây.</p><a class="btn sm" href="/admin/tien-ich?tab=zip">Tải gói ZIP</a></div>}
+      {shown.map((e) => (
+        <div class="pxi"><div class="h"><span set:html={icon(e.icon, 20)}></span><div style="flex:1"><b>{e.name} <span class="meta">v{e.version} · {e.category}</span></b><p>{e.desc}</p></div></div>
+          <div class="pxrow"><span class="meta">{e.author} · {e.runtime === 'builtin' ? 'Mã nguồn' : 'Gói ZIP'} · {e.declared.length} quyền</span></div>
+          <div class="pxrow"><a class="btn sm" href={`/admin/tien-ich?tab=ch&p=${e.id}`}>Xem chi tiết & cài</a></div></div>
+      ))}</div>
+  </>)}
+
+  {tab === 'zip' && (
+    <div class="box"><h3>Cài plugin từ gói ZIP</h3>
+      <p class="meta">Gói ZIP chỉ được chứa <code>manifest.json</code> (khai báo khối, vị trí hiển thị, trang admin, cấu hình). Website kiểm tra schema, giới hạn dung lượng, chặn đường dẫn độc, rồi cho bạn xem quyền trước khi cài. Mã máy chủ không bao giờ được thực thi từ gói tải lên; plugin cần route/API mới phải là plugin mã nguồn đi qua build và deploy.</p>
+      <form method="post" enctype="multipart/form-data"><input type="hidden" name="act" value="upload" /><label>Chọn tệp .zip (tối đa 2 MB)</label><input type="file" name="zip" accept=".zip,application/zip" required /><p><button class="btn" disabled={!ready}>Tải lên & kiểm tra</button></p></form>
+      <details><summary>Ví dụ manifest.json</summary><pre style="white-space:pre-wrap;font-size:12px;overflow-x:auto">{`{
+  "id": "loi-chao", "name": "Lời chào", "version": "1.0", "api": 2,
+  "category": "Giao diện", "permissions": ["frontend.slots", "frontend.blocks"],
+  "settings": [{"k":"text","label":"Nội dung","def":"Chào mừng bạn!"}],
+  "slots": [{"id":"bar","slot":"site.top","label":"Thanh chào","template":"<div class=\\"x\\">{{text}}</div>","css":".x{padding:8px;text-align:center}"}],
+  "blocks": [{"type":"hello","label":"Lời chào","fields":[{"k":"who","label":"Tên"}],"template":"<p>Xin chào {{who}}</p>"}]
+}`}</pre></details></div>
+  )}
+
+  {tab === 'nk' && (
+    <div class="box scroll"><h3>Nhật ký hoạt động plugin</h3>{logs.length === 0 ? <p class="meta">Chưa có nhật ký.</p> : <table class="pxt"><tbody>{logs.map((l) => <tr><td>{fmtDate(l.created_at)}</td><td><b>{l.plugin_id}</b> · {l.action}<br /><span class="meta">{l.detail} {l.actor && '· ' + l.actor}</span></td></tr>)}</tbody></table>}</div>
+  )}
+
+  {tab === 'wd' && (<>
+    {werr && <div class="msg err">{werr}</div>}
+    <div class="box"><h3>Tiện ích tự tạo (HTML / CSS / JS)</h3>
+      <p class="meta">Tạo ngay tại đây, không cần deploy. Trong trình dựng trang chọn khối “Tiện ích đã tạo”, nhập số hiệu. Dùng <code>{'{{ten}}'}</code> để thay giá trị từ ô “Biến”. Chế độ <b>Cách ly</b> chạy mã trong khung sandbox: không đọc được cookie/admin, không gọi mạng ra ngoài. Hãy dùng chế độ này cho mọi mã không do chính bạn viết.</p>
+      <div class="cards">{ws.map((x) => <div class="item"><div class="tt"><b>#{x.id} · {x.name}</b></div><div class="acts"><a class="btn sm" href={`/admin/tien-ich?tab=wd&id=${x.id}`}>Sửa</a>
+        <form method="post" class="inline"><input type="hidden" name="id" value={x.id} /><button class="btn ghost sm" name="act" value="wdup">Nhân bản</button></form>
+        <form method="post" class="inline" onsubmit="return confirm('Xóa tiện ích?')"><input type="hidden" name="id" value={x.id} /><button class="btn red sm" name="act" value="wdelete">Xóa</button></form></div></div>)}</div>
+      <p><a class="btn ic-b" href="/admin/tien-ich?tab=wd&moi=1"><Fragment set:html={icon('plus', 16)} />Tạo tiện ích mới</a></p>
+      {w && (
+        <form method="post"><input type="hidden" name="act" value="wsave" /><input type="hidden" name="id" value={w.id} />
+          <label for="n">Tên</label><input id="n" type="text" name="name" value={w.name} />
+          <label for="c">Mã (HTML, &lt;style&gt;, &lt;script&gt;)</label><textarea id="c" name="code" style="min-height:240px;font-family:monospace;font-size:13px" spellcheck="false" wrap="off">{w.code}</textarea>
+          <label for="v">Biến mặc định, mỗi dòng ten=giatri</label><textarea id="v" name="vars" style="min-height:70px;font-family:monospace">{w.vars}</textarea>
+          <label>Chế độ chạy</label><select name="mode"><option value="sandbox" selected={wMode === 'sandbox'}>Cách ly (an toàn, khuyên dùng)</option><option value="inline" selected={wMode === 'inline'}>Nhúng trực tiếp (mã tin cậy do bạn viết)</option></select>
+          <label>Chiều cao khung cách ly (px)</label><input type="number" name="height" value={wH} />
+          <div class="pxrow" style="margin-top:12px"><button class="btn" name="act" value="wsave" type="submit">Lưu tiện ích</button><button class="btn ghost" type="button" id="pvb">Xem trước (cách ly)</button></div>
+          <div id="pvw" style="margin-top:12px"></div>
+          {wrevs.length > 0 && <p class="meta">Lịch sử: {wrevs.map((r) => <a href={`/admin/tien-ich?tab=wd&id=${w.id}&rev=${r.id}`} style="margin-right:8px">{fmtDate(r.created_at)}</a>)} <br />Bấm một mốc để nạp vào ô soạn, rồi bấm Lưu để khôi phục.</p>}
+        </form>
+      )}</div>
+    <script is:inline>
+      var b = document.getElementById('pvb');
+      if (b) b.addEventListener('click', function () {
+        var code = document.getElementById('c').value, h = Math.max(60, Math.min(900, +document.querySelector('[name=height]').value || 300));
+        var csp = "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src https: data:\">";
+        var f = document.createElement('iframe'); f.setAttribute('sandbox', 'allow-scripts'); f.style.cssText = 'width:100%;border:1px solid #d0d5dd;border-radius:10px;height:' + h + 'px';
+        f.srcdoc = '<!doctype html><meta charset="utf-8">' + csp + code; var o = document.getElementById('pvw'); o.innerHTML = ''; o.appendChild(f);
+      });
+    </script>
+  </>)}
+</Admin>

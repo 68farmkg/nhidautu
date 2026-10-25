@@ -1,0 +1,22 @@
+---
+import { getFeed } from '../lib/rss';
+import { fmtDate } from '../lib/util';
+const keys = ['cafef-ck', 'vietstock-ck', 'vneconomy-ck'];
+const res = await Promise.allSettled(keys.map((k) => getFeed(k, 6, 4000)));
+const seen = new Set<string>();
+const items = res.flatMap((r) => (r.status === 'fulfilled' ? r.value : []))
+  .filter((i) => (seen.has(i.link) ? false : seen.add(i.link)))
+  .sort((a, b) => +new Date(b.date) - +new Date(a.date))
+  .slice(0, 8);
+---
+{items.length > 0 && (
+  <div class="box" style="margin-top:20px">
+    <h2>Tin từ các báo</h2>
+    {items.map((i) => (
+      <p style="margin:0 0 10px">
+        <a href={i.link} target="_blank" rel="noopener nofollow"><b>{i.title}</b></a><br />
+        <span class="meta">{i.source.split(' · ')[0]} · {(i.date && !isNaN(+new Date(i.date)) ? fmtDate(new Date(i.date).toISOString()) : '')}</span>
+      </p>
+    ))}
+  </div>
+)}

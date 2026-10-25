@@ -1,0 +1,22 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+import { getEntry, getSettings, logPx } from '../../../lib/px/registry';
+import { tpl, scopeCss } from '../../../lib/px/tpl';
+import { sanitizeHtml } from '../../../lib/px/sanitize';
+import { esc } from '../../../lib/esc';
+// Trang quản trị do plugin cung cấp. Chỉ plugin ĐANG BẬT; middleware đã yêu cầu đăng nhập và quyền admin.
+const env = Astro.locals.runtime.env, db = env.DB;
+const e = await getEntry(db, String(Astro.params.id));
+if (!e || !e.active) return Astro.redirect('/admin/tien-ich');
+const cfg = await getSettings(db, e);
+let html = '';
+if (e.builtin?.admin) {
+  try { html = await e.builtin.admin({ db, env, url: Astro.url, request: Astro.request, settings: cfg, user: (Astro.locals as any).user }); }
+  catch (x: any) { await logPx(db, e.id, 'admin-error', String(x?.message || x)); html = `<div class="msg err">Plugin lỗi: ${esc(String(x?.message || x))}</div>`; }
+} else if (e.manifest?.adminPages.length) {
+  const pages = e.manifest.adminPages, cur = pages.find((p) => p.id === Astro.url.searchParams.get('page')) || pages[0];
+  const nav = pages.length > 1 ? `<nav class="tabs">${pages.map((p) => `<a href="?page=${esc(p.id)}" class="${p.id === cur.id ? 'on' : ''}">${esc(p.title)}</a>`).join('')}</nav>` : '';
+  html = nav + `<div class="box">${sanitizeHtml(tpl(cur.template, cfg))}</div>`;
+}
+---
+<Admin title={e.name} active={'p:' + e.id}><div class="pagehead"><h1>{e.name}</h1><a class="btn ghost sm" href={`/admin/tien-ich?tab=dc&p=${e.id}`}>Cấu hình plugin</a></div><div set:html={html}></div></Admin>

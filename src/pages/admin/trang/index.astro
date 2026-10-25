@@ -1,0 +1,54 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+import { icon } from '../../../lib/icons';
+import { TEMPLATES } from '../../../lib/templates';
+import { all, first, run, nowIso, fmtDate, slugify } from '../../../lib/util';
+import { getSite } from '../../../lib/site';
+const db = Astro.locals.runtime.env.DB;
+let err = '';
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData(); const id = Number(f.get('id')); const act = String(f.get('act'));
+  try {
+    if (act === 'delete') await run(db, 'DELETE FROM pages WHERE id=?', id);
+    if (act === 'dup') { const p = await first(db, 'SELECT * FROM pages WHERE id=?', id);
+      if (p) { const r = await run(db, 'INSERT INTO pages (slug,title,blocks,status,is_template,show_header,show_footer,seo_title,seo_desc,seo_image,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)', p.slug + '-' + Date.now().toString(36), p.title + ' (bản sao)', p.blocks, 'draft', p.is_template, p.show_header, p.show_footer, p.seo_title, p.seo_desc, p.seo_image, nowIso(), nowIso()); return Astro.redirect(`/admin/trang/${r.meta.last_row_id}`); } }
+    if (act === 'home') { const p = await first(db, 'SELECT slug FROM pages WHERE id=?', id); await run(db, "INSERT INTO kv (k,v) VALUES ('s.home_page',?) ON CONFLICT(k) DO UPDATE SET v=excluded.v", p?.slug || ''); }
+    if (act === 'unhome') await run(db, "DELETE FROM kv WHERE k='s.home_page'");
+  } catch (e: any) { err = 'Lỗi: ' + (e?.message || e) + '. Bạn đã chạy nang-cap-2.sql chưa?'; }
+  if (!err) return Astro.redirect('/admin/trang');
+}
+let rows: any[] = [], tpls: any[] = [];
+try {
+  rows = await all(db, 'SELECT id,slug,title,status,updated_at,is_template FROM pages WHERE is_template=0 ORDER BY id DESC LIMIT 200');
+  tpls = await all(db, 'SELECT id,title FROM pages WHERE is_template=1 ORDER BY id DESC LIMIT 30');
+} catch (e: any) { err = err || 'Chưa có bảng trang. Hãy chạy nang-cap-2.sql trong D1 Console (xem HUONG-DAN.md).'; }
+const S = await getSite(db);
+---
+<Admin title="Trang" active="pages">
+  <div class="pagehead"><h1>Trang</h1></div>
+  {err && <div class="msg err">{err}</div>}
+  <div class="box"><b>Tạo trang mới</b>
+    <div class="acts" style="margin-top:10px">
+      {Object.entries(TEMPLATES).map(([k, t]) => <a class="btn ghost sm ic-b" href={`/admin/trang/moi?mau=${k}`} title={t.desc}><Fragment set:html={icon('plus', 16)} />{t.name}</a>)}
+      {tpls.map((t) => <a class="btn ghost sm ic-b" href={`/admin/trang/moi?tu=${t.id}`}><Fragment set:html={icon('star', 16)} />{t.title}</a>)}
+    </div>
+  </div>
+  <div class="cards" style="margin-top:14px">
+    {rows.length === 0 && !err && <div class="box">Chưa có trang nào.</div>}
+    {rows.map((r) => (
+      <div class="item">
+        <div class="tt"><a href={`/admin/trang/${r.id}`}><b>{r.title}</b></a>
+          <span class="meta">/{r.slug} · {fmtDate(r.updated_at)} </span>
+          <span class={`st ${r.status === 'published' ? 'published' : ''}`}>{r.status === 'published' ? 'Đã đăng' : 'Nháp'}</span>
+          {S.home_page === r.slug && <span class="st published" style="margin-left:4px">Trang chủ</span>}</div>
+        <div class="acts">
+          <a class="btn sm" href={`/admin/trang/${r.id}`}>Sửa</a>
+          {r.status === 'published' && <a class="btn ghost sm" href={`/${r.slug}`} target="_blank">Xem</a>}
+          <form method="post" class="inline"><input type="hidden" name="id" value={r.id} /><button class="btn ghost sm" name="act" value="dup">Nhân đôi</button></form>
+          <form method="post" class="inline"><input type="hidden" name="id" value={r.id} />{S.home_page === r.slug ? <button class="btn ghost sm" name="act" value="unhome">Bỏ làm trang chủ</button> : <button class="btn ghost sm" name="act" value="home">Đặt làm trang chủ</button>}</form>
+          <form method="post" class="inline" onsubmit="return confirm('Xóa trang này?')"><input type="hidden" name="id" value={r.id} /><button class="btn red sm" name="act" value="delete">Xóa</button></form>
+        </div>
+      </div>
+    ))}
+  </div>
+</Admin>

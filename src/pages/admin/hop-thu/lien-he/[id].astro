@@ -1,0 +1,34 @@
+---
+import Admin from '../../../../layouts/Admin.astro';
+import { first, run, nowIso, fmtDate } from '../../../../lib/util';
+const db = Astro.locals.runtime.env.DB;
+const id = Number(Astro.params.id) || 0;
+const m: any = await first(db, 'SELECT * FROM messages WHERE id=?', id);
+if (!m) return Astro.redirect('/admin/hop-thu');
+let st: any = null, err = '';
+try { st = await first(db, 'SELECT status,note FROM inbox_state WHERE msg_id=?', id); } catch { err = 'Chưa có bảng trạng thái. Hãy chạy nang-cap-3.sql.'; }
+if (Astro.request.method === 'POST' && !err) {
+  const f = await Astro.request.formData(); const act = String(f.get('act'));
+  if (act === 'delete') { await run(db, 'DELETE FROM messages WHERE id=?', id); await run(db, 'DELETE FROM inbox_state WHERE msg_id=?', id); return Astro.redirect('/admin/hop-thu'); }
+  const status = act === 'status' && ['new', 'processing', 'done'].includes(String(f.get('status'))) ? String(f.get('status')) : st?.status || 'new';
+  const note = act === 'note' ? String(f.get('note') || '').slice(0, 2000) : st?.note || '';
+  await run(db, 'INSERT INTO inbox_state (msg_id,status,note,updated_at) VALUES (?,?,?,?) ON CONFLICT(msg_id) DO UPDATE SET status=excluded.status,note=excluded.note,updated_at=excluded.updated_at', id, status, note, nowIso());
+  return Astro.redirect(`/admin/hop-thu/lien-he/${id}`);
+}
+// mở xem lần đầu: chuyển "Mới" thành "Đang xử lý"? Không tự đổi, để nhân viên chủ động.
+const status = st?.status || 'new';
+const SL: Record<string, string> = { new: 'Mới', processing: 'Đang xử lý', done: 'Đã xong' };
+const subj = encodeURIComponent('Phản hồi liên hệ của bạn');
+---
+<Admin title="Liên hệ" active="msg">
+  <div class="pagehead"><h1>{m.name} <span class={`st ${status}`}>{SL[status]}</span></h1><a class="btn ghost sm" href="/admin/hop-thu">← Hộp thư</a></div>
+  {err && <div class="msg err">{err}</div>}
+  <div class="box"><p class="meta">{fmtDate(m.created_at)}</p>
+    <p><b>Email:</b> {m.email}{m.phone && <> · <b>Điện thoại:</b> {m.phone}</>}</p>
+    <p style="white-space:pre-wrap">{m.body}</p>
+    <div class="acts"><a class="btn sm" href={`mailto:${encodeURI(m.email)}?subject=${subj}`}>Trả lời bằng email</a>{m.phone && <a class="btn ghost sm" href={`tel:${m.phone}`}>Gọi điện</a>}</div></div>
+  <div class="box" style="margin-top:14px"><b>Trạng thái</b>
+    <div class="acts" style="margin-top:8px">{Object.entries(SL).map(([k, n]) => <form method="post" class="inline"><input type="hidden" name="act" value="status" /><input type="hidden" name="status" value={k} /><button class={`btn sm ${status === k ? '' : 'ghost'}`} type="submit">{n}</button></form>)}</div>
+    <form method="post"><input type="hidden" name="act" value="note" /><label for="nt">Ghi chú nội bộ</label><textarea id="nt" name="note" style="min-height:70px">{st?.note || ''}</textarea><p><button class="btn ghost sm" type="submit">Lưu ghi chú</button></p></form>
+    <form method="post" onsubmit="return confirm('Xóa tin này?')"><input type="hidden" name="act" value="delete" /><button class="btn red sm" type="submit">Xóa</button></form></div>
+</Admin>

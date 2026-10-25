@@ -1,0 +1,47 @@
+---
+import '../../styles/global.css';
+import { makeSession, safeEq, verifyPw } from '../../lib/auth';
+import { allow, clear, ipOf } from '../../lib/ratelimit';
+import { nowIso } from '../../lib/util';
+const env = Astro.locals.runtime.env;
+let err = '';
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const ip = 'login:' + ipOf(Astro.request);
+  if (!(await allow(env.DB, ip, 10, 900))) err = 'Thử sai quá nhiều lần. Hãy đợi 15 phút rồi thử lại.';
+  else {
+    const user = String(f.get('username') || '').trim().toLowerCase().slice(0, 40), pw = String(f.get('password') || '').slice(0, 200);
+    let sess: { uid: number; role: string; name: string } | null = null;
+    if (!user) {
+      if (env.ADMIN_PASSWORD && safeEq(pw, env.ADMIN_PASSWORD)) sess = { uid: 0, role: 'admin', name: 'Chủ website' };
+    } else {
+      try {
+        const u: any = await env.DB.prepare('SELECT * FROM users WHERE username=? AND active=1').bind(user).first();
+        if (u && (await verifyPw(pw, u.pass))) { sess = { uid: u.id, role: u.role, name: u.name || u.username }; await env.DB.prepare('UPDATE users SET last_login=? WHERE id=?').bind(nowIso(), u.id).run(); }
+        else if (!u) await verifyPw(pw, 'AAAAAAAAAAAAAAAAAAAAAA==$AAAA'); // giữ thời gian xử lý gần như nhau
+      } catch { /* chưa chạy nang-cap-3.sql */ }
+    }
+    if (sess) {
+      await clear(env.DB, ip);
+      Astro.cookies.set('nhip_admin', await makeSession(env, sess), { httpOnly: true, secure: true, sameSite: 'lax', path: '/', maxAge: 60 * 60 * 24 * 14 });
+      return Astro.redirect('/admin');
+    }
+    err = err || 'Tên đăng nhập hoặc mật khẩu chưa đúng.';
+  }
+}
+---
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="robots" content="noindex" /><title>Đăng nhập quản trị</title></head>
+<body>
+  <div class="login box">
+    <h1 style="font-size:22px;margin:0 0 8px">Đăng nhập quản trị</h1>
+    {err && <div class="msg err">{err}</div>}
+    <form method="post">
+      <label for="un">Tên đăng nhập <span class="meta">(chủ website để trống)</span></label>
+      <input id="un" type="text" name="username" autocomplete="username" autocapitalize="none" />
+      <label for="pw">Mật khẩu</label>
+      <input id="pw" type="password" name="password" required autocomplete="current-password" />
+      <p><button class="btn" type="submit">Đăng nhập</button></p>
+    </form>
+  </div>
+</body></html>

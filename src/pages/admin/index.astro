@@ -1,0 +1,32 @@
+---
+import Admin from '../../layouts/Admin.astro';
+import { icon } from '../../lib/icons';
+import { all, first, fmtDate } from '../../lib/util';
+import { can } from '../../lib/perm';
+const db = Astro.locals.runtime.env.DB;
+const c = await first(db, "SELECT COUNT(*) total, SUM(status='pending') pending, SUM(status='published') pub, SUM(views) views FROM posts");
+const pend = await all(db, "SELECT id,title,created_at FROM posts WHERE status='pending' ORDER BY created_at DESC LIMIT 10");
+const msgs = await first(db, 'SELECT COUNT(*) n FROM messages');
+let np = 0; try { np = (await first(db, 'SELECT COUNT(*) n FROM pages WHERE is_template=0'))?.n || 0; } catch { /* chưa có bảng */ }
+const role = ((Astro.locals as any).user?.role) || 'admin';
+let nChat = 0, nNew = 0; try { nChat = (await first(db, 'SELECT COUNT(*) n FROM conversations WHERE unread_admin>0'))?.n || 0; nNew = (await first(db, "SELECT COUNT(*) n FROM messages m LEFT JOIN inbox_state s ON s.msg_id=m.id WHERE COALESCE(s.status,'new')='new'"))?.n || 0; } catch { /* chưa chạy nang-cap-3.sql */ }
+const quick0: [string, string, string][] = [['/admin/hop-thu', 'Hộp thư & chat', 'message'], ['/admin/trang/moi', 'Trang mới', 'file'], ['/admin/bai-viet/moi', 'Bài mới', 'edit'], ['/admin/ai', 'Viết bằng AI', 'bot'], ['/admin/menu', 'Sửa menu', 'menu'], ['/admin/cai-dat', 'Cài đặt', 'settings'], ['/admin/tien-ich', 'Tiện ích', 'puzzle'], ['/admin/nguoi-dung', 'Người dùng', 'user']];
+const quick = quick0.filter(([h]) => can(role, h));
+---
+<Admin title="Tổng quan" active="home">
+  <div class="pagehead"><h1>Tổng quan</h1></div>
+  <div class="stats">
+    <div class="box"><small>Tổng bài viết</small><b>{c?.total || 0}</b></div>
+    <div class="box"><small>Chờ duyệt</small><b>{c?.pending || 0}</b></div>
+    <div class="box"><small>Đã đăng</small><b>{c?.pub || 0}</b></div>
+    <div class="box"><small>Lượt xem</small><b>{c?.views || 0}</b></div>
+  </div>
+  <div class="tools" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr));margin-bottom:16px">
+    {quick.map(([h, l, ic]) => <a href={h}><Fragment set:html={icon(ic, 26)} /><br />{l}</a>)}
+  </div>
+  <div class="box"><h3>Bài chờ duyệt</h3>
+    {pend.length === 0 && <p>Không có bài nào chờ duyệt.</p>}
+    {pend.map((p) => <p><a href={`/admin/bai-viet/${p.id}`}><b>{p.title}</b></a> <span class="meta">{fmtDate(p.created_at)}</span></p>)}
+  </div>
+  <p class="meta">Trang tự dựng: {np} · Tin liên hệ: {msgs?.n || 0} · Chat chưa đọc: {nChat} · Liên hệ chưa xử lý: {nNew}</p>
+</Admin>

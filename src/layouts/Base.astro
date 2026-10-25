@@ -1,0 +1,98 @@
+---
+import '../styles/global.css';
+import '../styles/core.css';
+import { icon } from '../lib/icons';
+import Slot from '../components/Slot.astro';
+import { getSite, getMenus, isActive, safeUrl, type NavItem } from '../lib/site';
+const { title = '', description = '', image = '', hideHeader = false, hideFooter = false } = Astro.props;
+const db = Astro.locals.runtime.env.DB;
+const [S, M] = await Promise.all([getSite(db), getMenus(db)]);
+const path = Astro.url.pathname;
+const full = !title || title === S.name ? S.name : `${title} | ${S.name}`;
+const desc = description || S.tagline;
+const hc = (x: string) => (/^#[0-9a-f]{3,8}$/i.test(x) ? x : '');
+const css = `:root{--green:${hc(S.color) || '#12b76a'};--green-d:color-mix(in srgb,var(--green) 68%,#000);--ink:${hc(S.color_dark) || '#0a2a2f'};--ink2:color-mix(in srgb,var(--ink) 88%,#fff)}`;
+const dev = (i: NavItem) => (i.device === 'pc' ? 'only-pc' : i.device === 'mobile' ? 'only-m' : '');
+const bottom = M.bottom.filter((i) => i.device !== 'pc');
+const mobile = M.mobile.filter((i) => i.device !== 'pc');
+---
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>{full}</title>
+  <meta name="description" content={desc} />
+  <meta property="og:title" content={full} />
+  <meta property="og:description" content={desc} />
+  {image && <meta property="og:image" content={image} />}
+  <meta name="theme-color" content={hc(S.color_dark) || '#0a2a2f'} />
+  <link rel="icon" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap&subset=vietnamese" rel="stylesheet" />
+  <style is:inline set:html={css}></style>
+  {S.head_code && <Fragment set:html={S.head_code} />}
+  <Slot name="site.head" />
+</head>
+<body class={bottom.length && !hideHeader ? 'hasbar' : ''}>
+  {!hideHeader && (
+    <header class="top">
+      <div class="wrap">
+        <button class="burger" type="button" aria-label="Mở menu" data-dr set:html={icon('menu', 24)}></button>
+        <a class="logo" href="/">{S.logo ? <img src={S.logo} alt={S.name} referrerpolicy="no-referrer" /> : <i>↗</i>}<span>{S.name}<small>{S.tagline}</small></span></a>
+        <nav class="nav" aria-label="Menu chính">
+          {M.header.map((i) => (
+            <div class={`ni ${dev(i)}`}>
+              <a href={safeUrl(i.url)} target={i.target || undefined} class={isActive(i.url, path) ? 'on' : ''}>{i.label}</a>
+              {i.children && i.children.length > 0 && <div class="sub">{i.children.map((c) => <a href={safeUrl(c.url)} target={c.target || undefined}>{c.label}</a>)}</div>}
+            </div>
+          ))}
+        </nav>
+        <form class="search" action="/tim-kiem" method="get">
+          <input type="search" name="q" placeholder="Tìm mã, bài viết…" aria-label="Tìm kiếm" /><button type="submit">Tìm</button>
+        </form>
+      </div>
+    </header>
+    <div class="drawer-bg" data-dr></div>
+    <aside class="drawer" aria-label="Menu">
+      <div class="drawer-head"><a class="logo" href="/" style="padding:0"><i>↗</i><span>{S.name}</span></a><button type="button" data-dr aria-label="Đóng" set:html={icon('x', 24)}></button></div>
+      <form action="/tim-kiem" method="get" style="margin:0 6px 10px;display:flex"><input type="search" name="q" placeholder="Tìm kiếm…" style="border-radius:10px 0 0 10px" /><button class="btn" style="border-radius:0 10px 10px 0" type="submit">Tìm</button></form>
+      {mobile.map((i) => (<>
+        <a href={safeUrl(i.url)} target={i.target || undefined} class={isActive(i.url, path) ? 'on' : ''}><Fragment set:html={icon(i.icon || 'link')} />{i.label}</a>
+        {(i.children || []).map((c) => <a class="sb" href={safeUrl(c.url)}>{c.label}</a>)}
+      </>))}
+    </aside>
+  )}
+  {!hideHeader && <Slot name="site.top" />}
+  <slot />
+  <Slot name="site.bottom" />
+  {!hideFooter && (
+    <footer>
+      <div class="wrap">
+        <div><b>{S.name}</b><br />{S.tagline}{S.footer_text && <p set:html={S.footer_text.replace(/</g, '&lt;').replace(/\n/g, '<br>')}></p>}
+          <p class="fl">{S.social_fb && <a href={safeUrl(S.social_fb)} target="_blank" rel="noopener">Facebook</a>}{S.social_yt && <a href={safeUrl(S.social_yt)} target="_blank" rel="noopener">YouTube</a>}{S.social_zalo && <a href={safeUrl(S.social_zalo)} target="_blank" rel="noopener">Zalo</a>}</p></div>
+        {[['f1_title', M.footer1], ['f2_title', M.footer2]].map(([k, items]: any) => (
+          <div><h4>{(S as any)[k]}</h4><div class="fl">{items.map((i: NavItem) => <a href={safeUrl(i.url)} target={i.target || undefined} class={dev(i)}>{i.label}</a>)}</div></div>
+        ))}
+        <div><h4>Liên hệ</h4>Email: {S.email}<br />Hotline: {S.hotline}<br />{S.address}</div>
+        <div class="copy">© {new Date().getFullYear()} {S.name}. {S.disclaimer}</div>
+      </div>
+    </footer>
+  )}
+  {!hideHeader && bottom.length > 0 && (
+    <nav class="bottombar" aria-label="Điều hướng nhanh">
+      {bottom.map((i) => <a href={safeUrl(i.url)} class={isActive(i.url, path) ? 'on' : ''}><Fragment set:html={icon(i.icon || 'link', 22)} /><span>{i.label}</span></a>)}
+      <a href="#menu" data-dr role="button"><Fragment set:html={icon('menu', 22)} /><span>Menu</span></a>
+    </nav>
+  )}
+  {S.chat_on === '1' && !path.startsWith('/admin') && <script is:inline src="/chat.js" data-title={S.chat_title} data-welcome={S.chat_welcome} defer></script>}
+  <Slot name="site.floating" />
+  {S.body_code && <Fragment set:html={S.body_code} />}
+  <script is:inline>
+    document.querySelectorAll('[data-dr]').forEach(function (el) {
+      el.addEventListener('click', function (e) { e.preventDefault(); document.body.classList.toggle('dr-open'); });
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') document.body.classList.remove('dr-open'); });
+  </script>
+</body>
+</html>

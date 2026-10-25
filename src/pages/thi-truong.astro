@@ -1,0 +1,46 @@
+---
+import Base from '../layouts/Base.astro';
+import NewsFeed from '../components/NewsFeed.astro';
+import PriceRefresh from '../components/PriceRefresh.astro';
+import PostCard from '../components/PostCard.astro';
+import { all, nowIso, fmtNum, fmtPct, fmtDate } from '../lib/util';
+const db = Astro.locals.runtime.env.DB;
+const idx = await all(db, "SELECT * FROM quotes WHERE kind='index' ORDER BY rowid");
+const stocks = await all(db, "SELECT * FROM quotes WHERE kind='stock' ORDER BY symbol");
+const up = stocks.filter((s) => s.change_pct > 0).length;
+const down = stocks.filter((s) => s.change_pct < 0).length;
+const news = await all(db, "SELECT id,slug,title,summary,image,category,published_at FROM posts WHERE status='published' AND published_at <= ? AND category='thi-truong' ORDER BY published_at DESC LIMIT 6", nowIso());
+const updated = [...idx, ...stocks].map((q) => q.updated_at).filter(Boolean).sort().pop();
+---
+<Base title="Thị trường" active="thi-truong">
+  <div class="wrap" style="margin-top:20px">
+    <h1>Thị trường</h1>
+    <div class="idx" style="margin-top:0">
+      {idx.map((i) => (
+        <a class="c" href={`/co-phieu/${i.symbol}`}><small>{i.name}</small><b>{fmtNum(i.price)}</b>
+          <span class={i.change_pct >= 0 ? 'up' : 'down'} style="filter:brightness(1.5)">{fmtPct(i.change_pct)}</span></a>
+      ))}
+    </div>
+    <div class="grid">
+      <div class="box"><h2>Bảng giá cổ phiếu</h2>
+        <p class="meta">Tăng: {up} · Giảm: {down} · Cập nhật: {fmtDate(updated)}</p>
+        <div class="scroll"><table class="t">
+          <thead><tr><th>Mã</th><th>Ngành</th><th class="r">Giá</th><th class="r">%</th><th class="r">Khối lượng</th></tr></thead>
+          <tbody>
+            {stocks.map((s) => (
+              <tr><td><a href={`/co-phieu/${s.symbol}`}><b>{s.symbol}</b></a><br /><small class="meta">{s.name}</small></td>
+                <td>{s.sector}</td><td class="r">{fmtNum(s.price)}</td>
+                <td class={`r ${s.change_pct >= 0 ? 'up' : 'down'}`}>{fmtPct(s.change_pct)}</td><td class="r">{s.volume}</td></tr>
+            ))}
+          </tbody>
+        </table></div>
+      </div>
+      <div class="box"><h2>Tin thị trường nổi bật</h2>
+        {news.length === 0 && <p>Chưa có tin.</p>}
+        {news.map((p) => <PostCard p={p} />)}
+      </div>
+    </div>
+    <NewsFeed />
+  </div>
+  <PriceRefresh />
+</Base>
