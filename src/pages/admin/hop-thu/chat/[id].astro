@@ -1,7 +1,9 @@
 ---
 import Admin from '../../../../layouts/Admin.astro';
 import { all, first, run, nowIso, fmtDate } from '../../../../lib/util';
+import { pluginOn } from '../../../../lib/chatcfg';
 const db = Astro.locals.runtime.env.DB;
+if (await pluginOn(db, 'chat-pro')) return Astro.redirect(`/admin/chat?id=${Number(Astro.params.id) || ''}`);
 const U: any = (Astro.locals as any).user || { name: 'Quản trị' };
 const id = Number(Astro.params.id) || 0;
 const conv: any = await first(db, 'SELECT * FROM conversations WHERE id=?', id);

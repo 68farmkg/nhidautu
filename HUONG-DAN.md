@@ -138,3 +138,12 @@ Làm đúng 3 việc, theo thứ tự (giống Đợt 1):
    - Plugin mã nguồn: thư mục `src/plugins/<id>/index.ts` (xem `thanh-thong-bao` làm mẫu). Thêm mới cần đưa lên GitHub và deploy; sau đó bật/tắt/cấu hình ngay trong Admin. Plugin mới nên đặt `defaultOff: true`.
    - Gói ZIP khai báo: chỉ gồm `manifest.json` (xem `goi-mau/` và `goi-mau-loi-chao.zip`). Cài ngay, không cần deploy, không chạy mã máy chủ.
 4. Thay đổi bật/tắt có hiệu lực trong tối đa ~10 giây (bộ nhớ đệm của từng máy chủ Cloudflare).
+
+## ĐỢT 6. Plugin "Hộp thư & Chat Pro" (đã gộp vào hệ plugin)
+Chat Pro giờ là một plugin mã nguồn, mặc định TẮT. Chưa cài thì website chạy như cũ (Hộp thư & chat cơ bản).
+1. **Đưa file lên GitHub:** kéo thả đè các thư mục `src`, `public` và các file lẻ trong gói cập nhật vào repo, bấm Commit changes. Chờ Cloudflare build xong (Success).
+2. **(Tùy chọn) Chạy SQL:** D1 > Console, dán `nang-cap-5-sach.sql`, Execute. Có thể bỏ qua vì hệ thống tự tạo bảng khi bạn mở trang quản trị lần đầu. Cần đã chạy `nang-cap-3.sql` và `nang-cap-4.sql`.
+3. **Cài plugin:** Admin > Tiện ích & plugin > Cửa hàng > Hộp thư & Chat Pro > Cài đặt, tích đồng ý quyền rồi xác nhận.
+4. **Dùng:** menu admin xuất hiện **Hộp thư**, **Chat khách** và **Chat, AI & hộp thư gửi**. Cài đặt chat nằm ở Admin > Cài đặt website > cuộn xuống "Chat khách hàng, Trợ lý AI & Hộp thư gửi", nhớ bấm Lưu cài đặt chat. Để AI trả lời cần bật ít nhất một nhà AI có API key ở Cài đặt AI (API).
+5. **Tắt plugin:** dữ liệu chat, hộp thư và cài đặt được giữ nguyên; website quay về chat cơ bản.
+Chi tiết tính năng Chat Pro xem mục "NÂNG CẤP ĐỢT 5: HỘP THƯ PRO + CHAT PRO" của bản Chat Pro gốc (mẫu giao diện, form khách, AI, hộp thư gửi, thông báo).

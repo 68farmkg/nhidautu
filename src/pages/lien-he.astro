@@ -2,8 +2,9 @@
 import Base from '../layouts/Base.astro';
 import { nowIso, run } from '../lib/util';
 import { allow, ipOf } from '../lib/ratelimit';
-import { notify } from '../lib/notify';
 import { getSite } from '../lib/site';
+import { getCfg } from '../lib/chatcfg';
+import { notifyOwner, confirmVisitor } from '../lib/chatnotify';
 const db = Astro.locals.runtime.env.DB;
 const SITE = await getSite(db);
 let ok = false, err = '';
@@ -17,8 +18,10 @@ if (Astro.request.method === 'POST') {
   else if (!name || !body || !email.includes('@')) err = 'Hãy nhập họ tên, email hợp lệ và nội dung.';
   else if (!(await allow(db, 'contact:' + ipOf(Astro.request), 5, 3600))) err = 'Bạn gửi quá nhiều lần. Vui lòng thử lại sau.';
   else {
-    await run(db, 'INSERT INTO messages (name,email,phone,body,created_at) VALUES (?,?,?,?,?)', name, email, phone, body, nowIso()); ok = true;
-    notify(Astro.locals, `✉️ Liên hệ mới từ ${name} (${email}${phone ? ', ' + phone : ''}): ${body}\n${Astro.url.origin}/admin/hop-thu?kenh=lh`);
+    const r = await run(db, 'INSERT INTO messages (name,email,phone,body,created_at) VALUES (?,?,?,?,?)', name, email, phone, body, nowIso()); ok = true;
+    const cfg = await getCfg(db);
+    notifyOwner(Astro.locals, cfg, `✉️ Liên hệ mới từ ${name}`, `${email}${phone ? ' · ' + phone : ''}\n${body}`, `${Astro.url.origin}/admin/hop-thu?id=${r.meta.last_row_id}`);
+    confirmVisitor(Astro.locals, cfg, email, name);
   }
 }
 ---

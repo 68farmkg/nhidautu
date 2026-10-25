@@ -117,6 +117,7 @@ const tagCss = (e: any) => (e.active ? '' : 'background:#f2f4f7;color:#475467');
     <div class="box" style="margin-bottom:12px">
       <div class="pxrow" style="justify-content:space-between"><h3 style="margin:0"><Fragment set:html={icon(cur.icon, 18)} /> {cur.name} <span class="meta">v{cur.version}</span></h3><span class="tag" style={tagCss(cur)}>{SL[cur.status] || cur.status}</span></div>
       <p>{cur.desc}</p>
+      {cur.builtin?.features?.length ? <ul class="meta">{cur.builtin.features.map((f) => <li>{f}</li>)}</ul> : null}
       <p class="meta">Tác giả: {cur.author} · Loại: {cur.runtime === 'builtin' ? 'Plugin mã nguồn' : 'Gói ZIP khai báo'} · Danh mục: {cur.category} · Id: {cur.id}{cur.caps.length ? ' · Cung cấp: ' + cur.caps.join(', ') : ''}</p>
       {cur.error && <div class="msg err">{cur.error}</div>}
       {cur.requires.length > 0 && <p class="meta">Cần plugin: {cur.requires.join(', ')}</p>}
@@ -165,6 +166,7 @@ const tagCss = (e: any) => (e.active ? '' : 'background:#f2f4f7;color:#475467');
           <p><button class="btn">Lưu vị trí</button></p></form></div>
     )}
     {((cur.builtin?.admin) || (cur.manifest?.adminPages.length ?? 0) > 0) && <p><a class="btn ghost" href={`/admin/p/${cur.id}`}>Mở trang quản trị của plugin</a></p>}
+    {cur.active && (cur.builtin?.open || cur.builtin?.settingsUrl) && <p>{cur.builtin?.open && <a class="btn ghost" href={cur.builtin.open}>{cur.builtin.openLabel || 'Mở trang quản lý'}</a>} {cur.builtin?.settingsUrl && <a class="btn ghost" href={cur.builtin.settingsUrl}>Cài đặt plugin</a>}</p>}
     {logs.length > 0 && <div class="box scroll"><h3>Nhật ký plugin</h3><table class="pxt"><tbody>{logs.map((l) => <tr><td>{fmtDate(l.created_at)}</td><td><b>{l.action}</b><br /><span class="meta">{l.detail} {l.actor && '· ' + l.actor}</span></td></tr>)}</tbody></table></div>}
   </>)}
 
@@ -175,6 +177,7 @@ const tagCss = (e: any) => (e.active ? '' : 'background:#f2f4f7;color:#475467');
           <div class="pxrow"><span class="meta">{e.runtime === 'builtin' ? 'Mã nguồn' : 'Gói ZIP'}{e.caps.length ? ' · ' + e.caps.join(', ') : ''}{e.hasUpdate ? ' · có bản mới' : ''}</span></div>
           <div class="pxrow"><a class="btn sm" href={`/admin/tien-ich?tab=dc&p=${e.id}`}>Cấu hình / Chi tiết</a>
             {e.active && (e.builtin?.admin || (e.manifest?.adminPages.length ?? 0) > 0) && <a class="btn ghost sm" href={`/admin/p/${e.id}`}>Mở</a>}
+            {e.active && e.builtin?.open && <a class="btn ghost sm" href={e.builtin.open}>{e.builtin.openLabel || 'Mở'}</a>}
             <form method="post" class="inline"><input type="hidden" name="pid" value={e.id} /><input type="hidden" name="tab" value="dc" />
               {e.active ? <button class="btn ghost sm" name="act" value="deactivate">Tắt</button> : <button class="btn sm" name="act" value="activate">Kích hoạt</button>}</form></div></div>
       ))}</div>

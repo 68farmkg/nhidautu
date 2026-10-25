@@ -130,24 +130,6 @@ footer .copy{grid-column:1/-1;border-top:1px solid #1d4a47;padding-top:14px;font
 .zadd{margin-bottom:4px}
 .bl .bl{margin-bottom:6px}
 
-/* ===== ĐỢT 3: chat khách hàng (phía khách) ===== */
-.nc-btn{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:55;width:56px;height:56px;border-radius:50%;border:0;background:var(--green);color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.25);cursor:pointer;display:grid;place-items:center}
-.nc-btn .nc-n{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;border-radius:10px;background:var(--down);color:#fff;font-size:12px;display:none;place-items:center;padding:0 5px}
-.nc-btn .nc-n.on{display:grid}
-@media(max-width:860px){body.hasbar .nc-btn{bottom:calc(78px + env(safe-area-inset-bottom))}}
-.nc-box{position:fixed;right:16px;bottom:calc(84px + env(safe-area-inset-bottom));width:360px;max-width:calc(100vw - 24px);height:520px;max-height:calc(100vh - 110px);background:#fff;border-radius:16px;box-shadow:0 16px 48px rgba(0,0,0,.3);z-index:70;display:none;flex-direction:column;overflow:hidden}
-.nc-box.on{display:flex}
-.nc-h{background:var(--ink);color:#fff;padding:12px 14px;display:flex;align-items:center;justify-content:space-between}.nc-h b{font-size:15px}.nc-h button{background:none;border:0;color:#fff;font-size:22px;cursor:pointer;line-height:1}
-.nc-l{flex:1;overflow:auto;padding:12px;background:#f3f6f5;display:flex;flex-direction:column;gap:8px}
-.nc-m{max-width:82%;padding:9px 12px;border-radius:14px;font-size:14px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
-.nc-m.v{align-self:flex-end;background:var(--green);color:#fff;border-bottom-right-radius:4px}
-.nc-m.a{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:4px}
-.nc-m.s{align-self:center;background:none;color:var(--muted);font-size:12px;text-align:center;max-width:94%}
-.nc-f{border-top:1px solid var(--line);padding:8px;background:#fff}
-.nc-f .nc-name{margin-bottom:6px}.nc-f input,.nc-f textarea{font-size:16px!important;padding:9px 10px}
-.nc-row{display:flex;gap:6px}.nc-row textarea{min-height:44px;height:44px;resize:none;flex:1}.nc-row button{border:0;background:var(--green);color:#fff;border-radius:9px;padding:0 14px;font:inherit;font-weight:600;cursor:pointer}
-@media(max-width:560px){.nc-box{right:0;left:0;bottom:0;top:0;width:auto;max-width:none;height:auto;max-height:none;border-radius:0}}
-
 /* ===== ĐỢT 3-4: admin: hộp thư, người dùng ===== */
 .bdg{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--down);color:#fff;font-size:11px;font-weight:600;margin-left:6px;vertical-align:middle}
 .abar a{position:relative}.abar .bdg{position:absolute;top:2px;left:calc(50% + 6px);margin:0}

@@ -36,7 +36,7 @@ Không có mạng nên không cài được Astro: các tệp `.astro` và `bloc
 - Trang admin plugin chỉ dành cho vai trò admin (chưa cấp quyền theo vai trò từng plugin).
 - Chưa có tô màu cú pháp trong trình soạn mã (cần thư viện ngoài); chưa nối CI/CD GitHub.
 - Trạng thái bật/tắt có độ trễ tối đa ~10 giây giữa các máy chủ.
-- Chưa tích hợp Chat Pro vào hệ plugin (thiếu mã nguồn).
+- Chat Pro đã được gộp thành plugin `chat-pro` (Đợt 6). Bảng dữ liệu của nó vẫn do `lib/chatschema.ts` tự tạo (không qua migration `px_*`), nên khi gỡ plugin chọn "xóa dữ liệu" sẽ KHÔNG xóa các bảng chat/hộp thư.
 
 ## Tiêu chí nghiệm thu (sau khi deploy)
 1. Chạy `nang-cap-4.sql`; mở Tiện ích & plugin: thấy 5 plugin có sẵn đang bật, Cửa hàng có "Thanh thông báo".
@@ -44,3 +44,9 @@ Không có mạng nên không cài được Astro: các tệp `.astro` và `bloc
 3. Tải `goi-mau-loi-chao.zip` → xem quyền → cài → câu chào hiện ở trang chủ, khối "Lời chào" có trong trình dựng.
 4. Tắt "Biểu đồ TradingView" khi trang đang dùng → có cảnh báo, bố cục không mất; bật lại thì khối hiện lại.
 5. Bài viết, tin tức, RSS, chat, giá chứng khoán hoạt động như trước.
+
+
+## Đợt 6. Gộp Chat Pro
+- Trạng thái bật/tắt của Chat Pro lấy từ hệ plugin (`chatcfg.pluginOn` đọc `px/registry`), thay cho khóa `plugin.chat-pro` cũ.
+- Chưa cài: giữ nguyên Hộp thư & chat cơ bản (`components/MailBasic.astro`). Đã cài: Hộp thư Pro (`MailPro.astro`) + trang Chat khách.
+- Chưa build thử trên Astro/Cloudflare (không có mạng). Đã kiểm cú pháp TS/JS, kiểm import, và chạy thử SQL trên SQLite.

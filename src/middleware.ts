@@ -1,6 +1,8 @@
 import { defineMiddleware } from 'astro:middleware';
 import { readSession } from './lib/auth';
 import { can } from './lib/perm';
+import { ensureChatSchema } from './lib/chatschema';
+import { pluginOn } from './lib/chatcfg';
 
 const denied = '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Không đủ quyền</title><body style="font-family:system-ui;max-width:420px;margin:15vh auto;padding:0 16px"><h2>Bạn chưa có quyền vào mục này</h2><p>Tài khoản của bạn không được cấp quyền cho trang này. Hãy nhờ quản trị viên cấp thêm quyền.</p><p><a href="/admin">Về trang tổng quan</a></p></body>';
 
@@ -14,6 +16,7 @@ function crossSite(req: Request, origin: string) {
 }
 export const onRequest = defineMiddleware(async (context, next) => {
   const p = context.url.pathname;
+  if (p.startsWith('/admin') || p.startsWith('/api/chat')) { try { await ensureChatSchema((context.locals as any).runtime.env.DB); } catch { /* bỏ */ } }
   if ((p.startsWith('/admin') || p.startsWith('/api/px/')) && WRITE.has(context.request.method) && crossSite(context.request, context.url.origin)) {
     return new Response('Yêu cầu bị chặn (khác nguồn gốc)', { status: 403 });
   }
@@ -30,6 +33,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
       } catch { return context.redirect('/admin/login'); }
     }
     (context.locals as any).user = s;
+    // Trang của plugin Chat Pro chỉ mở khi đã cài/bật trong Tiện ích & plugin
+    if (/^\/admin\/(chat|chat-api|chat-config)(\/|$)/.test(p) && !(await pluginOn(env.DB, 'chat-pro'))) {
+      if (/-(api|config)$/.test(p)) return new Response(JSON.stringify({ ok: false, error: 'Plugin Hộp thư & Chat Pro chưa được cài. Vào Tiện ích & plugin để cài.' }), { status: 409, headers: { 'content-type': 'application/json' } });
+      return context.redirect('/admin/tien-ich?tab=dc&p=chat-pro');
+    }
     if (!can(s.role, p)) return new Response(denied, { status: 403, headers: { 'content-type': 'text/html; charset=utf-8' } });
   }
   const res = await next();

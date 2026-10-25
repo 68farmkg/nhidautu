@@ -3,11 +3,13 @@ import '../styles/global.css';
 import '../styles/core.css';
 import { icon } from '../lib/icons';
 import Slot from '../components/Slot.astro';
+import { getCfg, publicCfg } from '../lib/chatcfg';
 import { getSite, getMenus, isActive, safeUrl, type NavItem } from '../lib/site';
 const { title = '', description = '', image = '', hideHeader = false, hideFooter = false } = Astro.props;
 const db = Astro.locals.runtime.env.DB;
 const [S, M] = await Promise.all([getSite(db), getMenus(db)]);
 const path = Astro.url.pathname;
+const chatJson = S.chat_on === '1' && !path.startsWith('/admin') ? JSON.stringify(publicCfg(await getCfg(db), S)) : '';
 const full = !title || title === S.name ? S.name : `${title} | ${S.name}`;
 const desc = description || S.tagline;
 const hc = (x: string) => (/^#[0-9a-f]{3,8}$/i.test(x) ? x : '');
@@ -85,7 +87,7 @@ const mobile = M.mobile.filter((i) => i.device !== 'pc');
       <a href="#menu" data-dr role="button"><Fragment set:html={icon('menu', 22)} /><span>Menu</span></a>
     </nav>
   )}
-  {S.chat_on === '1' && !path.startsWith('/admin') && <script is:inline src="/chat.js" data-title={S.chat_title} data-welcome={S.chat_welcome} defer></script>}
+  {chatJson && <script is:inline src="/chat.js?v=2" data-cfg={chatJson} defer></script>}
   <Slot name="site.floating" />
   {S.body_code && <Fragment set:html={S.body_code} />}
   <script is:inline>

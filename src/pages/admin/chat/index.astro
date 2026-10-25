@@ -1,0 +1,35 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+import { icon } from '../../../lib/icons';
+import { all } from '../../../lib/util';
+const db = Astro.locals.runtime.env.DB;
+const U: any = (Astro.locals as any).user || { role: 'admin', name: 'Quản trị' };
+let quick: any[] = []; try { quick = await all(db, "SELECT id,title,body FROM quick_replies WHERE kind='chat' ORDER BY sort,id"); } catch { /* */ }
+const I = (n: string, s = 18) => icon(n, s);
+---
+<Admin title="Chat khách" active="chat">
+  <div class="cp" id="cp" data-quick={JSON.stringify(quick)} data-user={U.name || 'Nhân viên'} data-admin={U.role === 'admin' ? '1' : ''} data-open={Astro.url.searchParams.get('id') || ''}>
+    <div class="cp-head">
+      <div><h1>Quản lý Chat</h1><p>Theo dõi và trả lời tất cả cuộc trò chuyện với khách hàng, AI tự trả lời khi bạn vắng mặt.</p></div>
+      <div class="cp-tools">
+        <span class="cp-pill" id="cpAi"><i></i><span>AI: ...</span></span>
+        <div class="cp-seg" id="cpPres" title="Trạng thái của bạn"><button data-v="auto">Tự động</button><button data-v="online">Tôi online</button><button data-v="away">Tôi vắng</button></div>
+        <button class="btn ghost sm" id="cpSnd" type="button">🔔 Âm báo: bật</button>
+        {U.role === 'admin' && <a class="btn sm" href="/admin/cai-dat#chat">Cài đặt chat</a>}
+      </div>
+    </div>
+    <div class="msg err" id="cpErr" style="display:none"></div>
+    <div class="cp-stats" id="cpStats"></div>
+    <div class="cp-grid" id="cpGrid">
+      <section class="cp-col cp-list-col">
+        <div class="cp-tabs" id="cpTabs"></div>
+        <div class="cp-search"><input type="search" id="cpQ" placeholder="Tìm tên, SĐT, email, nội dung…" /></div>
+        <div class="cp-list" id="cpList"><div class="cp-empty">Đang tải…</div></div>
+      </section>
+      <section class="cp-col cp-th-col" id="cpTh"><div class="cp-empty" style="margin:auto">Chọn một cuộc trò chuyện ở bên trái</div></section>
+      <aside class="cp-col cp-info" id="cpInfo"></aside>
+    </div>
+    <div class="cp-modal" id="cpMail"><div class="in"><h3 style="margin-top:0">Gửi email cho khách</h3><div id="cpMailBody"></div></div></div>
+  </div>
+  <script is:inline src="/chat-admin.js" defer></script>
+</Admin>

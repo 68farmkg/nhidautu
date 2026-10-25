@@ -2,6 +2,7 @@
 import Admin from '../../layouts/Admin.astro';
 import { all, run } from '../../lib/util';
 import { getSite, SITE_KEYS, DEF } from '../../lib/site';
+import { pluginOn } from '../../lib/chatcfg';
 const db = Astro.locals.runtime.env.DB;
 let msg = '';
 if (Astro.request.method === 'POST') {
@@ -13,6 +14,7 @@ if (Astro.request.method === 'POST') {
   return Astro.redirect('/admin/cai-dat?saved=1');
 }
 const S: any = await getSite(db);
+const proOn = await pluginOn(db, 'chat-pro');
 let pages: any[] = []; try { pages = await all(db, "SELECT slug,title FROM pages WHERE status='published' AND is_template=0"); } catch { /* */ }
 const T = (k: string, l: string, ph = '') => ({ k, l, ph });
 const rows = [
@@ -34,15 +36,28 @@ const rows = [
     <div class="box" style="margin-bottom:12px"><h3>Trang chủ</h3>
       <label for="home_page">Dùng một trang tự dựng làm trang chủ</label>
       <select id="home_page" name="home_page"><option value="">Giao diện trang chủ mặc định</option>{pages.map((p) => <option value={p.slug} selected={S.home_page === p.slug}>{p.title} (/{p.slug})</option>)}</select></div>
-    <div class="box" style="margin-bottom:12px"><h3>Chat khách hàng</h3>
-      <p class="meta">Bật để hiện nút chat góc phải màn hình. Tin nhắn nằm ở Admin &gt; Hộp thư & chat. Muốn nhận báo ngay trên điện thoại: thêm biến TELEGRAM_BOT_TOKEN và TELEGRAM_CHAT_ID trong Cloudflare (xem HUONG-DAN.md).</p>
+    {!proOn && <div class="box" style="margin-bottom:12px"><h3>Chat khách hàng (cơ bản)</h3>
       <input type="hidden" name="chat_on" value="" />
       <label class="chk"><input type="checkbox" name="chat_on" value="1" checked={S.chat_on === '1'} />Bật chat trên website</label>
       <label for="chat_title">Tiêu đề cửa sổ chat</label><input id="chat_title" type="text" name="chat_title" value={S.chat_title} />
-      <label for="chat_welcome">Lời chào đầu tiên</label><textarea id="chat_welcome" name="chat_welcome" style="min-height:70px">{S.chat_welcome}</textarea></div>
+      <label for="chat_welcome">Lời chào đầu tiên</label><textarea id="chat_welcome" name="chat_welcome" style="min-height:70px">{S.chat_welcome}</textarea>
+      <p class="meta">Muốn giao diện chat đẹp, AI trả lời, bắt khách điền thông tin: cài plugin Hộp thư & Chat Pro ở Tiện ích & plugin.</p></div>}
     <div class="box"><h3>Mã nâng cao</h3><p class="meta">Dán mã Google Analytics, Facebook Pixel, chat… Chỉ dán mã bạn tin tưởng.</p>
       <label for="head_code">Mã chèn vào &lt;head&gt;</label><textarea id="head_code" name="head_code" style="font-family:monospace">{S.head_code}</textarea>
       <label for="body_code">Mã chèn cuối trang</label><textarea id="body_code" name="body_code" style="font-family:monospace">{S.body_code}</textarea></div>
     <div class="savebar"><button class="btn" type="submit">Lưu cài đặt</button></div>
   </form>
+  {proOn ? (<>
+  <div class="box cs" id="chat" style="margin-top:16px">
+    <h2 style="margin:0 0 4px">Chat khách hàng, Trợ lý AI & Hộp thư gửi</h2>
+    <p class="meta" style="margin:0 0 12px">Phần này có nút <b>Lưu</b> riêng ở cuối. Chọn mẫu giao diện chat, bắt khách điền thông tin, bật AI trả lời thay bạn, gợi ý nhanh và nhiều hộp thư gửi.</p>
+    <div id="csRoot"><div class="cp-empty">Đang tải cài đặt chat…</div></div>
+  </div>
+  <script is:inline src="/chat.js?v=2" data-lib="1"></script>
+  <script is:inline src="/chat-settings.js?v=2" defer></script>
+  </>) : (
+    <div class="box" id="chat" style="margin-top:16px"><h3>Chat khách hàng</h3>
+      <p>Chat nâng cao (giao diện chat, AI trả lời, khách điền thông tin, nhiều hộp thư gửi) nằm trong plugin <b>Hộp thư & Chat Pro</b>. Bấm cài trong 1 giây, không cần deploy.</p>
+      <a class="btn" href="/admin/tien-ich?tab=dc&p=chat-pro">Đến Tiện ích & plugin để cài</a></div>
+  )}
 </Admin>

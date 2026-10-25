@@ -21,6 +21,8 @@ export type Plugin = {
   routes?: ApiRoute[];                // API do plugin cung cấp, qua /api/px/<id>/<path>
   blocks?: BlockDef[];
   admin?: (ctx: Ctx) => string | Promise<string>;
+  // Plugin có trang quản trị / trang cài đặt riêng (không nằm ở /admin/p/<id>): hiện nút trong Tiện ích & plugin
+  open?: string; openLabel?: string; settingsUrl?: string; features?: string[];
 };
 
 const mods = import.meta.glob('../plugins/*/index.ts', { eager: true }) as Record<string, { default: Plugin }>;

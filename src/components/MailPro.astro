@@ -1,0 +1,25 @@
+---
+import Admin from '../layouts/Admin.astro';
+const U: any = (Astro.locals as any).user || { role: 'admin', name: 'Quản trị' };
+---
+<Admin title="Hộp thư" active="msg">
+  <div class="cp" id="mp" data-open={Astro.url.searchParams.get('id') || ''} data-admin={U.role === 'admin' ? '1' : ''}>
+    <div class="cp-head">
+      <div><h1>Hộp thư</h1><p>Thư liên hệ từ biểu mẫu trên website. Trả lời khách bằng email từ hộp thư gửi bạn chọn.</p></div>
+      <div class="cp-tools">
+        <a class="btn ghost sm" href="/admin/chat">Chat khách →</a>
+        {U.role === 'admin' && <a class="btn sm" href="/admin/cai-dat#mail">Hộp thư gửi (cài đặt)</a>}
+      </div>
+    </div>
+    <div class="msg err" id="mpErr" style="display:none"></div>
+    <div class="mp-grid" id="mpGrid">
+      <section class="cp-col mp-list-col">
+        <div class="cp-tabs" id="mpTabs"></div>
+        <div class="cp-search"><input type="search" id="mpQ" placeholder="Tìm tên, email, nội dung…" /></div>
+        <div class="cp-list" id="mpList"><div class="cp-empty">Đang tải…</div></div>
+      </section>
+      <section class="cp-col mp-det-col" id="mpDet"><div class="cp-empty" style="margin:auto">Chọn một thư ở bên trái</div></section>
+    </div>
+  </div>
+  <script is:inline src="/mail-admin.js" defer></script>
+</Admin>

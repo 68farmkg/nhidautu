@@ -1,7 +1,9 @@
 ---
 import Admin from '../../../../layouts/Admin.astro';
 import { first, run, nowIso, fmtDate } from '../../../../lib/util';
+import { pluginOn } from '../../../../lib/chatcfg';
 const db = Astro.locals.runtime.env.DB;
+if (await pluginOn(db, 'chat-pro')) return Astro.redirect(`/admin/hop-thu?id=${Number(Astro.params.id) || ''}`);
 const id = Number(Astro.params.id) || 0;
 const m: any = await first(db, 'SELECT * FROM messages WHERE id=?', id);
 if (!m) return Astro.redirect('/admin/hop-thu');

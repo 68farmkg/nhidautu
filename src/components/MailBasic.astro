@@ -1,0 +1,43 @@
+---
+import Admin from '../layouts/Admin.astro';
+import { icon } from '../lib/icons';
+import { all, fmtDate } from '../lib/util';
+const db = Astro.locals.runtime.env.DB;
+const kenh = ['chat', 'lh'].includes(Astro.url.searchParams.get('kenh') || '') ? Astro.url.searchParams.get('kenh')! : 'all';
+const tt = ['new', 'processing', 'done'].includes(Astro.url.searchParams.get('tt') || '') ? Astro.url.searchParams.get('tt')! : '';
+let err = '', convs: any[] = [], contacts: any[] = [];
+try {
+  convs = await all(db, "SELECT c.id,c.name,c.status,c.unread_admin,c.last_at,(SELECT body FROM chat_msgs WHERE conv_id=c.id ORDER BY id DESC LIMIT 1) last FROM conversations c ORDER BY COALESCE(c.last_at,c.created_at) DESC LIMIT 150");
+  contacts = await all(db, "SELECT m.id,m.name,m.email,m.body,m.created_at,COALESCE(s.status,'new') status FROM messages m LEFT JOIN inbox_state s ON s.msg_id=m.id ORDER BY m.id DESC LIMIT 150");
+} catch (e: any) {
+  err = 'Chưa có bảng hộp thư. Hãy chạy nang-cap-3.sql trong D1 Console (xem HUONG-DAN.md).';
+  try { contacts = (await all(db, 'SELECT id,name,email,body,created_at FROM messages ORDER BY id DESC LIMIT 150')).map((m) => ({ ...m, status: 'new' })); } catch { /* */ }
+}
+const SL: Record<string, string> = { new: 'Mới', processing: 'Đang xử lý', done: 'Đã xong' };
+let items = [
+  ...(kenh === 'lh' ? [] : convs.map((c) => ({ kind: 'chat', id: c.id, name: c.name || 'Khách (chat)', text: c.last || '', at: c.last_at, status: c.status || 'new', unread: c.unread_admin || 0 }))),
+  ...(kenh === 'chat' ? [] : contacts.map((m) => ({ kind: 'lh', id: m.id, name: m.name, text: m.body, at: m.created_at, status: m.status || 'new', unread: m.status === 'new' ? 1 : 0, email: m.email }))),
+];
+if (tt) items = items.filter((i) => i.status === tt);
+items.sort((a, b) => String(b.at || '').localeCompare(String(a.at || '')));
+const q = (k: string, t: string) => `/admin/hop-thu?${[k !== 'all' ? 'kenh=' + k : '', t ? 'tt=' + t : ''].filter(Boolean).join('&')}`;
+---
+<Admin title="Hộp thư & chat" active="msg">
+  <div class="pagehead"><h1>Hộp thư & chat</h1></div>
+  {err && <div class="msg err">{err}</div>}
+  <div class="tabs">
+    {[['all', 'Tất cả'], ['chat', 'Chat khách'], ['lh', 'Biểu mẫu liên hệ']].map(([k, n]) => <a href={q(k, tt)} class={kenh === k ? 'on' : ''}>{n}</a>)}
+  </div>
+  <div class="tabs">
+    <a href={q(kenh, '')} class={!tt ? 'on' : ''}>Mọi trạng thái</a>
+    {Object.entries(SL).map(([k, n]) => <a href={q(kenh, k)} class={tt === k ? 'on' : ''}>{n}</a>)}
+  </div>
+  {items.length === 0 && !err && <div class="box">Chưa có tin nào.</div>}
+  {items.map((i) => (
+    <a class={`inb ${i.unread ? 'unread' : ''}`} href={`/admin/hop-thu/${i.kind === 'chat' ? 'chat' : 'lien-he'}/${i.id}`}>
+      <span class="ico"><Fragment set:html={icon(i.kind === 'chat' ? 'message' : 'mail', 18)} /></span>
+      <span class="tx"><b>{i.name}{i.kind === 'lh' && i.email ? ` · ${i.email}` : ''}</b><p>{String(i.text || '').replace(/\s+/g, ' ')}</p></span>
+      <span class="rt">{fmtDate(i.at)}<span class={`st ${i.status}`}>{SL[i.status] || i.status}</span>{i.kind === 'chat' && i.unread > 0 && <span class="bdg" style="margin:0">{i.unread}</span>}</span>
+    </a>
+  ))}
+</Admin>
