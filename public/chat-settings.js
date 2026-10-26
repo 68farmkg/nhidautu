@@ -144,7 +144,7 @@
       '<div><label>Địa chỉ email gửi</label><input type="text" id="mbe" value="' + esc(e.from_email) + '" placeholder="hotro@tenmien.vn"></div>' +
       '<div><label>Nhận phản hồi tại (Reply-To)</label><input type="text" id="mbr" value="' + esc(e.reply_to) + '" placeholder="Gmail của bạn"></div>' +
       '<div><label id="mbkl">API key / mã bí mật</label><input type="password" id="mbk" autocomplete="off" placeholder="' + (e.has_key ? 'Đã lưu. Để trống nếu giữ nguyên' : 'Dán khóa vào đây') + '"></div>' +
-      '<div id="mbdw"><label>Tên miền gửi (Mailgun)</label><input type="text" id="mbd" value="' + esc(e.domain) + '" placeholder="mg.tenmien.vn"></div>' +
+      '<div id="mbdw"><label id="mbdl">Tên miền gửi (Mailgun)</label><input type="text" id="mbd" value="' + esc(e.domain) + '" placeholder="mg.tenmien.vn"></div>' +
       '<div id="mbxw"><label id="mbxl">Thông tin thêm</label><input type="text" id="mbx" value="' + esc(e.extra) + '"></div>' +
       '<div style="grid-column:1/-1"><label>Chữ ký tự thêm cuối mỗi thư</label><textarea id="mbs" style="min-height:70px" placeholder="Trân trọng,&#10;Nhịp Đầu Tư - 1900 0000">' + esc(e.signature) + '</textarea></div></div>' +
       '<div class="meta" id="mbh"></div><div id="mbcode"></div><label class="chk"><input type="checkbox" id="mbdef"' + (e.is_default ? ' checked' : '') + '> Đặt làm hộp thư mặc định</label><label class="chk"><input type="checkbox" id="mba"' + (e.active ? ' checked' : '') + '> Đang bật</label>' + (e.has_key ? '<label class="chk"><input type="checkbox" id="mbc"> Xóa khóa đã lưu</label>' : '') +
@@ -154,10 +154,11 @@
   function mbHints() {
     var s = $('#mbp'); if (!s) return; var p = s.value, P = X.providersMeta[p] || {};
     $('#mbh').innerHTML = '<b>' + esc(P.name || '') + ':</b> ' + esc(P.hint || '') + ' <i>(' + esc(P.free || '') + ')</i>';
-    $('#mbdw').style.display = p === 'mailgun' ? '' : 'none'; $('#mbxw').style.display = (p === 'mailgun' || p === 'webhook') ? '' : 'none';
-    $('#mbxl').textContent = p === 'webhook' ? 'Địa chỉ Web app của Apps Script (https://script.google.com/…/exec)' : 'Máy chủ EU? Ghi chữ eu (để trống = máy chủ Mỹ)';
-    $('#mbkl').textContent = p === 'webhook' ? 'Mã bí mật (tự đặt, trùng với mã trong Apps Script)' : 'API key';
-    $('#mbcode').innerHTML = p === 'webhook' ? '<p class="meta"><b>Cách làm (5 phút):</b> vào script.google.com > Dự án mới > dán mã dưới (đổi DOI-MA-BI-MAT-NAY thành mã bí mật của bạn) > Triển khai > Ứng dụng web > “Thực thi bằng: Tôi”, “Ai có quyền truy cập: Bất kỳ ai” > sao chép địa chỉ dán vào ô trên.</p><div class="cs-code">' + esc(X.appsScript) + '</div>' : '';
+    $('#mbdw').style.display = (p === 'mailgun' || p === 'smtp') ? '' : 'none'; $('#mbxw').style.display = (p === 'mailgun' || p === 'webhook' || p === 'smtp') ? '' : 'none';
+    $('#mbdl').textContent = p === 'smtp' ? 'Máy chủ SMTP (ví dụ smtp.gmail.com)' : 'Tên miền gửi (Mailgun)'; $('#mbd').placeholder = p === 'smtp' ? 'smtp.gmail.com' : 'mg.tenmien.vn';
+    $('#mbxl').textContent = p === 'webhook' ? 'Địa chỉ Web app của Apps Script (https://script.google.com/…/exec)' : p === 'smtp' ? 'Cổng (465 hoặc 587; để trống = 465). Tên đăng nhập khác email gửi: ghi 465|tendangnhap' : 'Máy chủ EU? Ghi chữ eu (để trống = máy chủ Mỹ)';
+    $('#mbkl').textContent = p === 'webhook' ? 'Mã bí mật (tự đặt, trùng với mã trong Apps Script)' : p === 'smtp' ? 'Mật khẩu SMTP (Gmail: Mật khẩu ứng dụng 16 ký tự)' : 'API key';
+    $('#mbcode').innerHTML = p === 'smtp' ? '<p class="meta"><b>Gmail:</b> Máy chủ <code>smtp.gmail.com</code>, cổng <code>465</code>, email gửi = Gmail của bạn, mật khẩu = Mật khẩu ứng dụng (myaccount.google.com &gt; Bảo mật &gt; Xác minh 2 bước &gt; Mật khẩu ứng dụng). Gmail luôn hiển thị người gửi là chính tài khoản đăng nhập.</p>' : p === 'webhook' ? '<p class="meta"><b>Cách làm (5 phút):</b> vào script.google.com > Dự án mới > dán mã dưới (đổi DOI-MA-BI-MAT-NAY thành mã bí mật của bạn) > Triển khai > Ứng dụng web > “Thực thi bằng: Tôi”, “Ai có quyền truy cập: Bất kỳ ai” > sao chép địa chỉ dán vào ô trên.</p><div class="cs-code">' + esc(X.appsScript) + '</div>' : '';
   }
 
   // ---------- vẽ
