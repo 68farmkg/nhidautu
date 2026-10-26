@@ -2,10 +2,13 @@
 import '../styles/global.css';
 import '../styles/core.css';
 import '../styles/pb.css';
+import '../styles/site.css';
 import { icon } from '../lib/icons';
 import Slot from '../components/Slot.astro';
 import { getCfg, publicCfg } from '../lib/chatcfg';
 import { getSite, getMenus, isActive, safeUrl, type NavItem } from '../lib/site';
+import { all, fmtNum, fmtPct } from '../lib/util';
+import { vnNow } from '../lib/ui';
 // Page Builder Pro: headHtml (font/meta do hệ thống sinh, đã thoát), canonical, noindex, jsonld (đã thoát < > &)
 const { title = '', description = '', image = '', hideHeader = false, hideFooter = false, headHtml = '', canonical = '', noindex = false, jsonld = '' } = Astro.props;
 const db = Astro.locals.runtime.env.DB;
@@ -19,6 +22,17 @@ const css = `:root{--green:${hc(S.color) || '#12b76a'};--green-d:color-mix(in sr
 const dev = (i: NavItem) => (i.device === 'pc' ? 'only-pc' : i.device === 'mobile' ? 'only-m' : '');
 const bottom = M.bottom.filter((i) => i.device !== 'pc');
 const mobile = M.mobile.filter((i) => i.device !== 'pc');
+// Thanh chỉ số trên cùng: dữ liệu thật từ bảng quotes; nếu lỗi thì ẩn thanh
+let tIdx: any[] = [], tUp = 0, tDown = 0;
+if (!hideHeader) {
+  try {
+    tIdx = await all(db, "SELECT symbol,name,price,change_pct FROM quotes WHERE kind='index' ORDER BY rowid LIMIT 3");
+    const b = await all(db, "SELECT SUM(change_pct>0) u, SUM(change_pct<0) d FROM quotes WHERE kind='stock'");
+    tUp = Number(b[0]?.u) || 0; tDown = Number(b[0]?.d) || 0;
+  } catch { /* chưa có bảng quotes */ }
+}
+const f1 = M.footer1.length ? M.footer1 : M.header.slice(0, 5);
+const f2 = M.footer2.length ? M.footer2 : M.header.filter((i) => /kien-thuc|phan-tich|lien-he/.test(i.url));
 ---
 <!doctype html>
 <html lang="vi">
@@ -47,10 +61,18 @@ const mobile = M.mobile.filter((i) => i.device !== 'pc');
 </head>
 <body class={bottom.length && !hideHeader ? 'hasbar' : ''}>
   {!hideHeader && (
+    <>
+    {tIdx.length > 0 && (
+      <div class="tick"><div class="wrap">
+        <span class="dt"><Fragment set:html={icon('clock', 14)} />{vnNow()}</span>
+        {tIdx.map((i) => <span class="ti"><b>{i.name}:</b> {fmtNum(i.price)} <span class={i.change_pct >= 0 ? 'up' : 'down'}>{fmtPct(i.change_pct)}</span></span>)}
+        {(tUp + tDown) > 0 && <span class="br">Tăng <b class="up" style="color:#3ddc97">{tUp}</b> · Giảm <b style="color:#ff7b80">{tDown}</b> mã</span>}
+      </div></div>
+    )}
     <header class="top">
       <div class="wrap">
         <button class="burger" type="button" aria-label="Mở menu" data-dr set:html={icon('menu', 24)}></button>
-        <a class="logo" href="/">{S.logo ? <img src={S.logo} alt={S.name} referrerpolicy="no-referrer" /> : <i>↗</i>}<span>{S.name}<small>{S.tagline}</small></span></a>
+        <a class="logo" href="/" aria-label={S.name}>{S.logo ? <img src={S.logo} alt={S.name} referrerpolicy="no-referrer" /> : <img class="lg" src="/logo-mark.svg" alt="" />}<span>{S.name}<small>{S.tagline}</small></span></a>
         <nav class="nav" aria-label="Menu chính">
           {M.header.map((i) => (
             <div class={`ni ${dev(i)}`}>
@@ -59,20 +81,22 @@ const mobile = M.mobile.filter((i) => i.device !== 'pc');
             </div>
           ))}
         </nav>
-        <form class="search" action="/tim-kiem" method="get">
+        <form class="search" action="/tim-kiem" method="get" role="search">
           <input type="search" name="q" placeholder="Tìm mã, bài viết…" aria-label="Tìm kiếm" /><button type="submit">Tìm</button>
         </form>
+        <a class="hbtn" href="/tim-kiem" aria-label="Tìm kiếm" set:html={icon('search', 22)}></a>
       </div>
     </header>
     <div class="drawer-bg" data-dr></div>
     <aside class="drawer" aria-label="Menu">
-      <div class="drawer-head"><a class="logo" href="/" style="padding:0"><i>↗</i><span>{S.name}</span></a><button type="button" data-dr aria-label="Đóng" set:html={icon('x', 24)}></button></div>
+      <div class="drawer-head"><a class="logo" href="/" style="padding:0"><img class="lg" src="/logo-mark.svg" alt="" /><span>{S.name}</span></a><button type="button" data-dr aria-label="Đóng" set:html={icon('x', 24)}></button></div>
       <form action="/tim-kiem" method="get" style="margin:0 6px 10px;display:flex"><input type="search" name="q" placeholder="Tìm kiếm…" style="border-radius:10px 0 0 10px" /><button class="btn" style="border-radius:0 10px 10px 0" type="submit">Tìm</button></form>
       {mobile.map((i) => (<>
         <a href={safeUrl(i.url)} target={i.target || undefined} class={isActive(i.url, path) ? 'on' : ''}><Fragment set:html={icon(i.icon || 'link')} />{i.label}</a>
         {(i.children || []).map((c) => <a class="sb" href={safeUrl(c.url)}>{c.label}</a>)}
       </>))}
     </aside>
+    </>
   )}
   {!hideHeader && <Slot name="site.top" />}
   <slot />
@@ -80,12 +104,27 @@ const mobile = M.mobile.filter((i) => i.device !== 'pc');
   {!hideFooter && (
     <footer>
       <div class="wrap">
-        <div><b>{S.name}</b><br />{S.tagline}{S.footer_text && <p set:html={S.footer_text.replace(/</g, '&lt;').replace(/\n/g, '<br>')}></p>}
-          <p class="fl">{S.social_fb && <a href={safeUrl(S.social_fb)} target="_blank" rel="noopener">Facebook</a>}{S.social_yt && <a href={safeUrl(S.social_yt)} target="_blank" rel="noopener">YouTube</a>}{S.social_zalo && <a href={safeUrl(S.social_zalo)} target="_blank" rel="noopener">Zalo</a>}</p></div>
-        {[['f1_title', M.footer1], ['f2_title', M.footer2]].map(([k, items]: any) => (
-          <div><h4>{(S as any)[k]}</h4><div class="fl">{items.map((i: NavItem) => <a href={safeUrl(i.url)} target={i.target || undefined} class={dev(i)}>{i.label}</a>)}</div></div>
+        <div class="brand">
+          <a class="logo" href="/">{S.logo ? <img src={S.logo} alt={S.name} referrerpolicy="no-referrer" /> : <img class="lg" src="/logo-mark.svg" alt="" />}<span>{S.name}<small style="color:#9fc0bb">{S.tagline}</small></span></a>
+          {S.footer_text && <p set:html={S.footer_text.replace(/</g, '&lt;').replace(/\n/g, '<br>')}></p>}
+          {(S.social_fb || S.social_yt || S.social_zalo) && (
+            <div class="soc">
+              {S.social_fb && <a href={safeUrl(S.social_fb)} target="_blank" rel="noopener" aria-label="Facebook">f</a>}
+              {S.social_yt && <a href={safeUrl(S.social_yt)} target="_blank" rel="noopener" aria-label="YouTube">▶</a>}
+              {S.social_zalo && <a href={safeUrl(S.social_zalo)} target="_blank" rel="noopener" aria-label="Zalo">Zalo</a>}
+            </div>
+          )}
+        </div>
+        {[[S.f1_title, f1], [S.f2_title, f2]].map(([t, items]: any) => (
+          <div><h4>{t}</h4><div class="fl">{items.map((i: NavItem) => <a href={safeUrl(i.url)} target={i.target || undefined} class={dev(i)}>{i.label}</a>)}</div></div>
         ))}
-        <div><h4>Liên hệ</h4>Email: {S.email}<br />Hotline: {S.hotline}<br />{S.address}</div>
+        <div class="ct2w"><h4>Thông tin liên hệ</h4>
+          <div class="ct2">
+            {S.address && <div><Fragment set:html={icon('map', 16)} />{S.address}</div>}
+            {S.email && <div><Fragment set:html={icon('mail', 16)} /><a href={`mailto:${S.email}`}>{S.email}</a></div>}
+            {S.hotline && <div><Fragment set:html={icon('phone', 16)} />Hotline: {S.hotline}</div>}
+          </div>
+        </div>
         <div class="copy">© {new Date().getFullYear()} {S.name}. {S.disclaimer}</div>
       </div>
     </footer>
@@ -93,7 +132,7 @@ const mobile = M.mobile.filter((i) => i.device !== 'pc');
   {!hideHeader && bottom.length > 0 && (
     <nav class="bottombar" aria-label="Điều hướng nhanh">
       {bottom.map((i) => <a href={safeUrl(i.url)} class={isActive(i.url, path) ? 'on' : ''}><Fragment set:html={icon(i.icon || 'link', 22)} /><span>{i.label}</span></a>)}
-      <a href="#menu" data-dr role="button"><Fragment set:html={icon('menu', 22)} /><span>Menu</span></a>
+      <a href="#menu" data-dr role="button"><Fragment set:html={icon('menu', 22)} /><span>Danh mục</span></a>
     </nav>
   )}
   {chatJson && <script is:inline src="/chat.js?v=2" data-cfg={chatJson} defer></script>}
