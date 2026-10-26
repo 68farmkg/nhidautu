@@ -3,6 +3,7 @@ import '../../styles/global.css';
 import { makeSession, safeEq, verifyPw } from '../../lib/auth';
 import { allow, clear, ipOf } from '../../lib/ratelimit';
 import { nowIso } from '../../lib/util';
+import { logAct } from '../../lib/activity';
 const env = Astro.locals.runtime.env;
 let err = '';
 if (Astro.request.method === 'POST') {
@@ -23,9 +24,11 @@ if (Astro.request.method === 'POST') {
     }
     if (sess) {
       await clear(env.DB, ip);
+      await logAct(env.DB, { uid: sess.uid, actor: sess.name, action: 'login', summary: sess.uid ? 'Tài khoản ' + user : 'Chủ website', ip: ipOf(Astro.request) });
       Astro.cookies.set('nhip_admin', await makeSession(env, sess), { httpOnly: true, secure: true, sameSite: 'lax', path: '/', maxAge: 60 * 60 * 24 * 14 });
       return Astro.redirect('/admin');
     }
+    if (!err) await logAct(env.DB, { actor: user || '(chủ website)', action: 'login_fail', summary: 'Sai tên đăng nhập hoặc mật khẩu', ip: ipOf(Astro.request) });
     err = err || 'Tên đăng nhập hoặc mật khẩu chưa đúng.';
   }
 }

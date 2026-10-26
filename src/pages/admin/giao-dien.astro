@@ -1,0 +1,96 @@
+---
+import Admin from '../../layouts/Admin.astro';
+import { listBlocks } from '../../lib/reusable';
+import { FIELDS, GROUPS, FONTS, EL, EL_MOBILE, PRESETS, SLOTS_M, getTheme, saveTheme, resetTheme } from '../../lib/theme';
+const db = Astro.locals.runtime.env.DB;
+const log = (a: string, o = '', s = '') => (Astro.locals as any).log?.(a, o, s);
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData(), act = String(f.get('act') || 'save');
+  if (act === 'reset') { await resetTheme(db); await log('theme.reset', 'theme', 'Về mặc định'); return Astro.redirect('/admin/giao-dien?m=' + encodeURIComponent('Đã đặt lại giao diện về mặc định.')); }
+  const raw: Record<string, string> = {};
+  for (const fd of FIELDS) { const v = f.getAll(fd.k); raw[fd.k] = String(v.length ? v[v.length - 1] : ''); } // ô tích: giá trị cuối (ẩn "0" + tích "1")
+  const o = await saveTheme(db, raw);
+  await log('theme.save', 'theme', `Header ${o.hd_on === '1' ? 'mới' : 'cũ'} · Footer ${o.ft_on === '1' ? 'mới' : 'cũ'}`);
+  return Astro.redirect('/admin/giao-dien?m=' + encodeURIComponent('Đã lưu giao diện.'));
+}
+const o = await getTheme(db);
+const blocks = await listBlocks(db);
+const m = Astro.url.searchParams.get('m');
+const J = (x: any) => JSON.stringify(x).replace(/</g, '\\u003c');
+const subs = (g: string) => { const out: [string, typeof FIELDS][] = []; for (const f of FIELDS.filter((x) => x.g === g)) { const s = f.sg || ''; const e = out.find((x) => x[0] === s); if (e) e[1].push(f); else out.push([s, [f]]); } return out; };
+---
+<Admin title="Tùy chỉnh giao diện" active="theme">
+  <div class="pagehead"><h1>Tùy chỉnh giao diện</h1></div>
+  {m && <div class="msg">{m}</div>}
+  <p class="meta">Màu, chữ, bố cục, Header và Footer của website. Ô để trống nghĩa là <b>giữ nguyên giao diện hiện tại</b>. Chỉ có hiệu lực sau khi bấm <b>Lưu giao diện</b>; mở trang chủ ở tab khác để xem thay đổi (có thể chậm tối đa 30 giây).</p>
+  <div class="tabs" id="gt">{GROUPS.map(([k, n], i) => <a href={`#${k}`} data-g={k} class={i === 0 ? 'on' : ''}>{n}</a>)}</div>
+  <form method="post" id="tf">
+    <input type="hidden" name="act" value="save" />
+    {GROUPS.map(([g, gn]) => (
+      <section data-sec={g} style={g === 'mau' ? '' : 'display:none'}>
+        {g === 'header' && (
+          <div class="box" style="margin-bottom:12px"><b>Mẫu Header dựng sẵn</b> <span class="meta">Bấm để điền vào bảng; chỉ áp dụng khi bấm Lưu.</span>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">{Object.entries(PRESETS).map(([id, p]) => <button type="button" class="btn ghost" data-preset={id}>{p.name}</button>)}</div></div>
+        )}
+        {subs(g).map(([sg, fs]) => (
+          <div class="box" style="margin-bottom:12px">
+            {sg && <h3 style="margin:0 0 8px;font-size:15px">{sg}</h3>}
+            {fs.map((f) => (
+              <div style="margin:0 0 10px">
+                {f.t === 'bool' ? (<label style="display:flex;gap:8px;align-items:center"><input type="hidden" name={f.k} value="0" /><input type="checkbox" name={f.k} value="1" checked={o[f.k] === '1'} /> {f.l}</label>)
+                : (<><label for={'f_' + f.k}>{f.l}</label>
+                  {f.t === 'color' && <div style="display:flex;gap:8px;align-items:center"><input type="color" data-cp={f.k} value={o[f.k] || '#0f9d6b'} style="width:44px;height:38px;padding:2px" aria-label={f.l + ' (chọn màu)'} /><input type="text" id={'f_' + f.k} name={f.k} value={o[f.k]} placeholder="#RRGGBB (trống = giữ nguyên)" maxlength="7" style="max-width:220px" /></div>}
+                  {f.t === 'int' && <input type="number" id={'f_' + f.k} name={f.k} value={o[f.k]} min={f.min} max={f.max} placeholder={f.def ? '' : 'giữ nguyên'} inputmode="numeric" style="max-width:160px" />}
+                  {f.t === 'enum' && <select id={'f_' + f.k} name={f.k}>{f.opts!.map(([v, l]) => <option value={v} selected={o[f.k] === v}>{l}</option>)}</select>}
+                  {f.t === 'font' && <select id={'f_' + f.k} name={f.k}><option value="" selected={!o[f.k]}>Giữ nguyên</option>{FONTS.map((x) => <option value={x} selected={o[f.k] === x}>{x}</option>)}</select>}
+                  {f.k.startsWith('blk_') && <select id={'f_' + f.k} name={f.k}><option value="" selected={!o[f.k]}>Không chèn</option>{blocks.map((b) => <option value={b.slug} selected={o[f.k] === b.slug}>{b.title} ({b.slug})</option>)}</select>}
+                  {(f.t === 'text' || f.t === 'url') && !f.k.startsWith('blk_') && <input type="text" id={'f_' + f.k} name={f.k} value={o[f.k]} maxlength={f.ml} placeholder={f.t === 'url' ? '/duong-dan hoặc https://…' : ''} />}
+                  {f.t === 'css' && <textarea id={'f_' + f.k} name={f.k} rows="8" maxlength={f.ml} spellcheck="false" style="font-family:monospace;width:100%">{o[f.k]}</textarea>}
+                  {f.t === 'slots' && <div class="slot" data-slot={f.k} data-m={SLOTS_M.includes(f.k) ? '1' : ''}><input type="hidden" name={f.k} value={o[f.k]} /><div class="chips"></div><select class="add"></select></div>}
+                </>)}
+                {f.hint && <div class="meta">{f.hint}</div>}
+              </div>
+            ))}
+          </div>
+        ))}
+        {g === 'header' && <p class="meta">Thanh trên cùng và thanh dưới chỉ hiện trên máy tính (như Flatsome); điện thoại dùng thanh riêng với nút ☰ và ngăn kéo lấy từ mục “Menu di động” trong Menu & chân trang.</p>}
+      </section>
+    ))}
+    <div class="savebar"><button class="btn" type="submit">Lưu giao diện</button><button class="btn ghost" type="submit" name="act" value="reset" formnovalidate onclick="return confirm('Đặt lại toàn bộ giao diện về mặc định?')">Đặt lại mặc định</button></div>
+  </form>
+  <script is:inline type="application/json" id="cfg" set:html={J({ el: EL, elm: EL_MOBILE, presets: Object.fromEntries(Object.entries(PRESETS).map(([k, p]) => [k, p.v])) })}></script>
+  <script is:inline>
+    (function () {
+      var cfg = JSON.parse(document.getElementById('cfg').textContent), q = function (s, r) { return (r || document).querySelector(s); }, qa = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+      function show(g) { qa('[data-sec]').forEach(function (s) { s.style.display = s.getAttribute('data-sec') === g ? '' : 'none'; }); qa('#gt a').forEach(function (a) { a.classList.toggle('on', a.getAttribute('data-g') === g); }); }
+      qa('#gt a').forEach(function (a) { a.addEventListener('click', function (e) { e.preventDefault(); show(a.getAttribute('data-g')); history.replaceState(null, '', '#' + a.getAttribute('data-g')); }); });
+      var h = location.hash.slice(1); if (h && q('[data-sec="' + h + '"]')) show(h);
+      qa('[data-cp]').forEach(function (c) { var t = q('[name="' + c.getAttribute('data-cp') + '"]'); c.addEventListener('input', function () { t.value = c.value; }); t.addEventListener('input', function () { if (/^#[0-9a-fA-F]{6}$/.test(t.value)) c.value = t.value; }); });
+      var names = {}; cfg.el.forEach(function (e) { names[e[0]] = e[1]; });
+      function all() { return qa('.slot'); }
+      function val(s) { var v = q('input', s).value; return v ? v.split(',') : []; }
+      function set(s, a) { q('input', s).value = a.join(','); draw(); }
+      function used(mobile) { var u = {}; all().filter(function (s) { return !!s.getAttribute('data-m') === mobile; }).forEach(function (s) { val(s).forEach(function (id) { u[id] = 1; }); }); return u; }
+      function draw() {
+        all().forEach(function (s) {
+          var mob = !!s.getAttribute('data-m'), a = val(s), box = q('.chips', s), sel = q('.add', s), u = used(mob); box.innerHTML = '';
+          a.forEach(function (id, i) {
+            var c = document.createElement('span'); c.className = 'chip'; c.style.cssText = 'display:inline-flex;gap:4px;align-items:center;border:1px solid #cfd8d6;border-radius:999px;padding:3px 6px 3px 10px;margin:0 6px 6px 0;background:#fff';
+            c.appendChild(document.createTextNode(names[id] || id));
+            [['◀', -1], ['▶', 1], ['✕', 0]].forEach(function (b) { var x = document.createElement('button'); x.type = 'button'; x.textContent = b[0]; x.setAttribute('aria-label', b[1] === 0 ? 'Bỏ' : b[1] < 0 ? 'Chuyển trước' : 'Chuyển sau'); x.style.cssText = 'border:0;background:transparent;cursor:pointer;min-width:28px;min-height:28px'; x.addEventListener('click', function () { var n = a.slice(); if (b[1] === 0) n.splice(i, 1); else { var j = i + b[1]; if (j < 0 || j >= n.length) return; var t = n[i]; n[i] = n[j]; n[j] = t; } set(s, n); }); c.appendChild(x); });
+            box.appendChild(c);
+          });
+          sel.innerHTML = '<option value="">+ Thêm phần tử…</option>';
+          cfg.el.forEach(function (e) { if (mob && cfg.elm.indexOf(e[0]) < 0) return; if (used(mob)[e[0]] && e[0] !== 'divider' && e[0] !== 'spacer') return; var o = document.createElement('option'); o.value = e[0]; o.textContent = e[1]; sel.appendChild(o); });
+          sel.onchange = function () { if (sel.value) set(s, a.concat([sel.value])); };
+        });
+      }
+      draw();
+      qa('[data-preset]').forEach(function (b) { b.addEventListener('click', function () {
+        var p = cfg.presets[b.getAttribute('data-preset')];
+        Object.keys(p).forEach(function (k) { var els = qa('[name="' + k + '"]'), last = els[els.length - 1]; if (!last) return; if (last.type === 'checkbox') last.checked = p[k] === '1'; else last.value = p[k]; });
+        var on = q('[name="hd_on"][type="checkbox"]'); if (on) on.checked = true; draw();
+      }); });
+    })();
+  </script>
+</Admin>

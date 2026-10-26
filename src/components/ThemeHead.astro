@@ -1,0 +1,10 @@
+---
+// Đặt trong <head> của layout công khai (Base.astro): <ThemeHead />
+import { getTheme, themeCss, fontsHref } from '../lib/theme';
+const o = await getTheme(Astro.locals.runtime.env.DB);
+const css = themeCss(o), href = fontsHref(o);
+---
+{href && <link rel="preconnect" href="https://fonts.googleapis.com" />}
+{href && <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />}
+{href && <link rel="stylesheet" href={href} />}
+<style id="nhip-theme" is:inline set:html={css}></style>

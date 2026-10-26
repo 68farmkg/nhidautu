@@ -1,7 +1,8 @@
 ---
 import Base from '../../layouts/Base.astro';
 import PostList from '../../components/PostList.astro';
-import { CATS } from '../../lib/util';
+import { getCats } from '../../lib/terms';
+const CATS = await getCats(Astro.locals.runtime.env.DB);
 const { cat } = Astro.params;
 if (!cat || !CATS[cat]) return Astro.redirect('/tin-tuc');
 const page = Math.max(1, Number(Astro.url.searchParams.get('trang')) || 1);

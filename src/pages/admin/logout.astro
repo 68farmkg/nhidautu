@@ -1,4 +1,5 @@
 ---
+await (Astro.locals as any).log?.('logout');
 Astro.cookies.delete('nhip_admin', { path: '/' });
 return Astro.redirect('/admin/login');
 ---

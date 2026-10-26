@@ -101,7 +101,7 @@ const CORE: BlockDef[] = [
   { type: 'posts', label: 'Danh sách bài viết', icon: 'news', group: 'Chức năng', fields: [
     { k: 'cat', label: 'Chuyên mục', type: 'select', options: [['', 'Tất cả'], ...Object.entries(CATS)] }, { k: 'count', label: 'Số bài', type: 'number', def: 6 },
     { k: 'layout', label: 'Kiểu hiển thị', type: 'select', options: [['grid', 'Lưới thẻ'], ['list', 'Danh sách']], def: 'grid' }, { k: 'title', label: 'Tiêu đề khối (tùy chọn)' }],
-    render: async (p, c) => { const w = ["status='published'", 'published_at <= ?']; const a: any[] = [new Date().toISOString()]; if (p.cat && CATS[p.cat]) { w.push('category=?'); a.push(p.cat); }
+    render: async (p, c) => { const w = ["status='published'", 'published_at <= ?']; const a: any[] = [new Date().toISOString()]; if (p.cat && /^[a-z0-9-]{1,80}$/.test(String(p.cat))) { w.push('category=?'); a.push(p.cat); }
       const rows = await all(c.db, `SELECT slug,title,summary,image,category,published_at FROM posts WHERE ${w.join(' AND ')} ORDER BY published_at DESC LIMIT ${num(p.count, 6, 1, 24)}`, ...a);
       const cards = rows.map((r) => `<a class="b-pc" href="/bai-viet/${esc(r.slug)}"><div class="im">${r.image ? `<img src="${esc(r.image)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ''}</div><div><h3>${esc(r.title)}</h3>${r.summary ? `<p>${esc(r.summary)}</p>` : ''}<span class="tag">${esc(CATS[r.category] || r.category)}</span></div></a>`).join('');
       return (p.title ? `<h2 class="b-h">${esc(p.title)}</h2>` : '') + `<div class="b-posts ${p.layout === 'list' ? 'list' : ''}">${cards || '<p class="meta">Chưa có bài viết.</p>'}</div>`; } },

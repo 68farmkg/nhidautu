@@ -1,0 +1,30 @@
+---
+import Admin from '../../layouts/Admin.astro';
+import { listAct, ACTIONS, GROUPS } from '../../lib/activity';
+import { fmtDate } from '../../lib/util';
+const db = Astro.locals.runtime.env.DB;
+const sp = Astro.url.searchParams;
+const nhom = GROUPS[sp.get('nhom') || ''] ? String(sp.get('nhom')) : '';
+const q = (sp.get('q') || '').slice(0, 60), page = Math.max(1, Number(sp.get('trang')) || 1);
+let d: Awaited<ReturnType<typeof listAct>> = { rows: [], total: 0, pages: 1, page: 1 }, err = '';
+try { d = await listAct(db, { nhom, q, page }); } catch { err = 'Chưa đọc được nhật ký.'; }
+const link = (o: Record<string, string | number>) => '?' + new URLSearchParams(Object.entries({ nhom, q, ...o }).filter(([, v]) => v !== '' && v !== 0).map(([k, v]) => [k, String(v)])).toString();
+const tabs: [string, string][] = [['', 'Tất cả'], ['login', 'Đăng nhập'], ['user', 'Tài khoản & vai trò'], ['content', 'Nội dung']];
+---
+<Admin title={nhom === 'login' ? 'Lịch sử đăng nhập' : 'Nhật ký hoạt động'} active={nhom === 'login' ? 'users-logins' : 'logs'}>
+  <div class="pagehead"><h1>{nhom === 'login' ? 'Lịch sử đăng nhập' : 'Nhật ký hoạt động'}</h1></div>
+  <p class="meta">Ghi lại ai làm gì và khi nào. Không lưu nội dung biểu mẫu, mật khẩu hay mã bí mật. Giữ 365 ngày.</p>
+  {err && <div class="msg err">{err}</div>}
+  <div class="acts" style="margin-bottom:10px">{tabs.map(([k, l]) => <a class={`btn sm ${nhom === k ? '' : 'ghost'}`} href={link({ nhom: k, trang: 0 })}>{l}</a>)}</div>
+  <form method="get" class="box" style="margin-bottom:10px">{nhom && <input type="hidden" name="nhom" value={nhom} />}
+    <input type="text" name="q" value={q} placeholder="Tìm theo người thực hiện, đối tượng, nội dung…" maxlength="60" />
+    <p><button class="btn sm" type="submit">Tìm</button> {q && <a class="btn ghost sm" href={link({ q: '', trang: 0 })}>Xóa lọc</a>}</p></form>
+  {d.rows.length === 0 && !err && <div class="box">Chưa có hoạt động nào phù hợp.</div>}
+  {d.rows.map((r) => (
+    <div class="box" style="margin-bottom:8px;padding:10px 12px">
+      <b>{ACTIONS[r.action] || r.action}</b> <span class="meta">· {r.actor || 'không rõ'} · {fmtDate(r.at)}{r.ip ? ' · ' + r.ip : ''}</span>
+      {(r.obj || r.summary) && <div class="meta">{r.obj}{r.obj && r.summary ? ' — ' : ''}{r.summary}</div>}
+    </div>
+  ))}
+  <div class="pager"><span>{d.page > 1 && <a class="btn ghost" href={link({ trang: d.page - 1 })}>← Mới hơn</a>}</span><span class="meta">Trang {d.page}/{d.pages} · {d.total} mục</span><span>{d.page < d.pages && <a class="btn ghost" href={link({ trang: d.page + 1 })}>Cũ hơn →</a>}</span></div>
+</Admin>

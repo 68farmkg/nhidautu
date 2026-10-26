@@ -1,8 +1,10 @@
 ---
 import Admin from '../../../layouts/Admin.astro';
 import PreviewPane from '../../../components/PreviewPane.astro';
-import { first, run, nowIso, slugify, fromLocalInput, toLocalInput, CATS } from '../../../lib/util';
+import { first, run, nowIso, slugify, fromLocalInput, toLocalInput } from '../../../lib/util';
+import { getCats, listTerms, setPostTags, getPostTags } from '../../../lib/terms';
 const db = Astro.locals.runtime.env.DB;
+const CATS = await getCats(db);
 const id = Astro.params.id === 'moi' ? 0 : Number(Astro.params.id);
 let p: any = id ? await first(db, 'SELECT * FROM posts WHERE id=?', id) : null;
 if (id && !p) return Astro.redirect('/admin/bai-viet');
@@ -20,17 +22,23 @@ if (Astro.request.method === 'POST') {
     let slug = slugify(String(f.get('slug') || '') || title);
     const dup = await first(db, 'SELECT id FROM posts WHERE slug=? AND id<>?', slug, id);
     if (dup) slug += '-' + Date.now().toString(36);
-    const vals = [slug, title, String(f.get('summary') || ''), String(f.get('content') || ''), String(f.get('category') || 'thi-truong'), String(f.get('tickers') || '').toUpperCase(), image, String(f.get('image_kw') || '').trim(), String(f.get('image_hint') || '').trim(), status, at || null];
+    const vals = [slug, title, String(f.get('summary') || ''), String(f.get('content') || ''), (String(f.get('category')) in CATS ? String(f.get('category')) : Object.keys(CATS)[0] || 'thi-truong'), String(f.get('tickers') || '').toUpperCase(), image, String(f.get('image_kw') || '').trim(), String(f.get('image_hint') || '').trim(), status, at || null];
     if (id) {
       await run(db, 'UPDATE posts SET slug=?,title=?,summary=?,content=?,category=?,tickers=?,image=?,image_kw=?,image_hint=?,status=?,published_at=? WHERE id=?', ...vals, id);
+      await setPostTags(db, id, String(f.get('tags') || ''));
+      await (Astro.locals as any).log?.('post.update', 'post:' + id, `${title} · ${status}`);
       return Astro.redirect(`/admin/bai-viet/${id}?saved=1`);
     }
     const r = await run(db, 'INSERT INTO posts (slug,title,summary,content,category,tickers,image,image_kw,image_hint,status,published_at,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)', ...vals, nowIso());
+    await setPostTags(db, r.meta.last_row_id, String(f.get('tags') || ''));
+    await (Astro.locals as any).log?.('post.create', 'post:' + r.meta.last_row_id, `${title} · ${status}`);
     return Astro.redirect(`/admin/bai-viet/${r.meta.last_row_id}?saved=1`);
   }
   p = { ...(p || {}), title, summary: String(f.get('summary') || ''), content: String(f.get('content') || ''), category: String(f.get('category') || ''), tickers: String(f.get('tickers') || ''), image, image_kw: String(f.get('image_kw') || ''), image_hint: String(f.get('image_hint') || ''), status: String(f.get('status') || 'draft') };
 }
 const v = p || { title: '', slug: '', summary: '', content: '', category: 'thi-truong', tickers: '', image: '', image_kw: '', image_hint: '', status: 'draft', published_at: '' };
+const tagsVal = Astro.request.method === 'POST' ? '' : (await getPostTags(db, id)).map((t) => t.name).join(', ');
+const tagSuggest = (await listTerms(db, 'tag')).slice(0, 200);
 const saved = Astro.url.searchParams.get('saved');
 const aiVia = Astro.url.searchParams.get('ai');
 const left = ((v.content || '').match(/\[ảnh cần:[^\]]*\]/gi) || []).length;
@@ -50,6 +58,8 @@ const kw = encodeURIComponent((v.image_kw || v.title || '').trim());
       <div><label for="tickers">Mã liên quan (cách nhau dấu phẩy)</label><input id="tickers" type="text" name="tickers" value={v.tickers} placeholder="TCB, VIC, FPT" /></div>
     </div>
 
+    <label for="tags">Thẻ (cách nhau dấu phẩy)</label><input id="tags" type="text" name="tags" value={tagsVal} list="tagsug" placeholder="VN-Index, cổ phiếu ngân hàng" />
+    <datalist id="tagsug">{tagSuggest.map((t) => <option value={t.name} />)}</datalist>
     <div class="msg" style="background:#eef6ff;color:#0b4a8f">
       <b>Tìm ảnh ở trang khác</b>
       {v.image_hint && <div>AI gợi ý: {v.image_hint}</div>}

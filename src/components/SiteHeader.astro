@@ -1,0 +1,53 @@
+---
+// Header theo cấu hình ở Quản trị › Tùy chỉnh giao diện. Chỉ hiển thị khi bật “Dùng Header mới”.
+// Dùng: <SiteHeader site={{ name: 'Nhịp Đầu Tư', logo: '/logo.svg' }} />
+import HeaderEl from './HeaderEl.astro';
+import ReusableBlock from './ReusableBlock.astro';
+import '../styles/theme-builder.css';
+import { getTheme, slotIds, cleanUrl } from '../lib/theme';
+import { all } from '../lib/util';
+const { site = {} } = Astro.props as { site?: { name?: string; logo?: string } };
+const name = site.name || 'Nhịp Đầu Tư', logo = site.logo || '';
+const db = Astro.locals.runtime.env.DB;
+const o = await getTheme(db);
+const on = o.hd_on === '1';
+const trans = on && o.hd_trans === '1' && Astro.url.pathname === '/';
+const tree = (rs: any[]) => { const m = new Map<number, any>(), top: any[] = []; for (const r of rs) { if (r.parent_id) { m.get(r.parent_id)?.subs.push(r); } else { r.subs = []; m.set(r.id, r); top.push(r); } } return top; };
+let rows: any[] = [], mrows: any[] = [];
+if (on) { try { rows = await all(db, "SELECT * FROM nav_items WHERE loc='header' ORDER BY sort,id"); mrows = await all(db, "SELECT * FROM nav_items WHERE loc='mobile' ORDER BY sort,id"); } catch { /* chưa có bảng menu */ } }
+const nav = tree(rows), mnav = tree(mrows.length ? mrows : rows);
+const bars: [string, string, string[]][] = [['top', 'hd_top', ['top_l', 'top_c', 'top_r']], ['main', '', ['mn_l', 'mn_c', 'mn_r']], ['bot', 'hd_bot', ['bt_l', 'bt_c', 'bt_r']]];
+const side = (k: string) => k.slice(-1);
+let ml = slotIds(o.mb_l), mr = slotIds(o.mb_r), mc: string[] = [];
+if (o.logo_m === 'center') { mc = ['logo']; ml = ml.filter((x) => x !== 'logo'); mr = mr.filter((x) => x !== 'logo'); }
+const burgerLeft = o.mb_burger === 'left';
+---
+<ReusableBlock slug={o.blk_hd_before} />
+{on && (<>
+  <header class={`nh-hd ${o.hd_sticky === '1' || trans ? 'is-sticky' : ''} ${trans ? 'is-trans' : ''} ${o.hd_shadow === '1' ? 'has-shadow' : ''} ${o.hd_line === '1' ? 'has-line' : ''} nav-${o.nav_style}`} id="nh-hd">
+    {bars.filter((b) => !b[1] || o[b[1]] === '1').map(([k, , slots]) => (
+      <div class={`nh-bar nh-${k} nh-pc`}><div class="nh-in">{slots.map((sk) => <div class={`nh-slot s-${side(sk)}`}>{slotIds(o[sk]).map((id) => <HeaderEl id={id} o={o} name={name} logo={logo} tree={nav} />)}</div>)}</div></div>
+    ))}
+    <div class="nh-bar nh-mb"><div class="nh-in">
+      <div class="nh-slot s-l">{burgerLeft && <button type="button" class="nh-burger" data-nh-dr aria-label="Mở menu" aria-expanded="false" aria-controls="nh-dr">☰</button>}{ml.map((id) => <HeaderEl id={id} o={o} name={name} logo={logo} tree={mnav} />)}</div>
+      <div class="nh-slot s-c">{mc.map((id) => <HeaderEl id={id} o={o} name={name} logo={logo} />)}</div>
+      <div class="nh-slot s-r">{mr.map((id) => <HeaderEl id={id} o={o} name={name} logo={logo} />)}{!burgerLeft && <button type="button" class="nh-burger" data-nh-dr aria-label="Mở menu" aria-expanded="false" aria-controls="nh-dr">☰</button>}</div>
+    </div></div>
+  </header>
+  <div class="nh-dr-bg" data-nh-dr></div>
+  <aside class="nh-dr" id="nh-dr" aria-label="Menu" aria-hidden="true">
+    <div class="nh-dr-h"><b>{name}</b><button type="button" data-nh-dr aria-label="Đóng menu">✕</button></div>
+    <ul>{mnav.filter((n: any) => n.device !== 'pc').map((n: any) => (<li><a href={cleanUrl(n.url) || '#'}>{n.label}</a>{n.subs.length > 0 && <ul>{n.subs.filter((s: any) => s.device !== 'pc').map((s: any) => <li><a href={cleanUrl(s.url) || '#'}>{s.label}</a></li>)}</ul>}</li>))}</ul>
+  </aside>
+  <script is:inline>
+    (function () {
+      var d = document, h = d.getElementById('nh-hd'), dr = d.getElementById('nh-dr');
+      function tog(open) { var o = typeof open === 'boolean' ? open : !d.body.classList.contains('nh-dr-open'); d.body.classList.toggle('nh-dr-open', o); dr.setAttribute('aria-hidden', o ? 'false' : 'true'); d.querySelectorAll('.nh-burger').forEach(function (b) { b.setAttribute('aria-expanded', o ? 'true' : 'false'); }); }
+      d.querySelectorAll('[data-nh-dr]').forEach(function (e) { e.addEventListener('click', function () { tog(); }); });
+      d.addEventListener('keydown', function (e) { if (e.key === 'Escape') tog(false); });
+      var t = false; function sc() { var s = window.scrollY > 8; if (s !== t) { t = s; h.classList.toggle('is-stuck', s); } }
+      window.addEventListener('scroll', sc, { passive: true }); sc();
+    })();
+  </script>
+</>)}
+<ReusableBlock slug={o.blk_hd_after} />

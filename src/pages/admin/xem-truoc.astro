@@ -2,8 +2,10 @@
 // Nhận dữ liệu đang soạn (chưa lưu) và dựng đúng giao diện thật để xem trước.
 import Base from '../../layouts/Base.astro';
 import Blocks from '../../components/Blocks.astro';
-import { renderContent, CATS, fmtDate, first } from '../../lib/util';
+import { renderContent, fmtDate, first } from '../../lib/util';
+import { getCats } from '../../lib/terms';
 import { cleanBlocks, parseBlocks, activeDefs, defsToMap } from '../../lib/blocks';
+const CATS = await getCats(Astro.locals.runtime.env.DB);
 
 let d: any = {};
 try { d = await Astro.request.json(); } catch { /* rỗng */ }

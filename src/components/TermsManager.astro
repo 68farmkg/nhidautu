@@ -1,0 +1,36 @@
+---
+// Bảng quản lý Chuyên mục / Thẻ dùng chung. Dữ liệu và xử lý form nằm ở lib/terms.ts (đã có test).
+const { kind, rows, base } = Astro.props;
+const cat = kind === 'category';
+---
+<div class="box" style="margin-bottom:14px">
+  <h3>{cat ? 'Thêm chuyên mục' : 'Thêm thẻ'}</h3>
+  <form method="post">
+    <input type="hidden" name="act" value="save" />
+    <label for="nn">Tên</label><input id="nn" type="text" name="name" maxlength="60" required />
+    <label for="ns">Đường dẫn (để trống sẽ tự tạo từ tên; không đổi được sau khi tạo)</label><input id="ns" type="text" name="slug" maxlength="80" />
+    {cat && <><label for="nd">Mô tả (không bắt buộc)</label><input id="nd" type="text" name="descr" maxlength="300" /></>}
+    <p><button class="btn" type="submit">{cat ? 'Thêm chuyên mục' : 'Thêm thẻ'}</button></p>
+  </form>
+</div>
+{rows.length === 0 && <p class="meta">Chưa có {cat ? 'chuyên mục' : 'thẻ'} nào. Thẻ sẽ tự xuất hiện khi bạn nhập thẻ trong trình soạn bài viết.</p>}
+{rows.map((t: any) => (
+  <div class="box" style="margin-bottom:10px">
+    <form method="post">
+      <input type="hidden" name="id" value={t.id} />
+      <div class="row2">
+        <div><label>Tên</label><input type="text" name="name" value={t.name} maxlength="60" required /></div>
+        {cat ? <div><label>Mô tả</label><input type="text" name="descr" value={t.descr} maxlength="300" /></div> : <div><label>Đường dẫn</label><input type="text" value={t.slug} disabled /></div>}
+      </div>
+      <p class="meta">/{cat ? 'chuyen-muc' : 'the'}/{t.slug} · {t.n} bài</p>
+      <p>
+        <button class="btn" type="submit" name="act" value="save">Lưu</button>
+        {cat && <button class="btn ghost" type="submit" name="act" value="up" formnovalidate aria-label="Lên">↑</button>}
+        {cat && <button class="btn ghost" type="submit" name="act" value="down" formnovalidate aria-label="Xuống">↓</button>}
+        <a class="btn ghost" href={`/${cat ? 'chuyen-muc' : 'the'}/${t.slug}`} target="_blank">Xem</a>
+        <button class="btn ghost" type="submit" name="act" value="delete" formnovalidate style="color:#b42318"
+          onclick={cat ? `return confirm('Xóa chuyên mục này? Bài viết KHÔNG bị xóa, sẽ chuyển sang chuyên mục còn lại đầu tiên.')` : `return confirm('Xóa thẻ này? Bài viết vẫn giữ nguyên.')`}>Xóa</button>
+      </p>
+    </form>
+  </div>
+))}

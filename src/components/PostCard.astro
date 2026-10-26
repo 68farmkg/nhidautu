@@ -1,6 +1,8 @@
 ---
-import { CATS, fmtDate } from '../lib/util';
+import { fmtDate } from '../lib/util';
+import { getCats } from '../lib/terms';
 const { p, big = false } = Astro.props;
+const CATS = await getCats(Astro.locals.runtime.env.DB);
 ---
 <a class={`pc ${big ? 'big' : ''}`} href={`/bai-viet/${p.slug}`}>
   <div class="im">{p.image && <img src={p.image} alt="" loading="lazy" referrerpolicy="no-referrer" />}</div>

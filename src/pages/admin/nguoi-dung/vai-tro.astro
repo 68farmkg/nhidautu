@@ -1,0 +1,45 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+import { CAPS, ASSIGNABLE } from '../../../lib/perm';
+import { listRoles, saveRole, deleteRole } from '../../../lib/roles';
+const db = Astro.locals.runtime.env.DB;
+const log = (a: string, o = '', s = '') => (Astro.locals as any).log?.(a, o, s);
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData(), act = String(f.get('act') || ''), slug = String(f.get('slug') || '');
+  const r = act === 'delete' ? await deleteRole(db, slug)
+    : await saveRole(db, { slug, name: String(f.get('name') || ''), caps: f.getAll('caps'), isNew: act === 'add' });
+  if (r.ok) await log(act === 'delete' ? 'role.delete' : 'role.save', 'role:' + slug, act === 'add' ? 'Tạo mới' : '');
+  return Astro.redirect(`/admin/nguoi-dung/vai-tro?${r.ok ? 'm=' : 'e='}${encodeURIComponent(r.msg)}`);
+}
+const roles = await listRoles(db);
+const m = Astro.url.searchParams.get('m'), e = Astro.url.searchParams.get('e');
+const capList = ASSIGNABLE.map((k) => [k, CAPS[k].label] as [string, string]);
+---
+<Admin title="Vai trò & quyền" active="users-roles">
+  <div class="pagehead"><h1>Vai trò & quyền</h1></div>
+  {m && <div class="msg">{m}</div>}{e && <div class="msg err">{e}</div>}
+  <p class="meta">Vai trò quyết định người dùng được vào khu nào của quản trị. Quyền được kiểm tra ở máy chủ cho mọi thao tác. Cài đặt, plugin, menu, người dùng, vai trò và nhật ký luôn chỉ dành cho quản trị viên, không gán được. Vai trò khác “admin” không được thêm hoặc sửa khối mã HTML tự do.</p>
+  {roles.map((r) => r.builtin ? (
+    <div class="box" style="margin-bottom:10px"><b>{r.name}</b> <span class="meta">· mã: {r.slug} · dựng sẵn, không sửa</span>
+      <p class="meta" style="margin:6px 0 0">{r.slug === 'admin' ? 'Toàn quyền.' : r.caps.filter((c) => CAPS[c]).map((c) => CAPS[c].label).join(' · ')}</p></div>
+  ) : (
+    <div class="box" style="margin-bottom:10px">
+      <form method="post"><input type="hidden" name="act" value="save" /><input type="hidden" name="slug" value={r.slug} />
+        <label>Tên vai trò <span class="meta">(mã: {r.slug})</span></label><input type="text" name="name" value={r.name} maxlength="60" required />
+        <p style="margin:8px 0 2px"><b>Quyền</b></p>
+        {capList.map(([k, l]) => <label style="display:block;margin:2px 0"><input type="checkbox" name="caps" value={k} checked={r.caps.includes(k)} /> {l}</label>)}
+        <p><button class="btn sm" type="submit">Lưu</button>
+          <button class="btn red sm" type="submit" name="act" value="delete" formnovalidate onclick="return confirm('Xóa vai trò này? Chỉ xóa được khi không còn tài khoản nào dùng.')">Xóa</button></p>
+      </form>
+    </div>
+  ))}
+  <div class="box"><h3>Thêm vai trò</h3>
+    <form method="post"><input type="hidden" name="act" value="add" />
+      <div class="row2"><div><label for="rs">Mã (a-z, 0-9, dấu gạch)</label><input id="rs" type="text" name="slug" required autocapitalize="none" /></div>
+        <div><label for="rn">Tên hiển thị</label><input id="rn" type="text" name="name" maxlength="60" required /></div></div>
+      <p style="margin:8px 0 2px"><b>Quyền</b></p>
+      {capList.map(([k, l]) => <label style="display:block;margin:2px 0"><input type="checkbox" name="caps" value={k} /> {l}</label>)}
+      <p><button class="btn" type="submit">Tạo vai trò</button></p>
+    </form>
+  </div>
+</Admin>

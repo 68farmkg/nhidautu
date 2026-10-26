@@ -1,37 +1,153 @@
 ---
 import Admin from '../../../layouts/Admin.astro';
-import { all, run, CATS, fmtDate } from '../../../lib/util';
+import '../../../styles/admin-pro.css';
+import { all, first, run, fmtDate } from '../../../lib/util';
+import { getCats } from '../../../lib/terms';
 const db = Astro.locals.runtime.env.DB;
+const CATS = await getCats(db);
+
 if (Astro.request.method === 'POST') {
   const f = await Astro.request.formData();
-  if (f.get('act') === 'delete') await run(db, 'DELETE FROM posts WHERE id=?', Number(f.get('id')));
-  return Astro.redirect('/admin/bai-viet');
+  if (f.get('act') === 'delete') {
+    const id = Number(f.get('id')) || 0;
+    if (id) { await run(db, 'DELETE FROM posts WHERE id=?', id); await (Astro.locals as any).log?.('post.delete', 'post:' + id); }
+  }
+  return Astro.redirect(Astro.url.pathname + Astro.url.search);
 }
-const st = Astro.url.searchParams.get('st') || '';
-const rows = await all(db, `SELECT id,title,category,status,published_at,created_at FROM posts ${st ? 'WHERE status=?' : ''} ORDER BY created_at DESC LIMIT 100`, ...(st ? [st] : []));
-const label: Record<string, string> = { draft: 'Nháp', pending: 'Chờ duyệt', published: 'Đã đăng' };
+
+// ---- tham số lọc (đã kiểm tra chặt) ----
+const sp = Astro.url.searchParams;
+const STATUS: Record<string, [string, string]> = { published: ['Đã xuất bản', 'g'], draft: ['Bản nháp', 'o'], pending: ['Chờ duyệt', 'v'] };
+const st = sp.get('st') && STATUS[sp.get('st')!] ? sp.get('st')! : '';
+const cat = sp.get('cat') && CATS[sp.get('cat')!] ? sp.get('cat')! : '';
+const q = (sp.get('q') || '').trim().slice(0, 80);
+const day = (s: string | null) => (s && /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : '');
+const from = day(sp.get('tu')), to = day(sp.get('den'));
+const sort = ['new', 'old', 'views'].includes(sp.get('sx') || '') ? sp.get('sx')! : 'new';
+const per = [10, 20, 50].includes(Number(sp.get('n'))) ? Number(sp.get('n')) : 10;
+const page = Math.max(1, Number(sp.get('trang')) || 1);
+
+const qs = (o: Record<string, string | number>) => {
+  const m: Record<string, string> = { st, cat, q, tu: from, den: to, sx: sort === 'new' ? '' : sort, n: per === 10 ? '' : String(per), trang: '' };
+  for (const [k, v] of Object.entries(o)) m[k] = String(v);
+  const s = Object.entries(m).filter(([, v]) => v !== '' && v !== '0').map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
+  return '/admin/bai-viet' + (s ? '?' + s : '');
+};
+
+// ---- điều kiện ----
+const w: string[] = [], a: any[] = [];
+const dt = 'COALESCE(published_at, created_at)';
+if (st) { w.push('status=?'); a.push(st); }
+if (cat) { w.push('category=?'); a.push(cat); }
+if (q) { w.push("(title LIKE ? ESCAPE '\\' OR summary LIKE ? ESCAPE '\\' OR tickers LIKE ? ESCAPE '\\')"); const l = `%${q.replace(/[\\%_]/g, (c) => '\\' + c)}%`; a.push(l, l, l); }
+if (from) { w.push(`${dt} >= ?`); a.push(from + 'T00:00:00'); }
+if (to) { w.push(`${dt} <= ?`); a.push(to + 'T23:59:59'); }
+const where = w.length ? 'WHERE ' + w.join(' AND ') : '';
+const order = sort === 'old' ? `${dt} ASC` : sort === 'views' ? 'views DESC, id DESC' : `${dt} DESC, id DESC`;
+
+let total = 0, rows: any[] = [], byStatus: Record<string, number> = {}, byCat: Record<string, number> = {}, views = 0, newMonth = 0, err = '';
+try {
+  total = (await first(db, `SELECT COUNT(*) n FROM posts ${where}`, ...a))?.n || 0;
+  const pg = Math.min(page, Math.max(1, Math.ceil(total / per)));
+  rows = await all(db, `SELECT id,slug,title,summary,category,status,image,views,published_at,created_at FROM posts ${where} ORDER BY ${order} LIMIT ? OFFSET ?`, ...a, per, (pg - 1) * per);
+  for (const r of await all(db, 'SELECT status, COUNT(*) n FROM posts GROUP BY status')) byStatus[r.status] = r.n;
+  for (const r of await all(db, 'SELECT category, COUNT(*) n FROM posts GROUP BY category')) byCat[r.category] = r.n;
+  views = (await first(db, 'SELECT COALESCE(SUM(views),0) n FROM posts'))?.n || 0;
+  const m1 = new Date(); m1.setDate(1); m1.setHours(0, 0, 0, 0);
+  newMonth = (await first(db, 'SELECT COUNT(*) n FROM posts WHERE created_at >= ?', m1.toISOString()))?.n || 0;
+} catch (e: any) { err = 'Không đọc được danh sách bài viết: ' + (e?.message || e); }
+const all_ = Object.values(byStatus).reduce((x, y) => x + y, 0);
+const pages = Math.max(1, Math.ceil(total / per)), cur = Math.min(page, pages);
+const nums: (number | '…')[] = [];
+for (let i = 1; i <= pages; i++) if (i === 1 || i === pages || Math.abs(i - cur) <= 1) nums.push(i); else if (nums[nums.length - 1] !== '…') nums.push('…');
+const n = (x: number) => x.toLocaleString('vi-VN');
 ---
 <Admin title="Bài viết" active="posts">
-  <h1>Bài viết</h1>
-  <p>
-    <a class="btn" href="/admin/bai-viet/moi">Viết bài mới</a>
-    <a class="btn ghost" href="/admin/bai-viet">Tất cả</a>
-    <a class="btn ghost" href="/admin/bai-viet?st=pending">Chờ duyệt</a>
-    <a class="btn ghost" href="/admin/bai-viet?st=draft">Nháp</a>
-    <a class="btn ghost" href="/admin/bai-viet?st=published">Đã đăng</a>
-  </p>
-  <div class="box scroll"><table class="t">
-    <thead><tr><th>Tiêu đề</th><th>Chuyên mục</th><th>Trạng thái</th><th>Ngày đăng</th><th></th></tr></thead>
-    <tbody>
-      {rows.map((r) => (
-        <tr>
-          <td><a href={`/admin/bai-viet/${r.id}`}><b>{r.title}</b></a></td>
-          <td>{CATS[r.category] || r.category}</td>
-          <td><span class={`st ${r.status}`}>{label[r.status] || r.status}</span></td>
-          <td>{fmtDate(r.published_at)}</td>
-          <td><form method="post" class="inline" onsubmit="return confirm('Xóa bài này?')"><input type="hidden" name="act" value="delete" /><input type="hidden" name="id" value={r.id} /><button class="btn red" type="submit">Xóa</button></form></td>
-        </tr>
-      ))}
-    </tbody>
-  </table></div>
+<div class="ap">
+  <div class="ap-head"><div><h1>Bài viết</h1><p>Quản lý tất cả bài viết trên website</p></div>
+    <a class="ap-btn" href="/admin/bai-viet/moi">+ Thêm bài viết mới</a></div>
+  {err && <div class="ap-msg err">{err}</div>}
+
+  <div class="ap-stats">
+    <div class="ap-stat"><i>▤</i><div><small>Tổng bài viết</small><b>{n(all_)}</b><em>+{n(newMonth)} (tháng này)</em></div></div>
+    <div class="ap-stat"><i>✓</i><div><small>Đã xuất bản</small><b>{n(byStatus.published || 0)}</b></div></div>
+    <div class="ap-stat o"><i>✎</i><div><small>Bản nháp</small><b>{n(byStatus.draft || 0)}</b></div></div>
+    <div class="ap-stat p"><i>⏳</i><div><small>Chờ duyệt</small><b>{n(byStatus.pending || 0)}</b></div></div>
+    <div class="ap-stat b"><i>👁</i><div><small>Tổng lượt xem</small><b>{n(views)}</b></div></div>
+  </div>
+
+  <div class="ap-grid">
+    <div>
+      <div class="ap-card">
+        <div class="ap-tabs">
+          <a href={qs({ st: '' })} class={!st ? 'on' : ''}>Tất cả ({n(all_)})</a>
+          {Object.entries(STATUS).map(([k, [l]]) => <a href={qs({ st: k })} class={st === k ? 'on' : ''}>{l} ({n(byStatus[k] || 0)})</a>)}
+        </div>
+        <form method="get" class="ap-filter">
+          {st && <input type="hidden" name="st" value={st} />}{from && <input type="hidden" name="tu" value={from} />}{to && <input type="hidden" name="den" value={to} />}
+          <input class="q" type="search" name="q" value={q} placeholder="Tìm tiêu đề, nội dung, mã CK…" maxlength="80" aria-label="Tìm bài viết" />
+          <select name="cat" aria-label="Chuyên mục"><option value="">Tất cả chuyên mục</option>{Object.entries(CATS).map(([k, v]) => <option value={k} selected={cat === k}>{v as string}</option>)}</select>
+          <select name="sx" aria-label="Sắp xếp"><option value="new" selected={sort === 'new'}>Mới nhất trước</option><option value="old" selected={sort === 'old'}>Cũ nhất trước</option><option value="views" selected={sort === 'views'}>Nhiều lượt xem</option></select>
+          <button class="ap-btn" type="submit">Lọc</button>
+        </form>
+
+        <div class="ap-scroll"><table class="ap-table rs">
+          <thead><tr><th>Tiêu đề</th><th>Chuyên mục</th><th>Lượt xem</th><th>Ngày đăng</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+          <tbody>
+            {rows.length === 0 && <tr><td colspan="6"><div class="ap-empty">Không có bài viết nào khớp bộ lọc.</div></td></tr>}
+            {rows.map((r) => (
+              <tr>
+                <td><div class="ap-post">{r.image ? <img src={r.image} alt="" loading="lazy" referrerpolicy="no-referrer" /> : <span class="ph"></span>}<div><b><a href={`/admin/bai-viet/${r.id}`} style="color:inherit;text-decoration:none">{r.title}</a></b>{r.summary && <small>{r.summary}</small>}</div></div></td>
+                <td data-l="Chuyên mục"><span class="ap-pill b">{CATS[r.category] || r.category}</span></td>
+                <td data-l="Lượt xem">{n(r.views || 0)}</td>
+                <td data-l="Ngày đăng">{r.published_at ? fmtDate(r.published_at) : fmtDate(r.created_at)}</td>
+                <td data-l="Trạng thái"><span class={`ap-pill ${STATUS[r.status]?.[1] || ''}`}>{STATUS[r.status]?.[0] || r.status}</span></td>
+                <td><div class="ap-acts">
+                  <a class="ap-ic" href={`/admin/bai-viet/${r.id}`} title="Sửa" aria-label="Sửa">✎</a>
+                  {r.status === 'published' && <a class="ap-ic" href={`/bai-viet/${r.slug}`} target="_blank" rel="noopener" title="Xem trên website" aria-label="Xem">👁</a>}
+                  <form method="post" onsubmit="return confirm('Xóa bài này? Không khôi phục được.')"><input type="hidden" name="act" value="delete" /><input type="hidden" name="id" value={r.id} /><button class="ap-ic" type="submit" title="Xóa" aria-label="Xóa">🗑</button></form>
+                </div></td>
+              </tr>
+            ))}
+          </tbody>
+        </table></div>
+
+        <div class="ap-pager">
+          <span>{total === 0 ? 'Không có kết quả' : `Hiển thị ${n((cur - 1) * per + 1)}–${n(Math.min(cur * per, total))} trên ${n(total)} bài viết`}</span>
+          <nav aria-label="Phân trang">
+            <a class={cur <= 1 ? 'dis' : ''} href={qs({ trang: cur - 1 })} aria-label="Trang trước">‹</a>
+            {nums.map((p) => p === '…' ? <span class="c">…</span> : <a class={p === cur ? 'on' : ''} href={qs({ trang: p })}>{p}</a>)}
+            <a class={cur >= pages ? 'dis' : ''} href={qs({ trang: cur + 1 })} aria-label="Trang sau">›</a>
+          </nav>
+          <span>{[10, 20, 50].map((x) => <a href={qs({ n: x })} style={per === x ? 'font-weight:700;margin-left:8px' : 'margin-left:8px'}>{x}/trang</a>)}</span>
+        </div>
+      </div>
+    </div>
+
+    <aside class="ap-side">
+      <div class="ap-card">
+        <h3>Lọc bài viết</h3>
+        <h4>Trạng thái</h4>
+        {Object.entries(STATUS).map(([k, [l]]) => <a class={`ck ${st === k ? 'on' : ''}`} style="display:flex;justify-content:space-between;padding:6px 2px;text-decoration:none;color:inherit" href={qs({ st: st === k ? '' : k })}><span>{st === k ? '☑' : '☐'} {l}</span><span>{n(byStatus[k] || 0)}</span></a>)}
+        <h4>Chuyên mục</h4>
+        {Object.entries(CATS).map(([k, v]) => <a class={`ck ${cat === k ? 'on' : ''}`} style="display:flex;justify-content:space-between;padding:6px 2px;text-decoration:none;color:inherit" href={qs({ cat: cat === k ? '' : k })}><span>{cat === k ? '☑' : '☐'} {v as string}</span><span>{n(byCat[k] || 0)}</span></a>)}
+        <form method="get">
+          {st && <input type="hidden" name="st" value={st} />}{cat && <input type="hidden" name="cat" value={cat} />}{q && <input type="hidden" name="q" value={q} />}{sort !== 'new' && <input type="hidden" name="sx" value={sort} />}
+          <h4>Khoảng thời gian</h4>
+          <div class="row"><input type="date" name="tu" value={from} aria-label="Từ ngày" /><input type="date" name="den" value={to} aria-label="Đến ngày" /></div>
+          <p style="display:flex;gap:8px;margin:12px 0 0"><button class="ap-btn" type="submit" style="flex:1;justify-content:center">Áp dụng</button><a class="ap-btn ghost" href="/admin/bai-viet">Đặt lại</a></p>
+        </form>
+      </div>
+      <div class="ap-card">
+        <h3>Thao tác nhanh</h3>
+        <p style="display:grid;gap:8px;margin:0">
+          <a class="ap-btn ghost" href="/admin/bai-viet/chuyen-muc">Quản lý chuyên mục</a>
+          <a class="ap-btn ghost" href="/admin/bai-viet/the">Quản lý thẻ</a>
+          <a class="ap-btn ghost" href="/admin/ai">Viết bằng AI</a>
+          <a class="ap-btn ghost" href="/admin/rss">Tin RSS các báo</a>
+        </p>
+      </div>
+    </aside>
+  </div>
+</div>
 </Admin>

@@ -1,0 +1,81 @@
+---
+import Admin from '../../layouts/Admin.astro';
+import { PARTS, MAX_BYTES, parseBackup, summary, applyBackup, snapshot, listSnaps, getSnap } from '../../lib/backup';
+const db = Astro.locals.runtime.env.DB;
+const log = (a: string, o = '', s = '') => (Astro.locals as any).log?.(a, o, s);
+const okParts = PARTS.map((p) => p[0]);
+let err = '', msg = Astro.url.searchParams.get('m') || '', preview: any = null, text = '', from = '';
+const back = (m: string, e = '') => Astro.redirect(`/admin/sao-luu?${e ? 'e=' + encodeURIComponent(e) : 'm=' + encodeURIComponent(m)}`);
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData(), act = String(f.get('act') || '');
+  const parts = f.getAll('p').map(String).filter((p) => okParts.includes(p));
+  if (act === 'preview') {
+    const file = f.get('file') as File | null;
+    if (!file || typeof file === 'string' || !file.size) err = 'Hãy chọn tệp sao lưu (.json).';
+    else if (file.size > MAX_BYTES) err = 'Tệp quá lớn (tối đa 2 MB).';
+    else { text = await file.text(); const r = parseBackup(text); if (!r.ok) err = r.msg; else { preview = r; text = JSON.stringify(r.data); } }
+  } else if (act === 'apply' || act === 'snap') {
+    let r: any;
+    if (act === 'snap') { r = await getSnap(db, Number(f.get('id'))); from = 'bản chụp'; } else { r = parseBackup(String(f.get('json') || '')); from = 'tệp'; }
+    if (!r.ok) err = r.msg;
+    else if (!parts.length) err = 'Hãy chọn ít nhất một phần để khôi phục.';
+    else if (!(await snapshot(db, 'Trước khi khôi phục'))) err = 'Không tạo được bản chụp an toàn trước khi khôi phục (dữ liệu quá lớn). Hãy tải bản sao lưu hiện tại về máy rồi thử lại.';
+    else {
+      try { const done = await applyBackup(db, r.data, parts); await log('backup.restore', 'backup', `${from}: ${done.join(', ')}`); return back('Đã khôi phục: ' + done.join(', ') + '. Bản trước đó được giữ trong “Bản chụp tự động”.'); }
+      catch (e: any) { err = 'Lỗi khi khôi phục: ' + (e?.message || e) + '. Có thể khôi phục lại từ “Bản chụp tự động”.'; }
+    }
+  }
+}
+const e = err || Astro.url.searchParams.get('e');
+const snaps = await listSnaps(db);
+const sm = preview ? summary(preview.data) : null;
+const fmt = (n: number) => (n < 0 ? 'không có trong tệp' : String(n));
+---
+<Admin title="Sao lưu & khôi phục" active="backup">
+  <div class="pagehead"><h1>Sao lưu & khôi phục</h1></div>
+  {msg && <div class="msg">{msg}</div>}{e && <div class="msg err">{e}</div>}
+  <p class="meta">Sao lưu <b>cấu hình giao diện</b> ra tệp JSON để chuyển sang website khác hoặc quay lại khi lỡ tay. Không gồm tài khoản, mật khẩu, vai trò, API key, bài viết, trang hay tin nhắn. Chỉ quản trị viên dùng được.</p>
+
+  <div class="box" style="margin-bottom:12px">
+    <h3 style="margin:0 0 8px;font-size:15px">1. Tải bản sao lưu về máy</h3>
+    <form method="get" action="/admin/sao-luu/tai">
+      {PARTS.map(([k, l]) => <label style="display:block;margin:2px 0"><input type="checkbox" name="p" value={k} checked /> {l}</label>)}
+      <div class="savebar"><button class="btn" type="submit">Tải tệp sao lưu</button></div>
+    </form>
+  </div>
+
+  <div class="box" style="margin-bottom:12px">
+    <h3 style="margin:0 0 8px;font-size:15px">2. Khôi phục từ tệp</h3>
+    {!preview && (
+      <form method="post" enctype="multipart/form-data">
+        <input type="hidden" name="act" value="preview" />
+        <label for="bk_file">Chọn tệp sao lưu (.json, tối đa 2 MB)</label><input id="bk_file" type="file" name="file" accept="application/json,.json" required />
+        <div class="savebar"><button class="btn" type="submit">Xem trước nội dung tệp</button></div>
+      </form>
+    )}
+    {preview && sm && (
+      <form method="post" onsubmit="return confirm('Khôi phục các phần đã chọn? Cấu hình hiện tại của các phần đó sẽ bị thay (có bản chụp tự động để quay lại).')">
+        <input type="hidden" name="act" value="apply" />
+        <textarea name="json" hidden>{text}</textarea>
+        <p class="meta">Tệp tạo lúc {preview.data.at || 'không rõ'}. Chọn phần cần khôi phục:</p>
+        {preview.data.parts.theme && <label style="display:block;margin:2px 0"><input type="checkbox" name="p" value="theme" checked /> Giao diện ({sm.theme} giá trị đã đặt) · thay toàn bộ</label>}
+        {preview.data.parts.blocks && <label style="display:block;margin:2px 0"><input type="checkbox" name="p" value="blocks" checked /> Khối dùng lại ({fmt(sm.blocks)}) · ghép theo mã, không xóa khối khác</label>}
+        {preview.data.parts.menu && <label style="display:block;margin:2px 0"><input type="checkbox" name="p" value="menu" checked /> Menu & chân trang ({fmt(sm.menu)} mục) · thay từng vị trí có trong tệp</label>}
+        {preview.note.map((n: string) => <div class="meta">{n}</div>)}
+        <div class="savebar"><button class="btn" type="submit">Khôi phục</button><a class="btn ghost" href="/admin/sao-luu">Hủy</a></div>
+      </form>
+    )}
+  </div>
+
+  <div class="box">
+    <h3 style="margin:0 0 8px;font-size:15px">3. Bản chụp tự động <span class="meta">(trước mỗi lần khôi phục, giữ 5 bản gần nhất)</span></h3>
+    {snaps.length === 0 && <div class="meta">Chưa có bản nào.</div>}
+    {snaps.map((s) => (
+      <form method="post" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:6px 0" onsubmit="return confirm('Quay lại bản chụp này? Giao diện, khối và menu hiện tại sẽ bị thay.')">
+        <input type="hidden" name="act" value="snap" /><input type="hidden" name="id" value={s.id} />
+        {PARTS.map(([k]) => <input type="hidden" name="p" value={k} />)}
+        <span>{s.at.replace('T', ' ').slice(0, 16)} UTC · {s.label}</span><button class="btn ghost" type="submit">Quay lại bản này</button>
+      </form>
+    ))}
+  </div>
+</Admin>

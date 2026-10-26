@@ -1,8 +1,9 @@
 ---
 import Admin from '../../layouts/Admin.astro';
-import { CATS } from '../../lib/util';
+import { getCats } from '../../lib/terms';
 import { CATALOG, loadSettings, keyOf } from '../../lib/ai';
 import { generateDraft } from '../../lib/draft';
+const CATS = await getCats(Astro.locals.runtime.env.DB);
 const env = Astro.locals.runtime.env;
 const db = env.DB;
 const st = await loadSettings(db);

@@ -1,0 +1,42 @@
+---
+import Admin from '../../layouts/Admin.astro';
+import { listBlocks, saveBlock, deleteBlock, SLUG } from '../../lib/reusable';
+const db = Astro.locals.runtime.env.DB;
+const log = (a: string, o = '', s = '') => (Astro.locals as any).log?.(a, o, s);
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData(), act = String(f.get('act') || ''), slug = String(f.get('slug') || '');
+  const r = act === 'delete' ? await deleteBlock(db, slug) : await saveBlock(db, { slug, title: String(f.get('title') || ''), html: String(f.get('html') || ''), isNew: act === 'add' });
+  if (r.ok) await log(act === 'delete' ? 'block.delete' : 'block.save', 'block:' + slug, act === 'add' ? 'Tạo mới' : '');
+  return Astro.redirect(`/admin/khoi-dung-lai?${r.ok ? 'm=' : 'e='}${encodeURIComponent(r.msg)}${r.ok && act !== 'delete' ? '&sua=' + encodeURIComponent(slug) : ''}`);
+}
+const blocks = await listBlocks(db);
+const m = Astro.url.searchParams.get('m'), e = Astro.url.searchParams.get('e');
+const sua = Astro.url.searchParams.get('sua') || '';
+const cur = blocks.find((b) => b.slug === sua);
+---
+<Admin title="Khối dùng lại" active="blocks">
+  <div class="pagehead"><h1>Khối dùng lại</h1></div>
+  {m && <div class="msg">{m}</div>}{e && <div class="msg err">{e}</div>}
+  <p class="meta">Soạn HTML một lần rồi chèn vào nhiều nơi: Header, Footer (Tùy chỉnh giao diện › Khối chèn sẵn), hoặc trong giao diện bằng <code>&lt;ReusableBlock slug="ma-khoi" /&gt;</code>. Trong nội dung có thể dùng <code>[khoi slug="ma-khoi"]</code> nếu trang gọi <code>expandBlocks</code>. Chỉ quản trị viên soạn được. Mã script, iframe, form và thuộc tính sự kiện (onclick…) bị loại tự động khi lưu.</p>
+  <div class="box" style="margin-bottom:12px">
+    <h3 style="margin:0 0 8px;font-size:15px">{cur ? `Sửa khối: ${cur.title}` : 'Tạo khối mới'}</h3>
+    <form method="post">
+      <input type="hidden" name="act" value={cur ? 'save' : 'add'} />
+      <label for="b_slug">Mã khối <span class="meta">(chữ thường không dấu, số, gạch; không đổi được sau khi tạo)</span></label>
+      <input id="b_slug" type="text" name="slug" value={cur?.slug || ''} readonly={!!cur} maxlength="40" required pattern={SLUG.source} />
+      <label for="b_title">Tên khối</label><input id="b_title" type="text" name="title" value={cur?.title || ''} maxlength="80" required />
+      <label for="b_html">Nội dung HTML</label><textarea id="b_html" name="html" rows="12" spellcheck="false" style="font-family:monospace;width:100%" maxlength="60000">{cur?.html || ''}</textarea>
+      <div class="savebar"><button class="btn" type="submit">{cur ? 'Lưu khối' : 'Tạo khối'}</button>{cur && <a class="btn ghost" href="/admin/khoi-dung-lai">Tạo khối khác</a>}</div>
+    </form>
+  </div>
+  {blocks.length === 0 && <div class="box">Chưa có khối nào.</div>}
+  {blocks.map((b) => (
+    <div class="box" style="margin-bottom:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between">
+      <div><b>{b.title}</b> <span class="meta">· mã: {b.slug}</span></div>
+      <div style="display:flex;gap:8px">
+        <a class="btn ghost" href={`/admin/khoi-dung-lai?sua=${encodeURIComponent(b.slug)}`}>Sửa</a>
+        <form method="post" onsubmit="return confirm('Xóa khối này? Nơi đang chèn khối sẽ không còn hiện gì.')"><input type="hidden" name="act" value="delete" /><input type="hidden" name="slug" value={b.slug} /><button class="btn ghost" type="submit">Xóa</button></form>
+      </div>
+    </div>
+  ))}
+</Admin>

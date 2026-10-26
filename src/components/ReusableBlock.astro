@@ -1,0 +1,7 @@
+---
+// <ReusableBlock slug="banner-khuyen-mai" />
+import { getBlockHtml } from '../lib/reusable';
+const { slug = '', class: cls = '' } = Astro.props as { slug?: string; class?: string };
+const html = await getBlockHtml(Astro.locals.runtime.env.DB, slug);
+---
+{html && <div class={`nh-block ${cls}`} data-block={slug} set:html={html} />}

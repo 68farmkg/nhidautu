@@ -1,0 +1,22 @@
+---
+import Base from '../../layouts/Base.astro';
+import PostCard from '../../components/PostCard.astro';
+import { nowIso } from '../../lib/util';
+import { tagBySlug, postsByTag } from '../../lib/terms';
+const db = Astro.locals.runtime.env.DB;
+const { slug } = Astro.params;
+const tag = slug ? await tagBySlug(db, slug) : null;
+if (!tag) return Astro.redirect('/tin-tuc');
+const page = Math.max(1, Number(Astro.url.searchParams.get('trang')) || 1), per = 12;
+const rows = await postsByTag(db, tag.id, nowIso(), per + 1, (page - 1) * per);
+const posts = rows.slice(0, per), more = rows.length > per;
+---
+<Base title={`Thẻ: ${tag.name}`} active="">
+  <div class="wrap" style="margin-top:20px"><h1>Thẻ: {tag.name}</h1>
+    <div class="box">
+      {posts.length === 0 && <p>Chưa có bài viết với thẻ này.</p>}
+      {posts.map((p: any) => <PostCard p={p} />)}
+      <div class="pager"><span>{page > 1 && <a class="btn ghost" href={`?trang=${page - 1}`}>← Trang trước</a>}</span><span>{more && <a class="btn ghost" href={`?trang=${page + 1}`}>Trang sau →</a>}</span></div>
+    </div>
+  </div>
+</Base>

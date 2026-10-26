@@ -2,13 +2,16 @@
 import Slot from '../../components/Slot.astro';
 import Base from '../../layouts/Base.astro';
 import PostCard from '../../components/PostCard.astro';
-import { all, first, run, nowIso, CATS, fmtDate, renderContent } from '../../lib/util';
+import { all, first, run, nowIso, fmtDate, renderContent } from '../../lib/util';
+import { getCats, getPostTags } from '../../lib/terms';
 const db = Astro.locals.runtime.env.DB;
+const CATS = await getCats(db);
 const { slug } = Astro.params;
 const p = await first(db, "SELECT * FROM posts WHERE slug=? AND status='published' AND published_at <= ?", slug, nowIso());
 if (!p) return new Response('Không tìm thấy bài viết', { status: 404 });
 await run(db, 'UPDATE posts SET views = views + 1 WHERE id=?', p.id);
 const related = await all(db, "SELECT id,slug,title,summary,image,category,published_at FROM posts WHERE status='published' AND published_at <= ? AND category=? AND id<>? ORDER BY published_at DESC LIMIT 4", nowIso(), p.category, p.id);
+const ptags = await getPostTags(db, p.id);
 const tickers = (p.tickers || '').split(',').map((s: string) => s.trim().toUpperCase()).filter(Boolean);
 ---
 <Base title={p.title} description={p.summary} image={p.image} active={p.category}>
@@ -21,6 +24,7 @@ const tickers = (p.tickers || '').split(',').map((s: string) => s.trim().toUpper
       {p.image && <img class="cover" src={p.image} alt="" referrerpolicy="no-referrer" />}
       <div class="body" set:html={renderContent(p.content)} />
       {p.source_url && <p class="meta">Nguồn tham khảo: <a href={p.source_url} target="_blank" rel="noopener nofollow"><u>{p.source_name || p.source_url}</u></a>. Nội dung đã được biên tập lại.</p>}
+      {ptags.length > 0 && <p>{ptags.map((t: any) => <a class="tag" href={`/the/${t.slug}`}>{t.name}</a>)}</p>}
       {tickers.length > 0 && <p>{tickers.map((t: string) => <a class="tag" href={`/co-phieu/${t}`}>#{t}</a>)}</p>}
     </article>
     {related.length > 0 && <div class="box" style="max-width:760px;margin:0 auto"><h2>Bài liên quan</h2>{related.map((r) => <PostCard p={r} />)}</div>}

@@ -1,0 +1,22 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+import TermsManager from '../../../components/TermsManager.astro';
+import { listTerms, handleTermsPost } from '../../../lib/terms';
+const db = Astro.locals.runtime.env.DB;
+const kind = 'tag';
+const here = Astro.url.pathname;
+if (Astro.request.method === 'POST') {
+  const r = await handleTermsPost(db, kind, await Astro.request.formData());
+  if (r.ok && r.msg) { const f2 = String(r.msg); await (Astro.locals as any).log?.(`term.${/xóa/i.test(f2) ? 'delete' : 'save'}`, kind, f2); }
+  return Astro.redirect(`${here}?${r.msg ? (r.ok ? 'm=' : 'e=') + encodeURIComponent(r.msg) : ''}`);
+}
+const rows = await listTerms(db, kind);
+const m = Astro.url.searchParams.get('m'), e = Astro.url.searchParams.get('e');
+---
+<Admin title="Thẻ bài viết" active="posts-tags">
+  <h1>Thẻ bài viết</h1>
+  <p class="meta">Từ khóa gắn thêm cho bài viết (một bài có thể có nhiều thẻ). Mỗi thẻ có trang riêng /the/tên-thẻ.</p>
+  {m && <div class="msg">{m}</div>}
+  {e && <div class="msg err">{e}</div>}
+  <TermsManager kind={kind} rows={rows} base={here} />
+</Admin>

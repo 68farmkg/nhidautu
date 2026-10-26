@@ -1,9 +1,11 @@
 ---
 import Admin from '../../layouts/Admin.astro';
 import { FEEDS, getFeed } from '../../lib/rss';
-import { CATS, fmtDate } from '../../lib/util';
+import { fmtDate } from '../../lib/util';
+import { getCats } from '../../lib/terms';
 import { CATALOG, loadSettings, keyOf } from '../../lib/ai';
 import { generateDraft } from '../../lib/draft';
+const CATS = await getCats(Astro.locals.runtime.env.DB);
 const env = Astro.locals.runtime.env;
 const db = env.DB;
 let err = '';

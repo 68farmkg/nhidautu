@@ -1,8 +1,10 @@
 ---
 import Admin from '../../layouts/Admin.astro';
 import { icon, ICONS, ICON_LABELS } from '../../lib/icons';
-import { all, run, CATS } from '../../lib/util';
+import { all, run } from '../../lib/util';
+import { getCats } from '../../lib/terms';
 import { LOCS } from '../../lib/site';
+const CATS = await getCats(Astro.locals.runtime.env.DB);
 const db = Astro.locals.runtime.env.DB;
 const loc = Object.keys(LOCS).includes(Astro.url.searchParams.get('loc') || '') ? Astro.url.searchParams.get('loc')! : 'header';
 let err = '';

@@ -1,0 +1,24 @@
+---
+import { cleanUrl, socialList, type Opts } from '../lib/theme';
+const { id, o, name, logo, tree = [] } = Astro.props as { id: string; o: Opts; name: string; logo: string; tree?: any[] };
+const dev = (n: any) => (n.device === 'pc' ? 'only-pc' : n.device === 'mobile' ? 'only-m' : '');
+const href = (n: any) => cleanUrl(n.url) || '#';
+const rel = (n: any) => (n.target === '_blank' ? 'noopener noreferrer' : undefined);
+const soc = socialList(o);
+const b1 = o.b1_t && cleanUrl(o.b1_u), b2 = o.b2_t && cleanUrl(o.b2_u);
+---
+{id === 'logo' && <a class="nh-logo" href="/" aria-label={name}>{logo ? <img src={logo} alt={name} height="40" /> : <b>{name}</b>}</a>}
+{id === 'nav' && tree.length > 0 && (
+  <nav class="nh-nav" aria-label="Menu chính"><ul>{tree.map((n: any) => (
+    <li class={`${dev(n)} ${n.subs.length ? 'has-sub' : ''}`}><a href={href(n)} target={n.target || undefined} rel={rel(n)}>{n.label}</a>
+      {n.subs.length > 0 && <ul class="nh-sub">{n.subs.map((s: any) => <li class={dev(s)}><a href={href(s)} target={s.target || undefined} rel={rel(s)}>{s.label}</a></li>)}</ul>}
+    </li>))}</ul></nav>
+)}
+{id === 'search' && <form class="nh-search" action="/tim-kiem" role="search"><input type="search" name="q" placeholder="Tìm kiếm mã cổ phiếu, bài viết…" aria-label="Tìm kiếm" maxlength="80" /><button type="submit" aria-label="Tìm">⌕</button></form>}
+{id === 'btn1' && b1 && <a class={`nh-btn ${o.b1_s === 'outline' ? 'out' : ''}`} href={b1}>{o.b1_t}</a>}
+{id === 'btn2' && b2 && <a class={`nh-btn ${o.b2_s === 'outline' ? 'out' : ''}`} href={b2}>{o.b2_t}</a>}
+{id === 'social' && soc.length > 0 && <div class="nh-soc">{soc.map(([n, s, u]) => <a href={u} target="_blank" rel="noopener noreferrer" aria-label={n} title={n}>{s}</a>)}</div>}
+{id === 'contact' && (o.ct_phone || o.ct_mail) && <div class="nh-ct">{o.ct_phone && <a href={`tel:${o.ct_phone.replace(/[^\d+]/g, '')}`}>☎ {o.ct_phone}</a>}{o.ct_mail && <a href={`mailto:${o.ct_mail}`}>✉ {o.ct_mail}</a>}</div>}
+{id === 'html' && o.hd_html && <span class="nh-txt">{o.hd_html}</span>}
+{id === 'divider' && <i class="nh-div" aria-hidden="true"></i>}
+{id === 'spacer' && <i class="nh-spc" aria-hidden="true"></i>}

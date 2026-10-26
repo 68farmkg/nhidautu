@@ -2,7 +2,7 @@
 import Admin from '../../layouts/Admin.astro';
 import { icon } from '../../lib/icons';
 import { all, first, fmtDate } from '../../lib/util';
-import { can } from '../../lib/perm';
+import { canU } from '../../lib/perm';
 const db = Astro.locals.runtime.env.DB;
 const c = await first(db, "SELECT COUNT(*) total, SUM(status='pending') pending, SUM(status='published') pub, SUM(views) views FROM posts");
 const pend = await all(db, "SELECT id,title,created_at FROM posts WHERE status='pending' ORDER BY created_at DESC LIMIT 10");
@@ -11,7 +11,7 @@ let np = 0; try { np = (await first(db, 'SELECT COUNT(*) n FROM pages WHERE is_t
 const role = ((Astro.locals as any).user?.role) || 'admin';
 let nChat = 0, nNew = 0; try { nChat = (await first(db, 'SELECT COUNT(*) n FROM conversations WHERE unread_admin>0'))?.n || 0; nNew = (await first(db, "SELECT COUNT(*) n FROM messages m LEFT JOIN inbox_state s ON s.msg_id=m.id WHERE COALESCE(s.status,'new')='new'"))?.n || 0; } catch { /* chưa chạy nang-cap-3.sql */ }
 const quick0: [string, string, string][] = [['/admin/hop-thu', 'Hộp thư & chat', 'message'], ['/admin/trang/moi', 'Trang mới', 'file'], ['/admin/bai-viet/moi', 'Bài mới', 'edit'], ['/admin/ai', 'Viết bằng AI', 'bot'], ['/admin/menu', 'Sửa menu', 'menu'], ['/admin/cai-dat', 'Cài đặt', 'settings'], ['/admin/tien-ich', 'Tiện ích', 'puzzle'], ['/admin/nguoi-dung', 'Người dùng', 'user']];
-const quick = quick0.filter(([h]) => can(role, h));
+const quick = quick0.filter(([h]) => canU((Astro.locals as any).user || { role }, h));
 ---
 <Admin title="Tổng quan" active="home">
   <div class="pagehead"><h1>Tổng quan</h1></div>

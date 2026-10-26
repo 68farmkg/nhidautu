@@ -1,0 +1,43 @@
+---
+// Footer theo cấu hình. Chỉ hiện khi bật “Dùng Footer mới”; nút “Lên đầu trang” luôn theo tùy chọn riêng.
+// Dùng: <SiteFooter site={{ name: 'Nhịp Đầu Tư', logo: '/logo.svg' }} />
+import HeaderEl from './HeaderEl.astro';
+import ReusableBlock from './ReusableBlock.astro';
+import '../styles/theme-builder.css';
+import { getTheme, cleanUrl } from '../lib/theme';
+import { all } from '../lib/util';
+import { LOCS } from '../lib/site';
+const { site = {} } = Astro.props as { site?: { name?: string; logo?: string } };
+const name = site.name || 'Nhịp Đầu Tư', logo = site.logo || '';
+const db = Astro.locals.runtime.env.DB;
+const o = await getTheme(db);
+const on = o.ft_on === '1';
+let groups: { t: string; items: any[] }[] = [];
+if (on) { try { const rows = await all(db, "SELECT * FROM nav_items WHERE loc LIKE 'footer%' ORDER BY loc,sort,id"); const m = new Map<string, any[]>(); for (const r of rows) { if (!m.has(r.loc)) m.set(r.loc, []); m.get(r.loc)!.push(r); } groups = [...m].map(([l, items]) => ({ t: (LOCS as any)[l] || '', items })); } catch { /* chưa có bảng menu */ } }
+const cols = Math.max(1, Number(o.ft_cols) || 4);
+groups = groups.slice(0, cols - 1);
+const copy = o.ft_copy || `© ${new Date().getFullYear()} ${name}`;
+---
+<ReusableBlock slug={o.blk_ft_before} />
+{on && (
+  <footer class="nh-ft">
+    <div class="nh-ft-in" style={`--cols:${cols}`}>
+      <div class="nh-ft-c">
+        <HeaderEl id="logo" o={o} name={name} logo={logo} />
+        {o.ft_about && <p>{o.ft_about}</p>}
+        {o.ft_social === '1' && <HeaderEl id="social" o={o} name={name} logo={logo} />}
+      </div>
+      {groups.map((g) => (<div class="nh-ft-c">{g.t && <h4>{g.t}</h4>}<ul>{g.items.map((n: any) => <li class={n.device === 'pc' ? 'only-pc' : n.device === 'mobile' ? 'only-m' : ''}><a href={cleanUrl(n.url) || '#'} target={n.target || undefined} rel={n.target === '_blank' ? 'noopener noreferrer' : undefined}>{n.label}</a></li>)}</ul></div>))}
+    </div>
+    <ReusableBlock slug={o.blk_ft_in} />
+    <div class={`nh-ft-b a-${o.ft_align}`}><div class="nh-ft-in"><span>{copy}</span>{o.ft_right && <span>{o.ft_right}</span>}</div></div>
+  </footer>
+)}
+{o.bt_on === '1' && (<>
+  <button type="button" id="nh-top" class={`nh-top ${o.bt_shape === 'square' ? 'sq' : ''} p-${o.bt_pos} ${o.bt_mob === '1' ? '' : 'only-pc'}`} aria-label="Lên đầu trang" hidden>↑</button>
+  <script is:inline>
+    (function () { var b = document.getElementById('nh-top'); if (!b) return; function f() { b.hidden = window.scrollY < 400; }
+      window.addEventListener('scroll', f, { passive: true }); f();
+      b.addEventListener('click', function () { var r = window.matchMedia('(prefers-reduced-motion: reduce)').matches; window.scrollTo({ top: 0, behavior: r ? 'auto' : 'smooth' }); }); })();
+  </script>
+</>)}
