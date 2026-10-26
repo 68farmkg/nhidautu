@@ -3,44 +3,114 @@ import Base from '../layouts/Base.astro';
 import NewsFeed from '../components/NewsFeed.astro';
 import PriceRefresh from '../components/PriceRefresh.astro';
 import PostCard from '../components/PostCard.astro';
-import { all, nowIso, fmtNum, fmtPct, fmtDate } from '../lib/util';
+import PageHero from '../components/PageHero.astro';
+import IdxCards from '../components/IdxCards.astro';
+import Spark from '../components/Spark.astro';
+import SH from '../components/SH.astro';
+import { all, fmtNum, fmtPct, fmtDate } from '../lib/util';
+import { getPosts, sectorStats, prevClose } from '../lib/ui';
+import { icon } from '../lib/icons';
 const db = Astro.locals.runtime.env.DB;
 const idx = await all(db, "SELECT * FROM quotes WHERE kind='index' ORDER BY rowid");
 const stocks = await all(db, "SELECT * FROM quotes WHERE kind='stock' ORDER BY symbol");
 const up = stocks.filter((s) => s.change_pct > 0).length;
 const down = stocks.filter((s) => s.change_pct < 0).length;
-const news = await all(db, "SELECT id,slug,title,summary,image,category,published_at FROM posts WHERE status='published' AND published_at <= ? AND category='thi-truong' ORDER BY published_at DESC LIMIT 6", nowIso());
+const flat = stocks.length - up - down;
+const { rows: news } = await getPosts(db, { cat: 'thi-truong', limit: 5 });
 const updated = [...idx, ...stocks].map((q) => q.updated_at).filter(Boolean).sort().pop();
+const gainers = [...stocks].sort((a, b) => b.change_pct - a.change_pct).slice(0, 5);
+const losers = [...stocks].sort((a, b) => a.change_pct - b.change_pct).slice(0, 5);
+const sectors = sectorStats(stocks).slice(0, 8);
+const exs = [...new Set(stocks.map((s) => s.exchange).filter(Boolean))];
+const pct = (n: number) => (stocks.length ? (n / stocks.length) * 100 : 0);
 ---
 <Base title="Thị trường" active="thi-truong">
-  <div class="wrap" style="margin-top:20px">
-    <h1>Thị trường</h1>
-    <div class="idx" style="margin-top:0">
-      {idx.map((i) => (
-        <a class="c" href={`/co-phieu/${i.symbol}`}><small>{i.name}</small><b>{fmtNum(i.price)}</b>
-          <span class={i.change_pct >= 0 ? 'up' : 'down'} style="filter:brightness(1.5)">{fmtPct(i.change_pct)}</span></a>
-      ))}
-    </div>
-    <div class="grid">
-      <div class="box"><h2>Bảng giá cổ phiếu</h2>
-        <p class="meta">Tăng: {up} · Giảm: {down} · Cập nhật: {fmtDate(updated)}</p>
-        <div class="scroll"><table class="t">
-          <thead><tr><th>Mã</th><th>Ngành</th><th class="r">Giá</th><th class="r">%</th><th class="r">Khối lượng</th></tr></thead>
-          <tbody>
-            {stocks.map((s) => (
-              <tr><td><a href={`/co-phieu/${s.symbol}`}><b>{s.symbol}</b></a><br /><small class="meta">{s.name}</small></td>
-                <td>{s.sector}</td><td class="r">{fmtNum(s.price)}</td>
-                <td class={`r ${s.change_pct >= 0 ? 'up' : 'down'}`}>{fmtPct(s.change_pct)}</td><td class="r">{s.volume}</td></tr>
-            ))}
-          </tbody>
-        </table></div>
+  <PageHero crumb="Thị trường" title="Thị trường chứng khoán" sub="Cập nhật liên tục diễn biến thị trường, chỉ số, cổ phiếu, ngành, biểu đồ và dữ liệu tài chính chính xác, nhanh chóng." />
+  <div class="wrap">
+    <IdxCards idx={idx} />
+    <nav class="chips tabbar" aria-label="Mục trên trang">
+      <a class="on" href="#tong-quan">Tổng quan</a><a href="#bang-gia">Bảng giá</a><a href="#nganh">Ngành</a><a href="#tin">Tin thị trường</a>
+    </nav>
+    <div class="cols" id="tong-quan">
+      <div>
+        <section class="box" id="bang-gia">
+          <SH title="Bảng giá chứng khoán" />
+          <div class="tools">
+            <div class="chips sm" data-ex-tabs>
+              <button type="button" class="on" data-ex="">Tất cả</button>
+              {exs.map((e) => <button type="button" data-ex={e}>{e}</button>)}
+            </div>
+            <input class="grow" type="search" placeholder="Nhập mã hoặc tên công ty…" aria-label="Lọc theo mã" data-q maxlength="30" />
+          </div>
+          <p class="meta" style="margin:0 0 8px">Cập nhật: {fmtDate(updated)}</p>
+          <div class="tw"><table class="t" data-board>
+            <thead><tr><th>Mã CK</th><th>Ngành</th><th class="r">Giá</th><th class="r">Thay đổi</th><th class="r">% Thay đổi</th><th class="r">KL giao dịch</th><th class="r">Biểu đồ</th></tr></thead>
+            <tbody>
+              {stocks.map((s) => {
+                const d = s.price - prevClose(s.price, s.change_pct);
+                return (
+                  <tr data-ex={s.exchange} data-s={`${s.symbol} ${s.name}`.toLowerCase()}>
+                    <td><a href={`/co-phieu/${s.symbol}`}><span class="sym">{s.symbol}</span></a><div class="tn">{s.name}</div></td>
+                    <td>{s.sector}</td>
+                    <td class="r"><b>{fmtNum(s.price)}</b></td>
+                    <td class={`r ${s.change_pct >= 0 ? 'up' : 'down'}`}>{d > 0 ? '+' : ''}{fmtNum(d)}</td>
+                    <td class="r"><span class={`pill ${s.change_pct >= 0 ? 'up' : 'down'}`}>{fmtPct(s.change_pct)}</span></td>
+                    <td class="r">{s.volume}</td>
+                    <td class="r"><Spark sym={s.symbol} pct={s.change_pct} w={84} h={26} /></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table></div>
+          <p class="empty" data-none hidden>Không có mã phù hợp.</p>
+        </section>
+        {sectors.length > 0 && (
+          <section class="box" id="nganh">
+            <SH title="Bản đồ ngành" />
+            <div class="tiles" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))">
+              {sectors.map((s) => <div class="tile"><i set:html={icon('building', 18)}></i><span><b>{s.name}</b><small>{s.n} mã</small><span class={`chg ${s.pct >= 0 ? 'up' : 'down'}`}>{fmtPct(s.pct)}</span></span></div>)}
+            </div>
+          </section>
+        )}
       </div>
-      <div class="box"><h2>Tin thị trường nổi bật</h2>
-        {news.length === 0 && <p>Chưa có tin.</p>}
-        {news.map((p) => <PostCard p={p} />)}
-      </div>
+      <aside style="display:grid;gap:18px;min-width:0">
+        <section class="box">
+          <SH title="Top cổ phiếu tăng/giảm" />
+          <div class="chips sm" data-tg-tabs style="margin-bottom:6px"><button type="button" class="on" data-t="up">Tăng mạnh</button><button type="button" data-t="down">Giảm mạnh</button></div>
+          {[['up', gainers], ['down', losers]].map(([k, rows]: any) => (
+            <div class="stk" data-tg={k} hidden={k === 'down'}>
+              {rows.map((s: any) => <a href={`/co-phieu/${s.symbol}`}><span class="s">{s.symbol}</span><span class="p">{fmtNum(s.price)}</span><span class={`c ${s.change_pct >= 0 ? 'up' : 'down'}`}>{fmtPct(s.change_pct)}</span></a>)}
+            </div>
+          ))}
+        </section>
+        <section class="box">
+          <SH title="Tổng quan thị trường" />
+          <div class="bar" role="img" aria-label={`Tăng ${up}, giảm ${down}, đứng giá ${flat}`}><i style={`width:${pct(up)}%;background:var(--up)`}></i><i style={`width:${pct(flat)}%;background:var(--warn)`}></i><i style={`width:${pct(down)}%;background:var(--down)`}></i></div>
+          <div class="kv">
+            <div><span>Số mã tăng</span><b class="up">{up}</b></div>
+            <div><span>Số mã giảm</span><b class="down">{down}</b></div>
+            <div><span>Số mã đứng giá</span><b>{flat}</b></div>
+            <div><span>Tổng số mã theo dõi</span><b>{stocks.length}</b></div>
+          </div>
+        </section>
+        <section class="box" id="tin">
+          <SH title="Tin thị trường" href="/chuyen-muc/thi-truong" />
+          {news.length === 0 && <p class="empty">Chưa có tin.</p>}
+          <div class="plist">{news.map((p) => <PostCard p={p} />)}</div>
+        </section>
+      </aside>
     </div>
-    <NewsFeed />
+    <NewsFeed title="Tin từ các báo" limit={8} />
   </div>
   <PriceRefresh />
+  <script is:inline>
+    (function () {
+      var rows = [].slice.call(document.querySelectorAll('[data-board] tbody tr')), ex = '', q = '';
+      var none = document.querySelector('[data-none]');
+      function apply() { var n = 0; rows.forEach(function (r) { var ok = (!ex || r.dataset.ex === ex) && (!q || r.dataset.s.indexOf(q) > -1); r.hidden = !ok; if (ok) n++; }); if (none) none.hidden = n > 0; }
+      document.querySelectorAll('[data-ex-tabs] button').forEach(function (b) { b.addEventListener('click', function () { ex = b.dataset.ex; document.querySelectorAll('[data-ex-tabs] button').forEach(function (x) { x.classList.toggle('on', x === b); }); apply(); }); });
+      var qi = document.querySelector('[data-q]'); if (qi) qi.addEventListener('input', function () { q = qi.value.trim().toLowerCase(); apply(); });
+      document.querySelectorAll('[data-tg-tabs] button').forEach(function (b) { b.addEventListener('click', function () { document.querySelectorAll('[data-tg-tabs] button').forEach(function (x) { x.classList.toggle('on', x === b); }); document.querySelectorAll('[data-tg]').forEach(function (g) { g.hidden = g.dataset.tg !== b.dataset.t; }); }); });
+    })();
+  </script>
 </Base>

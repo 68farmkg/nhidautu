@@ -2,6 +2,8 @@
 import Slot from '../../components/Slot.astro';
 import Base from '../../layouts/Base.astro';
 import PostCard from '../../components/PostCard.astro';
+import PageHero from '../../components/PageHero.astro';
+import SH from '../../components/SH.astro';
 import { all, first, nowIso, fmtNum, fmtPct, fmtDate } from '../../lib/util';
 const db = Astro.locals.runtime.env.DB;
 const sym = (Astro.params.symbol || '').toUpperCase();
@@ -11,26 +13,26 @@ const news = await all(db, "SELECT id,slug,title,summary,image,category,publishe
 const tvSymbol = `${q.exchange || 'HOSE'}:${sym.replace('-', '')}`;
 ---
 <Base title={`${sym} - ${q.name}`} active="thi-truong">
-  <div class="wrap" style="margin-top:20px">
-    <h1>{sym} <small class="meta">{q.name}</small></h1>
-    <div class="box">
-      <b style="font-size:30px">{fmtNum(q.price)}</b>
-      <span class={q.change_pct >= 0 ? 'up' : 'down'} style="font-size:18px;margin-left:10px">{fmtPct(q.change_pct)}</span>
-      <div class="meta">{q.exchange} · {q.sector} · Cập nhật {fmtDate(q.updated_at)}</div>
-    </div>
-    <div class="grid">
-      <div class="box"><h2>Biểu đồ giá</h2>
+  <PageHero crumb={sym} title={`${sym} · ${q.name}`} sub={[q.exchange, q.sector].filter(Boolean).join(' · ')} />
+  <div class="wrap">
+    <section class="box" style="margin-top:-40px;position:relative;z-index:2;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <b style="font-size:32px;letter-spacing:-.01em">{fmtNum(q.price)}</b>
+      <span class={`chg ${q.change_pct >= 0 ? 'up' : 'down'}`} style="font-size:17px">{q.change_pct >= 0 ? '▲' : '▼'} {fmtPct(q.change_pct)}</span>
+      <span class="meta">Cập nhật {fmtDate(q.updated_at)}</span>
+    </section>
+    <div class="cols">
+      <section class="box"><SH title="Biểu đồ giá" />
         <div id="tv" style="height:420px"></div>
         <script is:inline src="https://s3.tradingview.com/tv.js"></script>
         <script is:inline define:vars={{ tvSymbol }}>
           if (window.TradingView) new TradingView.widget({ container_id: 'tv', symbol: tvSymbol, interval: 'D', theme: 'light', locale: 'vi_VN', autosize: true, timezone: 'Asia/Ho_Chi_Minh', hide_side_toolbar: true });
         </script>
         <p class="meta">Biểu đồ do TradingView cung cấp, dữ liệu có thể chậm. Nếu biểu đồ trống, mã này chưa được TradingView hỗ trợ miễn phí.</p>
-      </div>
-      <div class="box"><h2>Tin liên quan</h2>
-        {news.length === 0 && <p>Chưa có tin về mã này.</p>}
-        {news.map((p) => <PostCard p={p} />)}
-      </div>
+      </section>
+      <section class="box"><SH title="Tin liên quan" />
+        {news.length === 0 && <p class="empty">Chưa có tin về mã này.</p>}
+        <div class="plist">{news.map((p) => <PostCard p={p} />)}</div>
+      </section>
     </div>
   </div>
 <Slot name="stock.bottom" />

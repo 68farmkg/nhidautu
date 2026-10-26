@@ -1,5 +1,8 @@
 ---
 import Base from '../layouts/Base.astro';
+import PageHero from '../components/PageHero.astro';
+import SH from '../components/SH.astro';
+import { icon } from '../lib/icons';
 import { nowIso, run } from '../lib/util';
 import { allow, ipOf } from '../lib/ratelimit';
 import { getSite } from '../lib/site';
@@ -24,23 +27,50 @@ if (Astro.request.method === 'POST') {
     confirmVisitor(Astro.locals, cfg, email, name);
   }
 }
+const mapSrc = SITE.address ? `https://www.google.com/maps?q=${encodeURIComponent(SITE.address)}&output=embed` : '';
+const tel = (SITE.hotline || '').replace(/[^\d+]/g, '');
 ---
 <Base title="Liên hệ" active="lien-he">
-  <div class="wrap grid" style="margin-top:20px">
-    <div class="box"><h2>Liên hệ với chúng tôi</h2>
-      {ok && <div class="msg">Đã gửi. Chúng tôi sẽ phản hồi sớm.</div>}
-      {err && <div class="msg err">{err}</div>}
-      <form method="post">
-        <label for="name">Họ và tên</label><input id="name" type="text" name="name" required />
-        <label for="email">Email</label><input id="email" type="email" name="email" required />
-        <label for="phone">Số điện thoại</label><input id="phone" type="text" name="phone" />
-        <label for="body">Nội dung</label><textarea id="body" name="body" required></textarea>
-        <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true" />
-        <p><button class="btn" type="submit">Gửi liên hệ</button></p>
-      </form>
+  <PageHero crumb="Liên hệ" title={`Liên hệ với ${SITE.name}`} sub="Chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn. Hãy liên hệ với chúng tôi qua các kênh sau:" />
+  <div class="wrap">
+    <div class="ci4">
+      <div class="ci"><i set:html={icon('phone', 20)}></i><div><small>Hotline</small><b>{tel ? <a href={`tel:${tel}`}>{SITE.hotline}</a> : SITE.hotline}</b></div></div>
+      <div class="ci"><i set:html={icon('mail', 20)}></i><div><small>Email</small><b><a href={`mailto:${SITE.email}`}>{SITE.email}</a></b><span>Phản hồi trong 24 giờ</span></div></div>
+      <div class="ci"><i set:html={icon('map', 20)}></i><div><small>Địa chỉ</small><b>{SITE.address}</b></div></div>
+      <div class="ci"><i set:html={icon('message', 20)}></i><div><small>Chat trực tuyến</small><b>Hỗ trợ nhanh qua website</b>{SITE.chat_on === '1' ? <button class="btn" type="button" data-open-chat>Chat ngay →</button> : <a class="btn" href="#form">Gửi tin nhắn →</a>}</div></div>
     </div>
-    <div class="box"><h3>Thông tin liên hệ</h3>
-      <p>Hotline: {SITE.hotline}<br />Email: {SITE.email}<br />Địa chỉ: {SITE.address}</p>
+    <div class="cols" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
+      <section class="box cf2" id="form">
+        <SH title="Gửi cho chúng tôi" />
+        <p class="meta" style="margin:-6px 0 4px;font-size:13.5px">Điền thông tin bên dưới, chúng tôi sẽ liên hệ lại với bạn trong thời gian sớm nhất.</p>
+        {ok && <div class="msg" role="status">Đã gửi. Chúng tôi sẽ phản hồi sớm.</div>}
+        {err && <div class="msg err" role="alert">{err}</div>}
+        <form method="post">
+          <div class="row2">
+            <div><label for="name">Họ và tên *</label><input id="name" type="text" name="name" placeholder="Nhập họ và tên của bạn" required /></div>
+            <div><label for="email">Email *</label><input id="email" type="email" name="email" placeholder="Nhập email của bạn" required /></div>
+          </div>
+          <label for="phone">Số điện thoại</label><input id="phone" type="text" name="phone" placeholder="Nhập số điện thoại của bạn" />
+          <label for="body">Nội dung *</label><textarea id="body" name="body" placeholder="Nhập nội dung cần hỗ trợ…" required></textarea>
+          <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true" />
+          <p style="margin:16px 0 0"><button class="btn" type="submit">Gửi liên hệ</button></p>
+        </form>
+      </section>
+      <section class="box">
+        {mapSrc && <iframe class="map" src={mapSrc} title="Bản đồ" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>}
+        <h3 style="margin:16px 0 8px">Thông tin liên hệ</h3>
+        <div class="kv">
+          <div><span>Hotline</span><b>{SITE.hotline}</b></div>
+          <div><span>Email</span><b>{SITE.email}</b></div>
+          <div><span>Địa chỉ</span><b style="text-align:right">{SITE.address}</b></div>
+        </div>
+      </section>
+    </div>
+    <div class="trust">
+      <div><i set:html={icon('clock', 18)}></i><span><b>Hỗ trợ nhanh</b><small>Phản hồi trong 24 giờ</small></span></div>
+      <div><i set:html={icon('user', 18)}></i><span><b>Đội ngũ chuyên nghiệp</b><small>Tận tâm, chuyên sâu</small></span></div>
+      <div><i set:html={icon('shield', 18)}></i><span><b>Bảo mật thông tin</b><small>An toàn, uy tín</small></span></div>
+      <div><i set:html={icon('chart', 18)}></i><span><b>Đồng hành lâu dài</b><small>Cùng phát triển</small></span></div>
     </div>
   </div>
 </Base>

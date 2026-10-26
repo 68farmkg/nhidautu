@@ -1,9 +1,11 @@
 ---
 import Base from '../layouts/Base.astro';
 import PostList from '../components/PostList.astro';
+import PageHero from '../components/PageHero.astro';
 const q = (Astro.url.searchParams.get('q') || '').trim().slice(0, 60);
 const page = Math.max(1, Number(Astro.url.searchParams.get('trang')) || 1);
 ---
-<Base title={`Tìm: ${q}`}>
-  <div class="wrap" style="margin-top:20px"><h1>Kết quả cho “{q}”</h1><PostList q={q} page={page} /></div>
+<Base title={q ? `Tìm: ${q}` : 'Tìm kiếm'}>
+  <PageHero crumb="Tìm kiếm" title={q ? `Kết quả cho “${q}”` : 'Tìm kiếm'} sub="Tìm theo mã cổ phiếu, tiêu đề hoặc nội dung bài viết." search="Nhập mã cổ phiếu, bài viết…" />
+  <div class="wrap" style="margin-top:20px"><PostList q={q} page={page} /></div>
 </Base>

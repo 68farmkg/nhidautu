@@ -1,8 +1,76 @@
 ---
 import Base from '../layouts/Base.astro';
-import PostList from '../components/PostList.astro';
+import PostCard from '../components/PostCard.astro';
+import NewsFeed from '../components/NewsFeed.astro';
+import PageHero from '../components/PageHero.astro';
+import SH from '../components/SH.astro';
+import { getPosts } from '../lib/ui';
+import { getCats } from '../lib/terms';
+import { all, fmtDay } from '../lib/util';
+const db = Astro.locals.runtime.env.DB;
 const page = Math.max(1, Number(Astro.url.searchParams.get('trang')) || 1);
+const CATS = await getCats(db);
+const per = 12;
+const head = page === 1 ? (await getPosts(db, { limit: 5 })).rows : [];
+const { rows: grid, more } = await getPosts(db, { limit: per, offset: page === 1 ? 5 : 5 + (page - 1) * per });
+const [hero, ...rows] = head;
+const counts = await all(db, "SELECT category c, COUNT(*) n FROM posts WHERE status='published' GROUP BY category");
+const cnt: Record<string, number> = Object.fromEntries(counts.map((r) => [r.c, r.n]));
+const bg = hero?.image ? `background-image:url('${hero.image.replace(/['"()\s]/g, encodeURIComponent)}')` : "background-image:url(/hero-city.svg)";
 ---
 <Base title="Tin tức" active="tin-tuc">
-  <div class="wrap" style="margin-top:20px"><h1>Tin tức</h1><PostList page={page} /></div>
+  {page === 1 && hero ? (
+    <div class="wrap">
+      <a class="fb" style={bg} href={`/bai-viet/${hero.slug}`}>
+        <div class="in">
+          <span class="ph-b">Tin tức nổi bật</span>
+          <h2>{hero.title}</h2>
+          {hero.summary && <p>{hero.summary}</p>}
+          <span class="btn">Xem chi tiết →</span>
+        </div>
+      </a>
+    </div>
+  ) : <PageHero crumb="Tin tức" title="Tin tức" sub="Tin mới nhất về thị trường, doanh nghiệp và kinh tế." />}
+  <div class="wrap">
+    <nav class="chips tabbar" aria-label="Chuyên mục">
+      <a class="on" href="/tin-tuc">Tất cả</a>
+      {Object.entries(CATS).map(([slug, name]) => <a href={slug === 'thi-truong' ? '/thi-truong' : `/chuyen-muc/${slug}`}>{name}</a>)}
+    </nav>
+    <div class="cols">
+      <div>
+        {rows.length > 0 && (
+          <section class="box">
+            <SH title="Tin nổi bật" />
+            <div class="split">
+              <PostCard p={rows[0]} v="feat" />
+              <div class="plist">{rows.slice(1).map((p) => <PostCard p={p} />)}</div>
+            </div>
+          </section>
+        )}
+        <section class="box">
+          <SH title="Tin mới nhất" />
+          {grid.length === 0 && <p class="empty">Chưa có bài viết.</p>}
+          <div class="pgrid g3">{grid.map((p) => <PostCard p={p} v="card" />)}</div>
+          {(page > 1 || more) && (
+            <div class="pager">
+              <span>{page > 1 && <a class="btn ghost" href={`/tin-tuc?trang=${page - 1}`}>← Trang trước</a>}</span>
+              <span>{more && <a class="btn ghost" href={`/tin-tuc?trang=${page + 1}`}>Trang sau →</a>}</span>
+            </div>
+          )}
+        </section>
+      </div>
+      <aside style="display:grid;gap:18px;min-width:0">
+        <NewsFeed title="Tin tức nhanh" limit={6} />
+        <section class="box">
+          <SH title="Tin theo chủ đề" />
+          <div class="tiles">
+            {Object.entries(CATS).map(([slug, name]) => (
+              <a class="tile" href={slug === 'thi-truong' ? '/thi-truong' : `/chuyen-muc/${slug}`}><span><b>{name}</b><small>{cnt[slug] || 0} bài viết</small></span></a>
+            ))}
+          </div>
+        </section>
+        <section class="cta"><h3>Cần hỗ trợ?</h3><p>Gửi câu hỏi cho đội ngũ Nhịp Đầu Tư, chúng tôi phản hồi trong 24 giờ.</p><a class="btn" href="/lien-he">Liên hệ ngay</a></section>
+      </aside>
+    </div>
+  </div>
 </Base>
