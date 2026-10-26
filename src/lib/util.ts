@@ -73,3 +73,8 @@ export const nowIso = () => new Date().toISOString();
 export const all = async (db: any, sql: string, ...a: any[]) => (await db.prepare(sql).bind(...a).all()).results as any[];
 export const first = async (db: any, sql: string, ...a: any[]) => (await db.prepare(sql).bind(...a).first()) as any;
 export const run = async (db: any, sql: string, ...a: any[]) => db.prepare(sql).bind(...a).run();
+
+export const fmtDay = (iso?: string) => {
+  const d = parse(iso);
+  return d ? d.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
+};

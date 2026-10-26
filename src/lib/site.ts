@@ -27,7 +27,7 @@ export const LOCS: Record<string, string> = {
   footer1: 'Chân trang: cột 1', footer2: 'Chân trang: cột 2',
 };
 const FALLBACK: Record<string, [string, string, string][]> = {
-  header: [['Trang chủ', '/', 'home'], ['Thị trường', '/thi-truong', 'chart'], ['Tin tức', '/tin-tuc', 'news'], ['Liên hệ', '/lien-he', 'mail']],
+  header: [['Trang chủ', '/', 'home'], ['Tin tức', '/tin-tuc', 'news'], ['Thị trường', '/thi-truong', 'chart'], ['Doanh nghiệp', '/chuyen-muc/doanh-nghiep', 'building'], ['Phân tích', '/chuyen-muc/phan-tich', 'chart'], ['Kiến thức', '/chuyen-muc/kien-thuc', 'book'], ['Liên hệ', '/lien-he', 'mail']],
   bottom: [['Trang chủ', '/', 'home'], ['Thị trường', '/thi-truong', 'chart'], ['Tin tức', '/tin-tuc', 'news'], ['Liên hệ', '/lien-he', 'mail']],
 };
 
