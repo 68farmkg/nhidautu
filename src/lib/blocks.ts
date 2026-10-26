@@ -4,14 +4,17 @@ import { safeUrl } from './site';
 import { PLUGINS } from './plugins';
 import { blockDefs } from './px/registry';
 import { sandboxFrame } from './px/sanitize';
+import { compileX, cleanX, FX_CSS, FX_JS } from './pb/css';
 
-export type Field = { k: string; label: string; type?: 'text' | 'textarea' | 'number' | 'select' | 'color' | 'check' | 'datetime'; options?: [string, string][]; def?: any; hint?: string };
-export type Ctx = { db: any; defs?: Record<string, BlockDef> };
-export type BlockDef = { type: string; label: string; icon: string; group: string; fields: Field[]; full?: boolean; container?: 'list' | 'cols'; admin?: boolean; render: (p: any, ctx: Ctx, kids?: any) => string | Promise<string> };
-export type Block = { id: string; type: string; props: Record<string, any>; style: Record<string, any>; children?: Block[]; cols?: Block[][] };
+export type Field = { k: string; label: string; type?: 'text' | 'textarea' | 'number' | 'select' | 'color' | 'check' | 'datetime' | 'image' | 'url'; options?: [string, string][]; def?: any; hint?: string };
+// Page Builder Pro: edit = đang dựng trong trình soạn (gắn data-bid, hiện vùng trống); url = địa chỉ trang (điều kiện hiển thị); fonts/once/anim = gom tài nguyên dùng chung của trang
+export type Ctx = { db: any; defs?: Record<string, BlockDef>; edit?: boolean; url?: URL; fonts?: Set<string>; once?: Set<string>; anim?: { used: boolean }; reuse?: number };
+export type BlockDef = { type: string; label: string; icon: string; group: string; fields: Field[]; full?: boolean; container?: 'list' | 'cols'; admin?: boolean; adminFields?: string[]; render: (p: any, ctx: Ctx, kids?: any, blk?: Block) => string | Promise<string> };
+export type Block = { id: string; type: string; props: Record<string, any>; style: Record<string, any>; children?: Block[]; cols?: Block[][] }; // style.x = kiểu mở rộng của Page Builder Pro (xem lib/pb/css.ts)
 
 import { esc } from './esc';
 export { esc };
+export { FX_CSS, FX_JS };
 const url = (s: any) => esc(safeUrl(String(s || '')));
 const col = (s: any) => (/^(#[0-9a-f]{3,8}|[a-z]+|rgba?\([\d\s.,%]+\))$/i.test(String(s || '').trim()) ? String(s).trim() : '');
 const num = (s: any, d: number, min = 0, max = 9999) => Math.min(max, Math.max(min, Number(s) || d));
@@ -168,31 +171,36 @@ export function parseBlocks(s: string): Block[] {
 export const MAX_DEPTH = 5;
 async function renderOne(b: Block, ctx: Ctx, depth: number, defs: Record<string, BlockDef>): Promise<string> {
   const d = defs[b.type]; if (!d) return '';
-  const s = { ...STYLE_DEF, ...(b.style || {}) };
+  const s: any = { ...STYLE_DEF, ...(b.style || {}) };
+  const X = s.x ? compileX(b.id, s.x, { edit: ctx.edit, url: ctx.url, fonts: ctx.fonts, anim: ctx.anim }) : null;
+  if (X && !X.show) return '';
   let inner = '';
   try {
     let kids: any;
-    if (d.container === 'list') kids = depth < MAX_DEPTH ? await renderBlocks(b.children || [], ctx, depth + 1) : '';
-    else if (d.container === 'cols') kids = await Promise.all((b.cols || []).map((c) => (depth < MAX_DEPTH ? renderBlocks(c || [], ctx, depth + 1) : Promise.resolve(''))));
-    inner = await d.render(b.props || {}, ctx, kids);
+    if (d.container === 'list') kids = depth < MAX_DEPTH ? await renderBlocks(b.children || [], ctx, depth + 1, b.id + ':0') : '';
+    else if (d.container === 'cols') kids = await Promise.all((b.cols || []).map((c, i) => (depth < MAX_DEPTH ? renderBlocks(c || [], ctx, depth + 1, b.id + ':' + i) : Promise.resolve(''))));
+    inner = await d.render(b.props || {}, ctx, kids, b);
   } catch (e: any) { inner = `<p class="meta">Khối “${esc(d.label)}” lỗi: ${esc(e?.message || e)}</p>`; }
   // "tràn hết chiều ngang" chỉ áp dụng ở cấp ngoài cùng (khối lồng bên trong đã nằm trong khung)
   const full = depth === 0 && (s.full || (d.full && b.style?.full !== false));
-  const cls = ['blk', `sp-${num(s.sp, 12, 1, 12)}`, `spm-${num(s.sm, 12, 1, 12)}`, s.hp ? 'hide-pc' : '', s.hm ? 'hide-m' : '', full ? 'full' : ''].filter(Boolean).join(' ');
+  const cls = ['blk', `sp-${num(s.sp, 12, 1, 12)}`, `spm-${num(s.sm, 12, 1, 12)}`, s.hp ? 'hide-pc' : '', s.hm ? 'hide-m' : '', full ? 'full' : '', X?.cls || ''].filter(Boolean).join(' ');
   const st = [s.py ? `padding-block:${num(s.py, 0, 0, 200)}px` : '', col(s.bg) ? `background:${col(s.bg)}` : '', ['left', 'center', 'right'].includes(s.al) ? `text-align:${s.al}` : ''].filter(Boolean).join(';');
-  return `<div class="${cls}"${st ? ` style="${st}"` : ''}>${inner}</div>`;
+  const mark = ctx.edit ? ` data-bid="${esc(b.id)}" data-bt="${esc(b.type)}"${s.x?.lock === 'admin' ? ' data-lock="1"' : ''}` : '';
+  return `<div class="${cls}"${st ? ` style="${st}"` : ''}${X?.attrs || ''}${mark}>${X?.css ? `<style>${X.css}</style>` : ''}${inner}</div>`;
 }
 
-export async function renderBlocks(blocks: Block[], ctx: Ctx, depth = 0): Promise<string> {
+export async function renderBlocks(blocks: Block[], ctx: Ctx, depth = 0, zone = ''): Promise<string> {
   if (!ctx.defs) ctx = { ...ctx, defs: defsToMap(await activeDefs(ctx.db)) };
   const defs = ctx.defs!;
   const out = await Promise.all((blocks || []).map((b) => renderOne(b, ctx, depth, defs)));
-  return `<div class="bgrid${depth ? ' nested' : ''}">${out.join('')}</div>`;
+  const z = ctx.edit && zone ? ` data-zone="${esc(zone)}"` : '';
+  const empty = ctx.edit && zone && !(blocks || []).length ? '<div class="pb-empty" data-pb-empty>＋ Kéo khối vào đây hoặc bấm để thêm</div>' : '';
+  return `<div class="bgrid${depth ? ' nested' : ''}"${z}>${out.join('')}${empty}</div>`;
 }
 
 // ===== Làm sạch dữ liệu trước khi lưu =====
 const flat = (o: any) => { const r: Record<string, any> = {}; if (o && typeof o === 'object') for (const [k, v] of Object.entries(o)) { if (!/^[\w-]{1,40}$/.test(k)) continue; if (typeof v === 'string') r[k] = v.slice(0, 30000); else if (typeof v === 'number' && isFinite(v)) r[k] = v; else if (typeof v === 'boolean') r[k] = v; } return r; };
-const cleanStyle = (s: any) => { const o = { ...STYLE_DEF }; if (s && typeof s === 'object') { o.sp = num(s.sp, 12, 1, 12); o.sm = num(s.sm, 12, 1, 12); o.hp = !!s.hp; o.hm = !!s.hm; o.py = num(s.py, 0, 0, 200); o.bg = col(s.bg); o.al = ['left', 'center', 'right'].includes(s.al) ? s.al : ''; o.full = !!s.full; } return o; };
+const cleanStyle = (s: any, admin = true, oldS?: any) => { const o: any = { ...STYLE_DEF }; if (s && typeof s === 'object') { o.sp = num(s.sp, 12, 1, 12); o.sm = num(s.sm, 12, 1, 12); o.hp = !!s.hp; o.hm = !!s.hm; o.py = num(s.py, 0, 0, 200); o.bg = col(s.bg); o.al = ['left', 'center', 'right'].includes(s.al) ? s.al : ''; o.full = !!s.full; if (s.x && typeof s.x === 'object') o.x = cleanX(s.x, admin, oldS?.x); else if (oldS?.x) o.x = cleanX(oldS.x, admin, oldS.x); } return o; }; // trình soạn cũ không gửi x: giữ nguyên kiểu Pro đã đặt, không làm mất dữ liệu
 
 // Kiểm tra cấu trúc khối: bỏ loại không biết, giới hạn độ sâu (5) và số khối (400).
 // Người không phải admin không được thêm/sửa khối chạy mã (HTML tự do, tiện ích): bản cũ được giữ nguyên, khối mới bị bỏ.
@@ -206,11 +214,15 @@ export function cleanBlocks(raw: any, o: { admin?: boolean; old?: Block[]; defs?
     for (const r of a) {
       if (!r || typeof r.type !== 'string' || n >= 400) continue;
       const d = defs[r.type] || known[r.type]; if (!d) continue; // khối của plugin đang tắt vẫn được giữ lại
+      // Khối bị khóa (chỉ quản trị viên được sửa): người khác lưu trang thì giữ nguyên bản cũ của khối đó (kể cả khối con)
+      const lk = !o.admin && typeof r.id === 'string' ? oldMap.get(r.id) : null;
+      if (lk && lk.type === r.type && (lk.style as any)?.x?.lock === 'admin' && !seen.has(r.id)) { seen.add(r.id); n++; out.push(JSON.parse(JSON.stringify(lk))); continue; }
       const id = typeof r.id === 'string' && /^[\w-]{1,20}$/.test(r.id) && !seen.has(r.id) ? r.id : uid(); seen.add(id);
       let props = flat(r.props);
+      if (d.adminFields && !o.admin) { const ob2 = oldMap.get(id); for (const k of d.adminFields) props[k] = ob2 && ob2.type === r.type ? (ob2.props?.[k] ?? '') : ''; } // trường chỉ quản trị viên được sửa (vd: JavaScript)
       if (d.admin && !o.admin) { const ob = oldMap.get(id); if (!ob || ob.type !== r.type) continue; props = ob.props || {}; }
       n++;
-      const b: Block = { id, type: r.type, props, style: cleanStyle(r.style) };
+      const b: Block = { id, type: r.type, props, style: cleanStyle(r.style, !!o.admin, oldMap.get(id)?.style) };
       if (d.container === 'list') b.children = walk(r.children, depth + 1);
       if (d.container === 'cols') {
         const k = parseLayout(props.layout).length, cs: any[] = Array.isArray(r.cols) ? r.cols : [];

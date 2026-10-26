@@ -1,0 +1,29 @@
+---
+// Dựng trang đang soạn (chưa lưu) bằng ĐÚNG giao diện khách. mode=frag trả JSON {html,head} để cập nhật canvas không nháy; mode=full trả cả trang (qua layout Base).
+import Base from '../../layouts/Base.astro';
+import { validateDoc } from '../../lib/pb/schema';
+import { renderPage } from '../../lib/pb/render';
+import { defsFor } from '../../lib/pb/api';
+import { ensurePb, getDraft, getLiveDoc } from '../../lib/pb/store';
+import { pbCfg } from '../../lib/pb/cfg';
+import { getSite } from '../../lib/site';
+const env = Astro.locals.runtime.env, db = env.DB;
+const U: any = (Astro.locals as any).user || { role: 'admin' };
+const jr = (o: any, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
+if (Astro.request.method !== 'POST') return new Response('Chỉ nhận POST', { status: 405 });
+if (!(await pbCfg(db)).on) return jr({ ok: false, error: 'Plugin Page Builder Pro chưa bật' }, 409);
+let d: any = {}; try { d = await Astro.request.json(); } catch { return jr({ ok: false, error: 'JSON không hợp lệ' }, 400); }
+await ensurePb(db);
+const id = Number(d.id) || 0, admin = U.role === 'admin';
+const old = id ? ((await getDraft(db, id))?.doc || (await getLiveDoc(db, id))) : null;
+const df = await defsFor(db);
+const v = validateDoc({ ...(d.doc || {}), title: (d.doc && d.doc.title) || 'Xem trước' }, { admin, old, defs: df.defs, known: df.known });
+if (!v.ok) return jr({ ok: false, error: v.errors.join(' ') }, 422);
+const S = await getSite(db);
+const out = await renderPage(db, { title: v.doc.title, slug: v.doc.slug, seo_title: v.doc.seo.title, seo_desc: v.doc.seo.desc, seo_image: v.doc.seo.image }, null, Astro.url, { site: S.name, edit: d.edit !== false, blocks: v.doc.blocks, side: v.doc.side, meta: v.doc.meta });
+if (d.mode !== 'full') return jr({ ok: true, html: out.html, head: out.head, warnings: v.warnings });
+---
+<Base title={v.doc.title} hideHeader={!v.doc.show_header} hideFooter={!v.doc.show_footer} headHtml={out.head}>
+  <div id="pb-root" set:html={out.html}></div>
+  {d.edit !== false && <script is:inline src="/pb-canvas.js"></script>}
+</Base>

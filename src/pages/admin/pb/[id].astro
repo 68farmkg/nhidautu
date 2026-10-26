@@ -1,0 +1,53 @@
+---
+// Trình dựng trang Page Builder Pro. Chỉ mở khi plugin đang bật; trang cũ/ trang mới đều dùng được. Mọi dữ liệu ghi qua /admin/pb-api (kiểm tra lại schema, quyền, CSRF).
+import Admin from '../../../layouts/Admin.astro';
+import { icon, ICONS } from '../../../lib/icons';
+import { editorShell } from '../../../lib/pb/editor-shell';
+import { pbCfg } from '../../../lib/pb/cfg';
+import { pbToken } from '../../../lib/pb/api';
+import { clientDefsAsync } from '../../../lib/blocks';
+import { ensurePb, getDraft, getLiveDoc, getTemplate, listCats } from '../../../lib/pb/store';
+import { emptyDoc, SCHEMA_TYPES, type Doc } from '../../../lib/pb/schema';
+import { SEED, CATEGORIES } from '../../../lib/pb/seed';
+import { FONTS } from '../../../lib/pb/css';
+import { all, first } from '../../../lib/util';
+const env = Astro.locals.runtime.env, db = env.DB;
+const U: any = (Astro.locals as any).user || { role: 'admin', uid: 0, name: '' };
+const cfg = await pbCfg(db);
+const id = Astro.params.id === 'moi' ? 0 : Number(Astro.params.id);
+if (!cfg.on) return Astro.redirect(id ? `/admin/trang/${id}?basic=1` : '/admin/tien-ich?tab=dc&p=page-builder');
+if (Astro.params.id !== 'moi' && !(id > 0)) return Astro.redirect('/admin/trang');
+await ensurePb(db);
+let doc: Doc = emptyDoc(), page = { id, status: 'draft' }, draft: any = null, startDirty = false;
+if (id) {
+  const row = await first(db, 'SELECT id,status FROM pages WHERE id=?', id);
+  if (!row) return Astro.redirect('/admin/trang');
+  page.status = row.status;
+  const live = await getLiveDoc(db, id); draft = await getDraft(db, id);
+  doc = (draft?.doc as Doc) || (live as Doc);
+} else {
+  const mau = Astro.url.searchParams.get('mau') || '', tu = Number(Astro.url.searchParams.get('tu')) || 0;
+  const seed = SEED.find((t) => t.id === mau);
+  if (seed) { doc.blocks = seed.make(); doc.title = seed.id === 'trong' ? '' : seed.name; }
+  else if (tu) { const t = await getTemplate(db, tu); if (t) { try { doc.blocks = JSON.parse(t.doc).blocks || []; doc.title = t.name + ' (mới)'; } catch { /* bỏ */ } } }
+}
+const pcats = (await listCats(db).catch(() => [])).map((c: any) => [c.id, c.name]);
+const links: [string, string][] = [['/', 'Trang chủ'], ['/thi-truong', 'Thị trường'], ['/tin-tuc', 'Tin tức'], ['/lien-he', 'Liên hệ']];
+try {
+  for (const p of await all(db, "SELECT slug,title FROM pages WHERE status='published' AND is_template=0 ORDER BY id DESC LIMIT 100")) links.push(['/' + p.slug, p.title]);
+  for (const p of await all(db, "SELECT slug,title FROM posts WHERE status='published' ORDER BY id DESC LIMIT 60")) links.push(['/bai-viet/' + p.slug, p.title]);
+} catch { /* bỏ */ }
+const fonts = Object.fromEntries(Object.entries(FONTS).map(([k, v]) => [k, v.label]));
+const boot = {
+  defs: await clientDefsAsync(db), icons: Object.fromEntries(Object.keys(ICONS).map((k) => [k, icon(k, 20)])), doc, page, startDirty,
+  draft: draft ? { updated_at: draft.updated_at } : null, token: await pbToken(env, Astro.cookies.get('nhip_admin')?.value || ''),
+  isAdmin: U.role === 'admin', autosave: cfg.autosave, links, fonts, cats: CATEGORIES, pcats, schemaTypes: Object.entries(SCHEMA_TYPES),
+};
+const bootJson = JSON.stringify(boot).replace(/</g, '\\u003c').replace(/\u2028|\u2029/g, '');
+---
+<Admin title={id ? 'Chỉnh sửa trang' : 'Thêm trang mới'} active={id ? 'pages' : 'pages-new'}>
+  <link rel="stylesheet" href="/pb.css?v=1" />
+  <Fragment set:html={editorShell()} />
+  <script is:inline type="application/json" id="pb-boot" set:html={bootJson}></script>
+  <script is:inline src="/pb.js?v=1" defer></script>
+</Admin>

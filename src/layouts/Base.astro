@@ -1,11 +1,13 @@
 ---
 import '../styles/global.css';
 import '../styles/core.css';
+import '../styles/pb.css';
 import { icon } from '../lib/icons';
 import Slot from '../components/Slot.astro';
 import { getCfg, publicCfg } from '../lib/chatcfg';
 import { getSite, getMenus, isActive, safeUrl, type NavItem } from '../lib/site';
-const { title = '', description = '', image = '', hideHeader = false, hideFooter = false } = Astro.props;
+// Page Builder Pro: headHtml (font/meta do hệ thống sinh, đã thoát), canonical, noindex, jsonld (đã thoát < > &)
+const { title = '', description = '', image = '', hideHeader = false, hideFooter = false, headHtml = '', canonical = '', noindex = false, jsonld = '' } = Astro.props;
 const db = Astro.locals.runtime.env.DB;
 const [S, M] = await Promise.all([getSite(db), getMenus(db)]);
 const path = Astro.url.pathname;
@@ -28,6 +30,13 @@ const mobile = M.mobile.filter((i) => i.device !== 'pc');
   <meta property="og:title" content={full} />
   <meta property="og:description" content={desc} />
   {image && <meta property="og:image" content={image} />}
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'} />
+  {canonical && <link rel="canonical" href={canonical} />}
+  {canonical && <meta property="og:url" content={canonical} />}
+  {noindex && <meta name="robots" content="noindex,nofollow" />}
+  {jsonld && <script type="application/ld+json" set:html={jsonld}></script>}
+  {headHtml && <Fragment set:html={headHtml} />}
   <meta name="theme-color" content={hc(S.color_dark) || '#0a2a2f'} />
   <link rel="icon" href="/favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />

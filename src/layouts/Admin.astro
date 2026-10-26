@@ -7,11 +7,18 @@ import { listEntries } from '../lib/px/registry';
 import { can } from '../lib/perm';
 import { first } from '../lib/util';
 import { pluginOn } from '../lib/chatcfg';
+import { pbCfg } from '../lib/pb/cfg';
 const { title = 'Quản trị', active = '' } = Astro.props;
 const U: any = (Astro.locals as any).user || { role: 'admin', name: '' };
 let unread = 0, nMail = 0, nChat = 0;
 const proOn = await pluginOn(Astro.locals.runtime.env.DB, 'chat-pro');
 try { const r = await first(Astro.locals.runtime.env.DB, "SELECT (SELECT COUNT(*) FROM conversations WHERE unread_admin>0) c, (SELECT COUNT(*) FROM messages m LEFT JOIN inbox_state s ON s.msg_id=m.id WHERE COALESCE(s.status,'new')='new') m"); nChat = r?.c || 0; nMail = r?.m || 0; unread = nChat + nMail; } catch { /* chưa có bảng */ }
+// Menu con của “Trang” (chỉ khi plugin Page Builder Pro bật), mở ra khi đang ở nhóm Trang
+const pbOn = (await pbCfg(Astro.locals.runtime.env.DB)).on;
+const SUBS: Item[] = [['/admin/trang', 'Tất cả trang', 'pages', 'list'], ['/admin/pb/moi', 'Thêm trang mới', 'pages-new', 'plus'], ['/admin/trang/danh-muc', 'Danh mục trang', 'pages-cats', 'layers'], ['/admin/menu', 'Giao diện & Menu', 'menu', 'menu']];
+const subs = pbOn ? SUBS.filter((i) => can(U.role, i[0])) : [];
+const subOpen = subs.length > 0 && (active === 'pages' || active.startsWith('pages-') || active === 'menu');
+const isOn = (k: string) => active === k || (k === 'pages' && subOpen && active.startsWith('pages-'));
 const badge = (k: string) => (proOn ? (k === 'msg' ? nMail : k === 'chat' ? nChat : 0) : k === 'msg' ? unread : 0);
 type Item = [string, string, string, string];
 const groups0: [string, Item[]][] = [
@@ -42,14 +49,14 @@ const bar = ([['/admin', 'Tổng quan', 'home', 'home'], ['/admin/hop-thu', 'H�
   <aside class="drawer" id="admdr">
     <div class="drawer-head"><b>Nhịp admin</b><button type="button" data-dr set:html={icon('x', 24)}></button></div>
     {groups.map(([g, items]) => (<><div class="grp" style="font-size:11px;text-transform:uppercase;color:#7fa39e;margin:12px 12px 4px">{g}</div>
-      {items.map(([h, l, k, ic]) => <a href={h} class={active === k ? 'on' : ''}><Fragment set:html={icon(ic)} />{l}{badge(k) > 0 && <span class="bdg">{badge(k)}</span>}</a>)}</>))}
+      {items.map(([h, l, k, ic]) => (<><a href={h} class={isOn(k) ? 'on' : ''}><Fragment set:html={icon(ic)} />{l}{badge(k) > 0 && <span class="bdg">{badge(k)}</span>}</a>{k === 'pages' && subOpen && subs.map(([sh, sl, sk]) => <a href={sh} class={`sub ${active === sk ? 'on' : ''}`}>{sl}</a>)}</>))}</>))}
     <a href="/" target="_blank"><Fragment set:html={icon('eye')} />Xem website</a><a href="/admin/logout"><Fragment set:html={icon('x')} />Đăng xuất</a>
   </aside>
   <div class="adm">
     <aside class="side">
       <a class="logo" href="/admin"><i>↗</i><span>Nhịp admin</span></a>
       {groups.map(([g, items]) => (<><div class="grp">{g}</div>
-        {items.map(([h, l, k, ic]) => <a href={h} class={active === k ? 'on' : ''}><Fragment set:html={icon(ic, 18)} />{l}{badge(k) > 0 && <span class="bdg">{badge(k)}</span>}</a>)}</>))}
+        {items.map(([h, l, k, ic]) => (<><a href={h} class={isOn(k) ? 'on' : ''}><Fragment set:html={icon(ic, 18)} />{l}{badge(k) > 0 && <span class="bdg">{badge(k)}</span>}</a>{k === 'pages' && subOpen && subs.map(([sh, sl, sk]) => <a href={sh} class={`sub ${active === sk ? 'on' : ''}`}>{sl}</a>)}</>))}</>))}
       <div class="grp">{U.name || 'Chủ website'} · {U.role}</div>
       <a href="/" target="_blank"><Fragment set:html={icon('eye', 18)} />Xem website</a>
       <a href="/admin/logout"><Fragment set:html={icon('x', 18)} />Đăng xuất</a>

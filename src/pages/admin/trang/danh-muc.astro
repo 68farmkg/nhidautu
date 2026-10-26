@@ -1,0 +1,49 @@
+---
+// Danh mục trang: phân loại trang trong khu quản trị (chỉ khi plugin Page Builder Pro bật). Xóa danh mục không xóa trang.
+import Admin from '../../../layouts/Admin.astro';
+import { pbCfg } from '../../../lib/pb/cfg';
+import { ensurePb, listCats, addCat, renameCat, deleteCat, moveCat, getCat } from '../../../lib/pb/store';
+const db = Astro.locals.runtime.env.DB;
+if (!(await pbCfg(db)).on) return Astro.redirect('/admin/trang');
+await ensurePb(db);
+let msg = '', err = '';
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData(), act = String(f.get('act') || ''), id = Number(f.get('id')) || 0;
+  try {
+    if (act === 'add') { const r = await addCat(db, String(f.get('name') || ''), String(f.get('descr') || '')); if (r.ok) msg = 'Đã thêm danh mục.'; else err = r.error; }
+    else if (!id || !(await getCat(db, id))) err = 'Không tìm thấy danh mục.';
+    else if (act === 'save') { err = await renameCat(db, id, String(f.get('name') || ''), String(f.get('descr') || '')); if (!err) msg = 'Đã lưu.'; }
+    else if (act === 'up' || act === 'down') await moveCat(db, id, act === 'up' ? -1 : 1);
+    else if (act === 'delete') { await deleteCat(db, id); msg = 'Đã xóa danh mục. Các trang thuộc danh mục này chuyển về “Chưa phân loại”.'; }
+  } catch (e: any) { err = 'Lỗi: ' + (e?.message || e); }
+}
+let cats: Awaited<ReturnType<typeof listCats>> = [];
+try { cats = await listCats(db); } catch (e: any) { err = err || 'Không đọc được danh mục: ' + (e?.message || e); }
+const un = await db.prepare("SELECT COUNT(*) n FROM pages p LEFT JOIN px_page_builder_meta m ON m.page_id=p.id WHERE p.is_template=0 AND COALESCE(json_extract(CASE WHEN json_valid(m.meta) THEN m.meta ELSE '{}' END,'$.cat'),0)=0").first().catch(() => null);
+---
+<Admin title="Danh mục trang" active="pages-cats">
+  <div class="pagehead"><h1>Danh mục trang</h1></div>
+  {msg && <div class="msg ok">{msg}</div>}{err && <div class="msg err">{err}</div>}
+  <div class="box"><b>Thêm danh mục</b>
+    <form method="post" class="row2" style="margin-top:8px"><input type="hidden" name="act" value="add" />
+      <input name="name" placeholder="Tên danh mục (vd: Landing, Giới thiệu…)" maxlength="60" required aria-label="Tên danh mục" />
+      <input name="descr" placeholder="Mô tả ngắn (tùy chọn)" maxlength="200" aria-label="Mô tả" />
+      <button class="btn sm">Thêm</button></form>
+    <div class="meta" style="margin-top:6px">Danh mục dùng để sắp xếp trang trong khu quản trị và lọc ở danh sách Trang. Chọn danh mục cho từng trang ở tab Cài đặt của trình dựng hoặc ngay trong danh sách Trang.</div>
+  </div>
+  <div class="cards" style="margin-top:14px">
+    {cats.length === 0 && <div class="box">Chưa có danh mục nào.</div>}
+    {cats.map((c) => (
+      <div class="item">
+        <form method="post" class="row2" style="align-items:center"><input type="hidden" name="id" value={c.id} />
+          <input name="name" value={c.name} maxlength="60" required aria-label="Tên danh mục" /><input name="descr" value={c.descr} maxlength="200" placeholder="Mô tả" aria-label="Mô tả" />
+          <span class="meta" style="white-space:nowrap"><a href={`/admin/trang?cat=${c.id}`}>{c.n} trang</a></span>
+          <button class="btn sm" name="act" value="save">Lưu</button>
+          <button class="btn ghost sm" name="act" value="up" aria-label="Lên" formnovalidate>↑</button><button class="btn ghost sm" name="act" value="down" aria-label="Xuống" formnovalidate>↓</button>
+          <button class="btn red sm" name="act" value="delete" formnovalidate onclick="return confirm('Xóa danh mục này? Trang không bị xóa.')">Xóa</button>
+        </form>
+      </div>
+    ))}
+    <div class="box"><span class="meta">Chưa phân loại: <a href="/admin/trang?cat=0">{un?.n ?? 0} trang</a></span></div>
+  </div>
+</Admin>

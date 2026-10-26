@@ -6,12 +6,29 @@ import DefaultHome from '../components/DefaultHome.astro';
 import { getSite } from '../lib/site';
 import { first } from '../lib/util';
 import { parseBlocks } from '../lib/blocks';
+import { pbCfg } from '../lib/pb/cfg';
+import { renderPage } from '../lib/pb/render';
 const db = Astro.locals.runtime.env.DB;
 const S = await getSite(db);
 let page: any = null;
 if (S.home_page) { try { page = await first(db, "SELECT * FROM pages WHERE slug=? AND status='published' AND is_template=0", S.home_page); } catch { /* chưa có bảng */ } }
+const cfg = page ? await pbCfg(db) : { on: false, cache: 0 };
+let pro: any = null;
+if (page && cfg.on) {
+  try {
+    const metaRow = await first(db, 'SELECT meta,side FROM px_page_builder_meta WHERE page_id=?', page.id).catch(() => null);
+    pro = await renderPage(db, page, metaRow, Astro.url, { site: S.name });
+    if (cfg.cache) Astro.response.headers.set('Cache-Control', `public, max-age=0, s-maxage=${cfg.cache}, stale-while-revalidate=${cfg.cache * 4}`);
+  } catch { pro = null; }
+}
 ---
-{page ? (
+{pro ? (
+  <Base title={page.seo_title || page.title} description={page.seo_desc} image={page.seo_image} hideHeader={!page.show_header} hideFooter={!page.show_footer} headHtml={pro.head} canonical={pro.meta.canonical || Astro.url.origin + '/'} noindex={pro.meta.noindex} jsonld={pro.jsonld}>
+    <Slot name="home.top" />
+    <Fragment set:html={pro.html} />
+    <Slot name="home.bottom" />
+  </Base>
+) : page ? (
   <Base title={page.seo_title || page.title} description={page.seo_desc} image={page.seo_image} hideHeader={!page.show_header} hideFooter={!page.show_footer}>
     <Slot name="home.top" />
     <Blocks blocks={parseBlocks(page.blocks)} />

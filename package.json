@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "test:pb": "node tests/run.mjs",
+    "test:pb:e2e": "node tests/run.mjs --e2e"
   },
   "dependencies": {
     "@astrojs/cloudflare": "~12.4.0",

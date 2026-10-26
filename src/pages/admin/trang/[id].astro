@@ -6,10 +6,13 @@ import { clientDefsAsync, parseBlocks, cleanBlocks, activeDefs, defsToMap } from
 import { blockDefs, emit } from '../../../lib/px/registry';
 import { TEMPLATES } from '../../../lib/templates';
 import { ICONS, icon } from '../../../lib/icons';
+import { pbCfg } from '../../../lib/pb/cfg';
 const db = Astro.locals.runtime.env.DB;
 const isAdmin = ((Astro.locals as any).user?.role || 'admin') === 'admin';
 const id = Astro.params.id === 'moi' ? 0 : Number(Astro.params.id);
 const RESERVED = ['admin', 'api', 'bai-viet', 'chuyen-muc', 'co-phieu', 'thi-truong', 'tin-tuc', 'tim-kiem', 'lien-he', 'favicon.svg', 'preview.js', 'builder.js', 'chat.js', '_astro'];
+// Page Builder Pro đang bật: chuyển sang trình dựng Pro (vẫn mở được trình cũ bằng ?basic=1)
+if (Astro.request.method === 'GET' && !Astro.url.searchParams.get('basic') && (await pbCfg(db)).on) return Astro.redirect(`/admin/pb/${Astro.params.id}${Astro.url.search}`);
 let msg = '', page: any = null;
 if (id) { page = await first(db, 'SELECT * FROM pages WHERE id=?', id); if (!page) return Astro.redirect('/admin/trang'); }
 

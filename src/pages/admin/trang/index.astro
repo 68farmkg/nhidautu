@@ -4,12 +4,17 @@ import { icon } from '../../../lib/icons';
 import { TEMPLATES } from '../../../lib/templates';
 import { all, first, run, nowIso, fmtDate, slugify } from '../../../lib/util';
 import { getSite } from '../../../lib/site';
+import { pbCfg } from '../../../lib/pb/cfg';
+import { ensurePb, listCats, getCat, setPageCat } from '../../../lib/pb/store';
 const db = Astro.locals.runtime.env.DB;
+const PRO = (await pbCfg(db)).on;
 let err = '';
+if (PRO) { try { await ensurePb(db); } catch { /* hiện lỗi ở dưới */ } }
 if (Astro.request.method === 'POST') {
   const f = await Astro.request.formData(); const id = Number(f.get('id')); const act = String(f.get('act'));
   try {
     if (act === 'delete') await run(db, 'DELETE FROM pages WHERE id=?', id);
+    if (act === 'setcat' && PRO) { const c = Number(f.get('cat')) || 0; if (!c || (await getCat(db, c))) await setPageCat(db, id, c); }
     if (act === 'dup') { const p = await first(db, 'SELECT * FROM pages WHERE id=?', id);
       if (p) { const r = await run(db, 'INSERT INTO pages (slug,title,blocks,status,is_template,show_header,show_footer,seo_title,seo_desc,seo_image,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)', p.slug + '-' + Date.now().toString(36), p.title + ' (bản sao)', p.blocks, 'draft', p.is_template, p.show_header, p.show_footer, p.seo_title, p.seo_desc, p.seo_image, nowIso(), nowIso()); return Astro.redirect(`/admin/trang/${r.meta.last_row_id}`); } }
     if (act === 'home') { const p = await first(db, 'SELECT slug FROM pages WHERE id=?', id); await run(db, "INSERT INTO kv (k,v) VALUES ('s.home_page',?) ON CONFLICT(k) DO UPDATE SET v=excluded.v", p?.slug || ''); }
@@ -17,9 +22,14 @@ if (Astro.request.method === 'POST') {
   } catch (e: any) { err = 'Lỗi: ' + (e?.message || e) + '. Bạn đã chạy nang-cap-2.sql chưa?'; }
   if (!err) return Astro.redirect('/admin/trang');
 }
-let rows: any[] = [], tpls: any[] = [];
+let rows: any[] = [], tpls: any[] = [], cats: any[] = [];
+const catQ = Astro.url.searchParams.get('cat'), catF = catQ !== null && /^\d+$/.test(catQ) ? Number(catQ) : -1;
 try {
-  rows = await all(db, 'SELECT id,slug,title,status,updated_at,is_template FROM pages WHERE is_template=0 ORDER BY id DESC LIMIT 200');
+  if (PRO) {
+    cats = await listCats(db);
+    const CE = "COALESCE(json_extract(CASE WHEN json_valid(m.meta) THEN m.meta ELSE '{}' END,'$.cat'),0)";
+    rows = await all(db, `SELECT p.id,p.slug,p.title,p.status,p.updated_at,p.is_template,${CE} cat FROM pages p LEFT JOIN px_page_builder_meta m ON m.page_id=p.id WHERE p.is_template=0 ${catF >= 0 ? `AND ${CE}=${catF}` : ''} ORDER BY p.id DESC LIMIT 200`);
+  } else rows = await all(db, 'SELECT id,slug,title,status,updated_at,is_template FROM pages WHERE is_template=0 ORDER BY id DESC LIMIT 200');
   tpls = await all(db, 'SELECT id,title FROM pages WHERE is_template=1 ORDER BY id DESC LIMIT 30');
 } catch (e: any) { err = err || 'Chưa có bảng trang. Hãy chạy nang-cap-2.sql trong D1 Console (xem HUONG-DAN.md).'; }
 const S = await getSite(db);
@@ -27,12 +37,14 @@ const S = await getSite(db);
 <Admin title="Trang" active="pages">
   <div class="pagehead"><h1>Trang</h1></div>
   {err && <div class="msg err">{err}</div>}
-  <div class="box"><b>Tạo trang mới</b>
+  {PRO && <div class="box"><b>Page Builder Pro</b> <span class="meta">trình dựng kéo thả có xem trước, bản nháp, phiên bản và thư viện mẫu</span><div class="acts" style="margin-top:10px"><a class="btn sm ic-b" href="/admin/pb/moi"><Fragment set:html={icon('plus', 16)} />Thêm trang mới bằng Pro</a></div></div>}
+  <div class="box"><b>Tạo trang mới (trình dựng cơ bản)</b>
     <div class="acts" style="margin-top:10px">
       {Object.entries(TEMPLATES).map(([k, t]) => <a class="btn ghost sm ic-b" href={`/admin/trang/moi?mau=${k}`} title={t.desc}><Fragment set:html={icon('plus', 16)} />{t.name}</a>)}
       {tpls.map((t) => <a class="btn ghost sm ic-b" href={`/admin/trang/moi?tu=${t.id}`}><Fragment set:html={icon('star', 16)} />{t.title}</a>)}
     </div>
   </div>
+  {PRO && <div class="acts" style="margin-top:14px;flex-wrap:wrap"><a class={`btn sm ${catF < 0 ? '' : 'ghost'}`} href="/admin/trang">Tất cả</a>{cats.map((c) => <a class={`btn sm ${catF === c.id ? '' : 'ghost'}`} href={`/admin/trang?cat=${c.id}`}>{c.name} ({c.n})</a>)}<a class={`btn sm ${catF === 0 ? '' : 'ghost'}`} href="/admin/trang?cat=0">Chưa phân loại</a><a class="btn ghost sm" href="/admin/trang/danh-muc">Quản lý danh mục</a></div>}
   <div class="cards" style="margin-top:14px">
     {rows.length === 0 && !err && <div class="box">Chưa có trang nào.</div>}
     {rows.map((r) => (
@@ -40,9 +52,10 @@ const S = await getSite(db);
         <div class="tt"><a href={`/admin/trang/${r.id}`}><b>{r.title}</b></a>
           <span class="meta">/{r.slug} · {fmtDate(r.updated_at)} </span>
           <span class={`st ${r.status === 'published' ? 'published' : ''}`}>{r.status === 'published' ? 'Đã đăng' : 'Nháp'}</span>
-          {S.home_page === r.slug && <span class="st published" style="margin-left:4px">Trang chủ</span>}</div>
+          {S.home_page === r.slug && <span class="st published" style="margin-left:4px">Trang chủ</span>}
+          {PRO && cats.length > 0 && <form method="post" class="inline" style="margin-left:6px"><input type="hidden" name="id" value={r.id} /><input type="hidden" name="act" value="setcat" /><select name="cat" aria-label="Danh mục" onchange="this.form.submit()" style="width:auto;padding:2px 6px;font-size:12px"><option value="0" selected={!r.cat}>Chưa phân loại</option>{cats.map((c) => <option value={c.id} selected={r.cat === c.id}>{c.name}</option>)}</select></form>}</div>
         <div class="acts">
-          <a class="btn sm" href={`/admin/trang/${r.id}`}>Sửa</a>
+          <a class="btn sm" href={`/admin/trang/${r.id}`}>{PRO ? 'Sửa (Pro)' : 'Sửa'}</a>{PRO && <a class="btn ghost sm" href={`/admin/trang/${r.id}?basic=1`}>Cơ bản</a>}
           {r.status === 'published' && <a class="btn ghost sm" href={`/${r.slug}`} target="_blank">Xem</a>}
           <form method="post" class="inline"><input type="hidden" name="id" value={r.id} /><button class="btn ghost sm" name="act" value="dup">Nhân đôi</button></form>
           <form method="post" class="inline"><input type="hidden" name="id" value={r.id} />{S.home_page === r.slug ? <button class="btn ghost sm" name="act" value="unhome">Bỏ làm trang chủ</button> : <button class="btn ghost sm" name="act" value="home">Đặt làm trang chủ</button>}</form>

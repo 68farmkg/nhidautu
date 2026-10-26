@@ -5,7 +5,7 @@ export const ROLES: Record<string, string> = {
   support: 'Chăm sóc khách hàng (hộp thư, chat khách)',
 };
 const ALLOW: Record<string, string[]> = {
-  editor: ['/admin/trang', '/admin/bai-viet', '/admin/ai', '/admin/rss', '/admin/thi-truong', '/admin/xem-truoc', '/admin/tai-khoan'],
+  editor: ['/admin/trang', '/admin/bai-viet', '/admin/ai', '/admin/rss', '/admin/thi-truong', '/admin/xem-truoc', '/admin/pb', '/admin/pb-api', '/admin/pb-preview', '/admin/tai-khoan'],
   support: ['/admin/hop-thu', '/admin/chat', '/admin/chat-api', '/admin/mail-api', '/admin/chat-poll', '/admin/tin-nhan', '/admin/tai-khoan'],
 };
 export function can(role: string, path: string): boolean {

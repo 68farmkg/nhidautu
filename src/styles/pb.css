@@ -1,0 +1,27 @@
+/* Page Builder Pro: giao diện khách (nhẹ, chỉ các khối Pro + bố cục trang) */
+.pb-page .pb-title{margin:20px 0 4px}
+.pb-l-boxed>.wrap{max-width:960px}
+.pb-grid{display:grid;gap:24px;align-items:start}.pb-grid.side-right{grid-template-columns:minmax(0,1fr) 300px}.pb-grid.side-left{grid-template-columns:300px minmax(0,1fr)}.pb-grid.side-left .pb-side{order:-1}
+@media(max-width:860px){.pb-grid{grid-template-columns:1fr!important}.pb-grid.side-left .pb-side{order:0}}
+.pb-grid .blk.full{margin-inline:0;width:auto}
+.pb-cta{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:28px;border-radius:16px;flex-wrap:wrap}
+.pb-cta h2{margin:0 0 6px;font-size:22px}.pb-cta p{margin:0;opacity:.9}.pb-cta-b{display:flex;gap:10px;flex-wrap:wrap}
+.pb-cta.l-brand{background:linear-gradient(135deg,color-mix(in srgb,var(--green) 80%,#000),var(--ink));color:#fff}.pb-cta.l-dark{background:#0a2a2f;color:#fff}.pb-cta.l-light{background:#f3f6f5;color:var(--ink)}
+.pb-cta.l-brand .btn.ghost,.pb-cta.l-dark .btn.ghost{color:#fff;border-color:rgba(255,255,255,.6)}
+.pb-cta.a-center{flex-direction:column;text-align:center}.pb-cta.a-right{flex-direction:row-reverse;text-align:right}
+.pb-plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.pb-plan{position:relative;border:1px solid var(--line);border-radius:14px;padding:22px;background:#fff;display:flex;flex-direction:column;gap:10px}.pb-plan.hot{border-color:var(--green);box-shadow:0 10px 30px rgba(0,0,0,.08)}
+.pb-plan h3{margin:0}.pb-price b{font-size:28px}.pb-price small{color:#667}.pb-plan ul{list-style:none;padding:0;margin:0;flex:1}.pb-plan li{padding:5px 0;border-bottom:1px dashed var(--line)}.pb-plan li:before{content:"✓ ";color:var(--green)}
+.pb-badge{position:absolute;top:-10px;right:14px;background:var(--green);color:#fff;font-size:12px;padding:2px 10px;border-radius:99px}
+.pb-stock{display:block;border:1px solid var(--line);border-radius:12px;padding:14px;background:#fff;color:inherit;text-decoration:none}.pb-stock.empty{color:#667;font-size:14px}
+.pb-stock-h{display:flex;gap:8px;align-items:baseline}.pb-stock-h span{color:#667;font-size:13px}.pb-stock-p strong{font-size:26px;margin-right:10px}.pb-stock-m{color:#667;font-size:13px;margin-top:4px}
+.pb-stock .up,.pb-stock em.up{color:#12b76a}.pb-stock .down{color:#e0342c}
+.pb-mchart{width:100%;height:auto;display:block}.pb-mchart .l{font-size:12px;fill:#334}.pb-mchart .v{font-size:12px;font-weight:600}.pb-mchart .u{fill:#12b76a}.pb-mchart .d{fill:#e0342c}.pb-mchart text.u{fill:#0e9355}.pb-mchart text.d{fill:#c02a23}.pb-mchart .ax{stroke:#ccd5d3}
+.pb-newsbox{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff}.pb-newsbox h3{margin:0 0 8px}
+.pb-news{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);color:inherit;text-decoration:none}.pb-news:last-of-type{border:0}.pb-news .im{flex:0 0 64px;height:48px;border-radius:8px;background:#e8eeed;overflow:hidden}.pb-news .im img{width:100%;height:100%;object-fit:cover}.pb-news .tx{display:flex;flex-direction:column;gap:2px}.pb-news b{font-size:14px;line-height:1.35}.pb-news small{color:#667}
+.pb-more{display:inline-block;margin-top:6px;color:var(--green-d);font-weight:600;font-size:14px}
+.pb-ai-tag{display:inline-block;font-size:12px;background:#eef7f3;color:#0e6b43;border-radius:99px;padding:2px 10px;margin-bottom:6px}
+.pb-vid{position:relative;width:100%;background:#000;border-radius:12px;overflow:hidden}.pb-vid iframe,.pb-vid video,.pb-yt{position:absolute;inset:0;width:100%;height:100%;border:0}.pb-yt{padding:0;background:#000;cursor:pointer}.pb-yt img{width:100%;height:100%;object-fit:cover;opacity:.85}.pb-yt i{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;font-style:normal;display:grid;place-items:center;font-size:24px}
+.pbh{max-width:100%;overflow-x:auto}
+/* chỉ hiện trong trình soạn */
+.pb-empty{grid-column:1/-1;border:2px dashed #9ab;border-radius:10px;padding:18px;text-align:center;color:#678;font-size:13px;cursor:pointer;background:rgba(18,183,106,.04)}

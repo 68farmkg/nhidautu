@@ -145,3 +145,6 @@ footer .copy{grid-column:1/-1;border-top:1px solid #1d4a47;padding-top:14px;font
 .th-m.v{align-self:flex-start;background:#fff;border:1px solid var(--line)}
 .th-m.a{align-self:flex-end;background:var(--green);color:#fff}
 .reply{display:flex;gap:8px;margin-top:10px}.reply textarea{min-height:48px;height:48px;flex:1}
+
+/* Menu con của Trang (Page Builder Pro) */
+.side a.sub,.drawer a.sub{padding-left:46px;font-size:13px;opacity:.9;position:relative}.side a.sub:before,.drawer a.sub:before{content:'';position:absolute;left:30px;top:50%;width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.45;transform:translateY(-50%)}.side a.sub.on:before,.drawer a.sub.on:before{opacity:1}
