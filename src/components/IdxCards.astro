@@ -1,0 +1,18 @@
+---
+import Spark from './Spark.astro';
+import { fmtNum, fmtPct } from '../lib/util';
+const { idx = [] } = Astro.props;
+---
+{idx.length > 0 && (
+  <div class="ic4">
+    {idx.map((i: any) => (
+      <a class="ic" href={`/co-phieu/${i.symbol}`}>
+        <div class="ic-t"><span class="ic-n">{i.name}</span></div>
+        <div class="ic-b">
+          <div><b>{fmtNum(i.price)}</b><span class={`chg ${i.change_pct >= 0 ? 'up' : 'down'}`}>{i.change_pct >= 0 ? '▲' : '▼'} {fmtPct(i.change_pct)}</span></div>
+          <Spark sym={i.symbol} pct={i.change_pct} w={120} h={38} />
+        </div>
+      </a>
+    ))}
+  </div>
+)}

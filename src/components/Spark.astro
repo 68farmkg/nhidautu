@@ -1,0 +1,7 @@
+---
+import { sparkPath } from '../lib/spark';
+const { sym = '', pct = 0, w = 110, h = 34 } = Astro.props;
+const s = sparkPath(String(sym), Number(pct), w, h);
+const c = Number(pct) >= 0 ? 'var(--up)' : 'var(--down)';
+---
+<svg class="spark" viewBox={`0 0 ${w} ${h}`} width={w} height={h} preserveAspectRatio="none" aria-hidden="true"><path d={s.area} fill={c} opacity=".12" /><path d={s.line} fill="none" stroke={c} stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" /></svg>

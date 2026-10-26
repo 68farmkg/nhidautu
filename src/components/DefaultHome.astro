@@ -1,77 +1,78 @@
 ---
 import Slot from './Slot.astro';
 import Base from '../layouts/Base.astro';
-import NewsFeed from '../components/NewsFeed.astro';
-import PriceRefresh from '../components/PriceRefresh.astro';
-import PostCard from '../components/PostCard.astro';
-import { all, nowIso, fmtNum, fmtPct } from '../lib/util';
+import NewsFeed from './NewsFeed.astro';
+import PriceRefresh from './PriceRefresh.astro';
+import PostCard from './PostCard.astro';
+import PageHero from './PageHero.astro';
+import IdxCards from './IdxCards.astro';
+import Spark from './Spark.astro';
+import SH from './SH.astro';
+import { all, fmtNum, fmtPct } from '../lib/util';
+import { getPosts } from '../lib/ui';
+import { icon } from '../lib/icons';
 const db = Astro.locals.runtime.env.DB;
 const idx = await all(db, "SELECT * FROM quotes WHERE kind='index' ORDER BY rowid LIMIT 4");
-const stocks = await all(db, "SELECT * FROM quotes WHERE kind='stock' ORDER BY change_pct DESC LIMIT 6");
-const posts = await all(db, "SELECT id,slug,title,summary,image,category,published_at FROM posts WHERE status='published' AND published_at <= ? ORDER BY published_at DESC LIMIT 9", nowIso());
-const top = posts[0];
-const rest = posts.slice(1);
+const stocks = await all(db, "SELECT * FROM quotes WHERE kind='stock' ORDER BY change_pct DESC LIMIT 5");
+const { rows: posts } = await getPosts(db, { limit: 9 });
+const { rows: analysis } = await getPosts(db, { cat: 'phan-tich', limit: 3 });
+const top = posts[0], list = posts.slice(1, 5), latest = posts.slice(5, 9);
+const cats = [
+  ['/thi-truong', 'chart', 'Thị trường', 'Cập nhật diễn biến thị trường'],
+  ['/chuyen-muc/doanh-nghiep', 'building', 'Doanh nghiệp', 'Thông tin doanh nghiệp niêm yết'],
+  ['/chuyen-muc/phan-tich', 'news', 'Phân tích', 'Báo cáo, nhận định chuyên sâu'],
+  ['/chuyen-muc/kien-thuc', 'book', 'Kiến thức', 'Kiến thức đầu tư hiệu quả'],
+];
 ---
 <Base active="home">
 <Slot name="home.top" />
-  <section class="hero">
-    <div class="wrap">
-      <h1>Đồng hành cùng bạn trên hành trình đầu tư thông minh</h1>
-      <p>Cập nhật thị trường nhanh chóng · Phân tích chuyên sâu · Kiến thức thực tiễn</p>
-      <form action="/tim-kiem" method="get">
-        <input type="search" name="q" placeholder="Tìm kiếm mã cổ phiếu, bài viết, phân tích…" aria-label="Tìm kiếm" />
-        <button type="submit">Tìm</button>
-      </form>
-    </div>
-  </section>
+  <PageHero cls="lg" title="Đồng hành cùng bạn trên hành trình đầu tư thông minh" sub="Cập nhật thị trường nhanh chóng · Phân tích chuyên sâu · Kiến thức thực tiễn" search="Tìm mã cổ phiếu, bài viết, phân tích…" />
   <div class="wrap">
-    <div class="idx">
-      {idx.map((i) => (
-        <a class="c" href={`/co-phieu/${i.symbol}`}>
-          <small>{i.name}</small>
-          <b>{fmtNum(i.price)}</b>
-          <span class={i.change_pct >= 0 ? 'up' : 'down'} style="filter:brightness(1.5)">{fmtPct(i.change_pct)}</span>
-        </a>
-      ))}
-    </div>
-
-    <div class="grid">
+    <IdxCards idx={idx} />
+    <div class="cols">
       <div>
         {top ? (
-          <div class="box"><h2>Tin nổi bật <a href="/tin-tuc">Xem tất cả</a></h2>
-            <PostCard p={top} big />
-          </div>
-        ) : <div class="box"><p>Chưa có bài viết. Hãy đăng bài đầu tiên trong trang quản trị.</p></div>}
-        {rest.length > 0 && (
-          <div class="box" style="margin-top:20px"><h2>Mới cập nhật</h2>
-            {rest.map((p) => <PostCard p={p} />)}
-          </div>
+          <section class="box">
+            <SH title="Tin nổi bật" href="/tin-tuc" />
+            <div class="split">
+              <PostCard p={top} v="feat" />
+              <div class="plist">{list.map((p) => <PostCard p={p} />)}</div>
+            </div>
+          </section>
+        ) : <section class="box"><p class="empty">Chưa có bài viết. Hãy đăng bài đầu tiên trong trang quản trị.</p></section>}
+        {latest.length > 0 && (
+          <section class="box">
+            <SH title="Bài viết mới nhất" href="/tin-tuc" />
+            <div class="pgrid">{latest.map((p) => <PostCard p={p} v="card" />)}</div>
+          </section>
         )}
       </div>
-      <aside>
-        <div class="box"><h2>Top cổ phiếu quan tâm <a href="/thi-truong">Xem thêm</a></h2>
-          <table class="t">
-            <tbody>
-              {stocks.map((s) => (
-                <tr><td><a href={`/co-phieu/${s.symbol}`}><b>{s.symbol}</b></a></td>
-                  <td class="r">{fmtNum(s.price)}</td>
-                  <td class={`r ${s.change_pct >= 0 ? 'up' : 'down'}`}>{fmtPct(s.change_pct)}</td></tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <NewsFeed />
-        <div class="studio" style="margin-top:20px">
-          <h3>Nhịp AI Content Studio</h3>
-          <div>Tự động nghiên cứu · Sáng tạo nội dung · Xuất bản thông minh</div>
-          <ul><li>Tìm kiếm chủ đề hot</li><li>Viết bài bằng AI chất lượng</li><li>Duyệt trước khi đăng</li></ul>
-        </div>
-        <div class="box" style="margin-top:20px"><h2>Chuyên mục</h2>
-          <div class="tools">
-            <a href="/thi-truong">Thị trường</a><a href="/chuyen-muc/doanh-nghiep">Doanh nghiệp</a>
-            <a href="/chuyen-muc/phan-tich">Phân tích</a><a href="/chuyen-muc/kien-thuc">Kiến thức</a>
+      <aside style="display:grid;gap:18px;min-width:0">
+        <section class="box">
+          <SH title="Top cổ phiếu quan tâm" href="/thi-truong" more="Xem thêm" />
+          <div class="stk">
+            {stocks.map((s) => (
+              <a href={`/co-phieu/${s.symbol}`}>
+                <span class="s">{s.symbol}</span><span class="p">{fmtNum(s.price)}</span>
+                <span class={`c ${s.change_pct >= 0 ? 'up' : 'down'}`}>{fmtPct(s.change_pct)}</span>
+                <Spark sym={s.symbol} pct={s.change_pct} w={68} h={26} />
+              </a>
+            ))}
           </div>
-        </div>
+        </section>
+        <section class="box">
+          <SH title="Chuyên mục" />
+          <div class="tiles">
+            {cats.map(([u, ic, n, d]) => <a class="tile" href={u}><i set:html={icon(ic, 18)}></i><span><b>{n}</b><small>{d}</small></span></a>)}
+          </div>
+        </section>
+        {analysis.length > 0 && (
+          <section class="box">
+            <SH title="Phân tích & nhận định" href="/chuyen-muc/phan-tich" />
+            <div class="plist">{analysis.map((p) => <PostCard p={p} />)}</div>
+          </section>
+        )}
+        <NewsFeed />
       </aside>
     </div>
   </div>

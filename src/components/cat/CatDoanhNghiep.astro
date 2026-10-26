@@ -1,0 +1,94 @@
+---
+import PostCard from '../PostCard.astro';
+import PageHero from '../PageHero.astro';
+import Spark from '../Spark.astro';
+import SH from '../SH.astro';
+import { all, fmtNum, fmtPct } from '../../lib/util';
+import { getPosts, sectorStats } from '../../lib/ui';
+import { icon } from '../../lib/icons';
+const { page = 1 } = Astro.props;
+const db = Astro.locals.runtime.env.DB;
+const stocks = await all(db, "SELECT * FROM quotes WHERE kind='stock' ORDER BY symbol");
+const per = 6;
+const { rows: news, more } = await getPosts(db, { cat: 'doanh-nghiep', limit: per, offset: (page - 1) * per });
+const exs = [...new Set(stocks.map((s) => s.exchange).filter(Boolean))];
+const sectors = sectorStats(stocks);
+const featured = [...stocks].sort((a, b) => b.price - a.price).slice(0, 5);
+const stat = [['Tổng số doanh nghiệp theo dõi', stocks.length], ...exs.map((e) => [`Doanh nghiệp ${e}`, stocks.filter((s) => s.exchange === e).length])].slice(0, 4);
+---
+<PageHero badge="Doanh nghiệp" crumb="Doanh nghiệp" title="Hệ thống thông tin doanh nghiệp niêm yết Việt Nam" sub="Cập nhật thông tin doanh nghiệp, báo cáo tài chính, kết quả kinh doanh, hoạt động cổ đông và các chỉ số quan trọng." search="Nhập mã cổ phiếu hoặc tên doanh nghiệp…" />
+<div class="wrap">
+  <div class="stat4">
+    {stat.map(([n, v]) => <div class="sc"><i set:html={icon('building', 20)}></i><div><small>{n}</small><b>{v}</b></div></div>)}
+  </div>
+  <div class="cols">
+    <div>
+      {featured.length > 0 && (
+        <section class="box">
+          <SH title="Doanh nghiệp tiêu biểu" href="/thi-truong" />
+          <div class="pgrid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))">
+            {featured.map((s) => (
+              <a class="tile" href={`/co-phieu/${s.symbol}`} style="flex-direction:column;align-items:flex-start;gap:6px">
+                <b style="font-size:16px">{s.symbol}</b><small>{s.name}</small>
+                <b style="font-size:18px">{fmtNum(s.price)}</b>
+                <span style="display:flex;justify-content:space-between;width:100%;align-items:flex-end"><span class={`chg ${s.change_pct >= 0 ? 'up' : 'down'}`}>{fmtPct(s.change_pct)}</span><Spark sym={s.symbol} pct={s.change_pct} w={64} h={24} /></span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+      <section class="box">
+        <SH title="Danh sách doanh nghiệp" />
+        <div class="tools">
+          <div class="chips sm" data-ex-tabs><button type="button" class="on" data-ex="">Tất cả</button>{exs.map((e) => <button type="button" data-ex={e}>{e}</button>)}</div>
+          <select data-sec aria-label="Ngành nghề"><option value="">Tất cả ngành</option>{sectors.map((s) => <option value={s.name}>{s.name}</option>)}</select>
+          <input class="grow" type="search" placeholder="Tìm doanh nghiệp…" aria-label="Tìm doanh nghiệp" data-q maxlength="30" />
+        </div>
+        <div class="tw"><table class="t" data-board>
+          <thead><tr><th>Mã CK</th><th>Tên doanh nghiệp</th><th>Sàn</th><th>Ngành nghề</th><th class="r">Giá hiện tại</th><th class="r">%</th><th class="r"></th></tr></thead>
+          <tbody>
+            {stocks.map((s) => (
+              <tr data-ex={s.exchange} data-sec={s.sector} data-s={`${s.symbol} ${s.name}`.toLowerCase()}>
+                <td><span class="sym">{s.symbol}</span></td><td>{s.name}</td><td>{s.exchange}</td><td>{s.sector}</td>
+                <td class="r"><b>{fmtNum(s.price)}</b></td>
+                <td class="r"><span class={`pill ${s.change_pct >= 0 ? 'up' : 'down'}`}>{fmtPct(s.change_pct)}</span></td>
+                <td class="r"><a style="color:var(--green-d);font-weight:600" href={`/co-phieu/${s.symbol}`}>Xem</a></td>
+              </tr>
+            ))}
+          </tbody>
+        </table></div>
+        <p class="empty" data-none hidden>Không có doanh nghiệp phù hợp.</p>
+      </section>
+    </div>
+    <aside style="display:grid;gap:18px;min-width:0">
+      <section class="box">
+        <SH title="Tin tức doanh nghiệp" />
+        {news.length === 0 && <p class="empty">Chưa có tin.</p>}
+        <div class="plist">{news.map((p) => <PostCard p={p} />)}</div>
+        {(page > 1 || more) && (
+          <div class="pager">
+            <span>{page > 1 && <a class="btn ghost" href={`/chuyen-muc/doanh-nghiep?trang=${page - 1}`}>← Trước</a>}</span>
+            <span>{more && <a class="btn ghost" href={`/chuyen-muc/doanh-nghiep?trang=${page + 1}`}>Sau →</a>}</span>
+          </div>
+        )}
+      </section>
+      {sectors.length > 0 && (
+        <section class="box">
+          <SH title="Ngành nghề nổi bật" />
+          <div class="tiles">
+            {sectors.slice(0, 8).map((s) => <div class="tile"><i set:html={icon('building', 18)}></i><span><b>{s.name}</b><span class={`chg ${s.pct >= 0 ? 'up' : 'down'}`}>{fmtPct(s.pct)}</span></span></div>)}
+          </div>
+        </section>
+      )}
+    </aside>
+  </div>
+</div>
+<script is:inline>
+  (function () {
+    var rows = [].slice.call(document.querySelectorAll('[data-board] tbody tr')), ex = '', sec = '', q = '', none = document.querySelector('[data-none]');
+    function apply() { var n = 0; rows.forEach(function (r) { var ok = (!ex || r.dataset.ex === ex) && (!sec || r.dataset.sec === sec) && (!q || r.dataset.s.indexOf(q) > -1); r.hidden = !ok; if (ok) n++; }); if (none) none.hidden = n > 0; }
+    document.querySelectorAll('[data-ex-tabs] button').forEach(function (b) { b.addEventListener('click', function () { ex = b.dataset.ex; document.querySelectorAll('[data-ex-tabs] button').forEach(function (x) { x.classList.toggle('on', x === b); }); apply(); }); });
+    var se = document.querySelector('select[data-sec]'); if (se) se.addEventListener('change', function () { sec = se.value; apply(); });
+    var qi = document.querySelector('[data-q]'); if (qi) qi.addEventListener('input', function () { q = qi.value.trim().toLowerCase(); apply(); });
+  })();
+</script>

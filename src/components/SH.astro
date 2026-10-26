@@ -1,0 +1,5 @@
+---
+// Tiêu đề khối: tên + liên kết "Xem tất cả"
+const { title, href = '', more = 'Xem tất cả' } = Astro.props;
+---
+<div class="sh"><h2>{title}</h2>{href && <a href={href}>{more} →</a>}</div>

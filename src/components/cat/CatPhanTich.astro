@@ -1,0 +1,78 @@
+---
+import PostCard from '../PostCard.astro';
+import PageHero from '../PageHero.astro';
+import Spark from '../Spark.astro';
+import SH from '../SH.astro';
+import { all, fmtNum, fmtPct, fmtDay } from '../../lib/util';
+import { getPosts } from '../../lib/ui';
+import { listTerms } from '../../lib/terms';
+import { icon } from '../../lib/icons';
+const { page = 1 } = Astro.props;
+const db = Astro.locals.runtime.env.DB;
+const per = 6;
+const head = page === 1 ? (await getPosts(db, { cat: 'phan-tich', limit: 5 })).rows : [];
+const { rows: grid, more } = await getPosts(db, { cat: 'phan-tich', limit: per, offset: page === 1 ? 5 : 5 + (page - 1) * per });
+const [top, ...list] = head;
+const stocks = await all(db, "SELECT * FROM quotes WHERE kind='stock' ORDER BY change_pct DESC");
+const watch = stocks.slice(0, 5);
+let tags: any[] = [];
+try { tags = (await listTerms(db, 'tag')).filter((t) => t.n > 0).sort((a, b) => b.n - a.n).slice(0, 8); } catch { /* chưa có thẻ */ }
+const base = '/chuyen-muc/phan-tich';
+---
+<PageHero badge="Phân tích chuyên sâu" crumb="Phân tích" title="Những góc nhìn chuyên sâu cho quyết định đầu tư thông minh" sub="Phân tích kỹ thuật, phân tích cơ bản, đánh giá doanh nghiệp, nhận định thị trường và các báo cáo chuyên sâu." search="Tìm bài phân tích, mã cổ phiếu, chủ đề…" />
+<div class="wrap">
+  {tags.length > 0 && (
+    <nav class="chips tabbar" style="margin-top:-30px;position:relative;z-index:2" aria-label="Chủ đề">
+      <a class="on" href={base}>Tất cả</a>
+      {tags.map((t) => <a href={`/the/${t.slug}`}>{t.name}</a>)}
+    </nav>
+  )}
+  <div class="cols" style={tags.length ? '' : 'margin-top:-30px;position:relative;z-index:2'}>
+    <div>
+      {top && (
+        <section class="box">
+          <SH title="Phân tích mới nhất" />
+          <div class="split">
+            <PostCard p={top} v="feat" />
+            <div class="plist">{list.map((p) => <PostCard p={p} />)}</div>
+          </div>
+        </section>
+      )}
+      <section class="box">
+        <SH title="Bài viết phân tích" />
+        {grid.length === 0 && !top && <p class="empty">Chưa có bài phân tích.</p>}
+        <div class="pgrid g3">{grid.map((p) => <PostCard p={p} v="card" />)}</div>
+        {(page > 1 || more) && (
+          <div class="pager">
+            <span>{page > 1 && <a class="btn ghost" href={`${base}?trang=${page - 1}`}>← Trang trước</a>}</span>
+            <span>{more && <a class="btn ghost" href={`${base}?trang=${page + 1}`}>Trang sau →</a>}</span>
+          </div>
+        )}
+      </section>
+    </div>
+    <aside style="display:grid;gap:18px;min-width:0">
+      {head.length > 0 && (
+        <section class="box">
+          <SH title="Báo cáo phân tích nổi bật" />
+          <ul class="rank">
+            {head.map((p) => <li><i class="rk" set:html={icon('file', 13)}></i><div><a href={`/bai-viet/${p.slug}`}>{p.title}</a><div class="meta">{fmtDay(p.published_at)}</div></div></li>)}
+          </ul>
+        </section>
+      )}
+      <section class="box">
+        <SH title="Cổ phiếu đáng chú ý" href="/thi-truong" more="Bảng giá" />
+        <div class="stk">
+          {watch.map((s, i) => (
+            <a href={`/co-phieu/${s.symbol}`}><span class="rk">{i + 1}</span><span class="s">{s.symbol}</span><span class="p">{fmtNum(s.price)}</span><span class={`c ${s.change_pct >= 0 ? 'up' : 'down'}`}>{fmtPct(s.change_pct)}</span><Spark sym={s.symbol} pct={s.change_pct} w={60} h={24} /></a>
+          ))}
+        </div>
+      </section>
+      <section class="box">
+        <SH title="Tin phân tích theo mã" />
+        <div class="chips sm" style="flex-wrap:wrap;overflow:visible">
+          {stocks.slice(0, 12).map((s) => <a href={`/co-phieu/${s.symbol}`}>{s.symbol}</a>)}
+        </div>
+      </section>
+    </aside>
+  </div>
+</div>

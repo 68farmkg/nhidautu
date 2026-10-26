@@ -1,0 +1,57 @@
+---
+import PostCard from '../PostCard.astro';
+import PageHero from '../PageHero.astro';
+import SH from '../SH.astro';
+import { fmtDay } from '../../lib/util';
+import { getPosts } from '../../lib/ui';
+import { listTerms } from '../../lib/terms';
+const { page = 1 } = Astro.props;
+const db = Astro.locals.runtime.env.DB;
+const per = 8;
+const feat = page === 1 ? (await getPosts(db, { cat: 'kien-thuc', limit: 4 })).rows : [];
+const { rows: grid, more } = await getPosts(db, { cat: 'kien-thuc', limit: per, offset: page === 1 ? 4 : 4 + (page - 1) * per });
+const { rows: popular } = await getPosts(db, { cat: 'kien-thuc', limit: 5, order: 'views' });
+let tags: any[] = [];
+try { tags = (await listTerms(db, 'tag')).filter((t) => t.n > 0).sort((a, b) => b.n - a.n).slice(0, 8); } catch { /* chưa có thẻ */ }
+const base = '/chuyen-muc/kien-thuc';
+---
+<PageHero badge="Kiến thức đầu tư" crumb="Kiến thức" title="Kiến thức đầu tư – Nền tảng vững chắc cho hành trình tài chính" sub="Cập nhật kiến thức từ cơ bản đến chuyên sâu về chứng khoán, tài chính, kinh tế, quản trị rủi ro và các kỹ năng đầu tư hiệu quả." />
+<div class="wrap">
+  {tags.length > 0 && (
+    <div class="stat4" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+      {tags.map((t) => <a class="sc" href={`/the/${t.slug}`}><div><b style="font-size:15px">{t.name}</b><small>{t.n} bài viết</small></div></a>)}
+    </div>
+  )}
+  <div class="cols" style={tags.length ? '' : 'margin-top:-30px;position:relative;z-index:2'}>
+    <div>
+      {feat.length > 0 && (
+        <section class="box">
+          <SH title="Bài viết nổi bật" />
+          <div class="pgrid">{feat.map((p) => <PostCard p={p} v="card" />)}</div>
+        </section>
+      )}
+      <section class="box">
+        <SH title="Tất cả bài viết kiến thức" />
+        {grid.length === 0 && feat.length === 0 && <p class="empty">Chưa có bài viết.</p>}
+        <div class="pgrid">{grid.map((p) => <PostCard p={p} v="card" />)}</div>
+        {(page > 1 || more) && (
+          <div class="pager">
+            <span>{page > 1 && <a class="btn ghost" href={`${base}?trang=${page - 1}`}>← Trang trước</a>}</span>
+            <span>{more && <a class="btn ghost" href={`${base}?trang=${page + 1}`}>Trang sau →</a>}</span>
+          </div>
+        )}
+      </section>
+    </div>
+    <aside style="display:grid;gap:18px;min-width:0">
+      {popular.length > 0 && (
+        <section class="box">
+          <SH title="Bài viết được xem nhiều" />
+          <ol class="rank">
+            {popular.map((p, i) => <li><span class="rk">{i + 1}</span><div><a href={`/bai-viet/${p.slug}`}>{p.title}</a><div class="meta">{fmtDay(p.published_at)}{p.views ? ` · ${p.views.toLocaleString('vi-VN')} lượt xem` : ''}</div></div></li>)}
+          </ol>
+        </section>
+      )}
+      <section class="cta"><h3>Có câu hỏi về đầu tư?</h3><p>Gửi câu hỏi cho đội ngũ Nhịp Đầu Tư để được giải đáp.</p><a class="btn" href="/lien-he">Liên hệ</a></section>
+    </aside>
+  </div>
+</div>

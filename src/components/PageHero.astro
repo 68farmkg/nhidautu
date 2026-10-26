@@ -1,0 +1,20 @@
+---
+import { icon } from '../lib/icons';
+const { title, sub = '', crumb = '', badge = '', search = '', cls = '' } = Astro.props;
+---
+<section class={`ph ${cls}`}>
+  <div class="wrap">
+    {crumb && <nav class="crumb2" aria-label="Đường dẫn"><a href="/">Trang chủ</a><span aria-hidden="true">›</span><b>{crumb}</b></nav>}
+    {badge && <span class="ph-b">{badge}</span>}
+    <h1>{title}</h1>
+    {sub && <p>{sub}</p>}
+    <slot />
+    {search && (
+      <form class="ph-s" action="/tim-kiem" method="get" role="search">
+        <span set:html={icon('search', 18)}></span>
+        <input type="search" name="q" placeholder={search} aria-label="Tìm kiếm" maxlength="60" />
+        <button type="submit">Tìm</button>
+      </form>
+    )}
+  </div>
+</section>
