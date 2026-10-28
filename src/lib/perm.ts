@@ -27,7 +27,7 @@ export const ROLE_CAPS: Record<string, string[]> = {
 // Khớp theo "đúng đường dẫn hoặc đường dẫn con" (giống bản cũ).
 const PATH_CAP: [string, string][] = [
   ['/admin/bai-viet', 'posts'], ['/admin/trang', 'pages'], ['/admin/pb', 'builder'], ['/admin/pb-api', 'builder'], ['/admin/pb-preview', 'builder'],
-  ['/admin/xem-truoc', 'preview'], ['/admin/ai', 'ai'], ['/admin/rss', 'rss'], ['/admin/thi-truong', 'market'],
+  ['/admin/xem-truoc', 'preview'], ['/admin/ai', 'ai'], ['/admin/rss', 'rss'], ['/admin/thi-truong', 'market'], ['/admin/ma-chung-khoan', 'market'],
   ['/admin/hop-thu', 'inbox'], ['/admin/mail-api', 'inbox'], ['/admin/tin-nhan', 'inbox'],
   ['/admin/chat', 'chat'], ['/admin/chat-api', 'chat'], ['/admin/chat-poll', 'chat'],
   ['/admin/tai-khoan', 'self'], ['/admin/nhat-ky', 'logs'],

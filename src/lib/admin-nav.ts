@@ -25,7 +25,7 @@ export const NAV: Group[] = [
   { g: 'Công cụ', items: [
     { h: '/admin/ai', l: 'AI Content Studio', k: 'ai', ic: 'bot' },
     { h: '/admin/rss', l: 'Tin RSS các báo', k: 'rss', ic: 'rss' },
-    { h: '/admin/thi-truong', l: 'Số liệu thị trường', k: 'market', ic: 'chart' },
+    { h: '/admin/ma-chung-khoan', l: 'Danh bạ mã 3 sàn', k: 'market', ic: 'chart', subs: [['/admin/ma-chung-khoan', 'Tất cả mã HOSE · HNX · UPCoM', 'market'], ['/admin/thi-truong', 'Chỉ số & sửa tay', 'market']] },
   ] },
   { g: 'Cài đặt & tài khoản', items: [
     { h: '/admin/cai-dat', l: 'Cài đặt website', k: 'site', ic: 'settings', subs: [['/admin/cai-dat', 'Thông tin chung', 'site'], ['/admin/cai-dat#chat', 'Chat & hộp thư gửi', 'site-chat'], ['/admin/cai-dat-ai', 'Cài đặt AI (API)', 'aiset']] },

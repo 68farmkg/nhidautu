@@ -11,7 +11,7 @@ export const dsym = (s: string) => {
   return x;
 };
 
-const fmtVol = (v: number) => (v >= 1e6 ? (v / 1e6).toLocaleString('vi-VN', { maximumFractionDigits: 1 }) + ' triệu' : v >= 1e3 ? (v / 1e3).toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' nghìn' : String(v || ''));
+export const fmtVol = (v: number) => (v >= 1e6 ? (v / 1e6).toLocaleString('vi-VN', { maximumFractionDigits: 1 }) + ' triệu' : v >= 1e3 ? (v / 1e3).toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' nghìn' : String(v || ''));
 
 // Lấy giá đóng cửa gần nhất và % so với phiên trước từ nến ngày VNDirect DChart
 export async function fetchQuote(symbol: string) {

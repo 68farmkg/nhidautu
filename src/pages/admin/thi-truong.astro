@@ -33,7 +33,7 @@ if (Astro.request.method === 'POST') {
     return Astro.redirect('/admin/thi-truong');
   }
 }
-const rows = await all(db, "SELECT * FROM quotes ORDER BY kind, symbol");
+const rows = await all(db, "SELECT * FROM quotes WHERE kind='index' ORDER BY symbol");
 const last = rows.map((r) => r.updated_at).filter(Boolean).sort().pop();
 ---
 <Admin title="Số liệu thị trường" active="market">
@@ -48,7 +48,7 @@ const last = rows.map((r) => r.updated_at).filter(Boolean).sort().pop();
       <button class="btn" type="submit">Thêm mã</button>
     </form>
   </div>
-  <p class="meta">Giá hiển thị theo đơn vị nguồn trả về (cổ phiếu thường tính theo nghìn đồng). Bạn vẫn có thể sửa tay từng dòng bên dưới. Loại “index” là chỉ số (hiện ở dải trên cùng): VN-INDEX, HNX-INDEX, UPCOM-INDEX, VN30.</p>
+  <p class="meta">Trang này chỉ sửa tay các <b>chỉ số</b>. Toàn bộ mã cổ phiếu của 3 sàn ở <a href="/admin/ma-chung-khoan">Danh bạ mã 3 sàn</a>. Giá hiển thị theo đơn vị nguồn trả về (cổ phiếu thường tính theo nghìn đồng). Bạn vẫn có thể sửa tay từng dòng bên dưới. Loại “index” là chỉ số (hiện ở dải trên cùng): VN-INDEX, HNX-INDEX, UPCOM-INDEX, VN30.</p>
   <div class="box scroll">
     {[...rows, null].map((r) => (
       <form method="post" class="row2" style="grid-template-columns:repeat(9,minmax(70px,1fr));gap:6px;margin-bottom:8px;min-width:900px">

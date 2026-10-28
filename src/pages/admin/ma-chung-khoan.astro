@@ -1,0 +1,119 @@
+---
+import Admin from '../../layouts/Admin.astro';
+import { all, first, run, fmtNum, fmtDate } from '../../lib/util';
+import { refreshQuotes } from '../../lib/market';
+import { syncListing, syncBoard, EXCH } from '../../lib/symbols';
+const db = Astro.locals.runtime.env.DB;
+let note = '', bad = false;
+
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const act = String(f.get('act') || '');
+  const sym = String(f.get('symbol') || '').toUpperCase().replace(/[^A-Z0-9.\-]/g, '').slice(0, 20);
+  try {
+    if (act === 'list') {
+      const r = await syncListing(db);
+      note = `Đã đồng bộ ${r.total} mã (HOSE ${r.per.HOSE} · HNX ${r.per.HNX} · UPCoM ${r.per.UPCOM}). Thêm mới ${r.added} mã.`;
+    } else if (act === 'price') {
+      const rs = [];
+      for (const ex of EXCH) rs.push(await syncBoard(db, ex));
+      bad = rs.some((r) => !r.ok);
+      note = rs.map((r) => r.ok ? `${r.ex}: ${r.matched}/${r.rows} mã (${r.unit})` : `${r.ex}: lỗi — ${r.msg}`).join(' · ');
+    } else if (act === 'one' && sym) {
+      const r = await refreshQuotes(db, sym);
+      bad = !r.ok; note = r.ok ? `Đã làm mới giá ${sym}.` : `Chưa lấy được giá ${sym} (${r.errors[0] || ''}).`;
+    } else if (act === 'delete' && sym) {
+      await run(db, "DELETE FROM quotes WHERE symbol=? AND kind='stock'", sym); note = `Đã xóa ${sym} khỏi danh sách.`;
+    }
+  } catch (e: any) { bad = true; note = 'Lỗi: ' + (e?.message || e); }
+}
+
+const sp = Astro.url.searchParams;
+const ex = EXCH.includes(String(sp.get('ex')) as any) ? String(sp.get('ex')) : '';
+const q = String(sp.get('q') || '').trim().slice(0, 40);
+const st = ['priced', 'nopr'].includes(String(sp.get('st'))) ? String(sp.get('st')) : '';
+const PER = 50;
+const page = Math.max(1, Number(sp.get('p')) || 1);
+
+const where: string[] = ["kind='stock'"]; const args: any[] = [];
+if (ex) { where.push('exchange=?'); args.push(ex); }
+if (q) { where.push('(symbol LIKE ? OR name LIKE ?)'); args.push(q.toUpperCase() + '%', '%' + q + '%'); }
+if (st === 'priced') where.push('price > 0'); if (st === 'nopr') where.push('(price IS NULL OR price = 0)');
+const W = where.join(' AND ');
+const total = Number((await first(db, `SELECT COUNT(*) n FROM quotes WHERE ${W}`, ...args))?.n || 0);
+const pages = Math.max(1, Math.ceil(total / PER));
+const cur = Math.min(page, pages);
+const rows = await all(db, `SELECT symbol,name,exchange,sector,price,change_pct,volume,updated_at FROM quotes WHERE ${W} ORDER BY symbol LIMIT ${PER} OFFSET ${(cur - 1) * PER}`, ...args);
+const stat = await all(db, "SELECT exchange, COUNT(*) n, SUM(CASE WHEN price>0 THEN 1 ELSE 0 END) p, MAX(updated_at) u FROM quotes WHERE kind='stock' GROUP BY exchange");
+const S: Record<string, any> = {}; stat.forEach((x) => (S[x.exchange] = x));
+const all3 = EXCH.reduce((a, k) => a + Number(S[k]?.n || 0), 0);
+const url = (o: Record<string, any>) => { const u = new URLSearchParams(); const m = { ex, q, st, p: cur, ...o } as any; for (const k of Object.keys(m)) if (m[k] && !(k === 'p' && m[k] === 1)) u.set(k, String(m[k])); const s = u.toString(); return '/admin/ma-chung-khoan' + (s ? '?' + s : ''); };
+const COL: Record<string, string> = { HOSE: '#0f9d6e', HNX: '#2f7bd9', UPCOM: '#c27c0e' };
+---
+<Admin title="Danh bạ mã 3 sàn" active="market">
+  <h1>Danh bạ mã chứng khoán 3 sàn</h1>
+  {note && <div class={`msg ${bad ? 'err' : ''}`}>{note}</div>}
+
+  <div class="box">
+    <p style="margin:0 0 10px"><b>Làm theo 2 bước:</b> ① <b>Đồng bộ danh sách mã</b> (lấy tên, sàn, ngành của tất cả mã) → ② <b>Cập nhật giá 3 sàn</b> (một lượt cho mỗi sàn). Bước ① chỉ cần làm khi có mã niêm yết mới.</p>
+    <form method="post" style="display:inline"><input type="hidden" name="act" value="list" /><button class="btn" type="submit">① Đồng bộ danh sách mã</button></form>
+    <form method="post" style="display:inline"><input type="hidden" name="act" value="price" /><button class="btn ghost" type="submit">② Cập nhật giá 3 sàn</button></form>
+    <a class="btn ghost" href="/admin/thi-truong">Chỉ số &amp; sửa tay</a>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:12px 0">
+    {EXCH.map((k) => (
+      <a href={url({ ex: k, p: 1 })} class="box" style={`margin:0;text-decoration:none;color:inherit;border-left:4px solid ${COL[k]};${ex === k ? 'outline:2px solid ' + COL[k] : ''}`}>
+        <small style="opacity:.7">{k === 'UPCOM' ? 'UPCoM' : k}</small>
+        <div style="font-size:26px;font-weight:700">{S[k]?.n || 0}<span style="font-size:13px;font-weight:400;opacity:.7"> mã</span></div>
+        <small style="opacity:.7">Có giá {S[k]?.p || 0} · {S[k]?.u ? fmtDate(S[k].u) : 'chưa cập nhật'}</small>
+      </a>
+    ))}
+    <a href={url({ ex: '', p: 1 })} class="box" style={`margin:0;text-decoration:none;color:inherit;border-left:4px solid #64748b;${!ex ? 'outline:2px solid #64748b' : ''}`}>
+      <small style="opacity:.7">Cả 3 sàn</small>
+      <div style="font-size:26px;font-weight:700">{all3}<span style="font-size:13px;font-weight:400;opacity:.7"> mã</span></div>
+      <small style="opacity:.7">Bảng bên dưới đang lọc: {total}</small>
+    </a>
+  </div>
+
+  <form method="get" class="box" style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
+    <div style="flex:1;min-width:180px"><label for="q">Tìm mã hoặc tên</label><input id="q" type="text" name="q" value={q} placeholder="VCB, Vietcombank…" /></div>
+    <div><label for="ex">Sàn</label><select id="ex" name="ex"><option value="">Tất cả</option>{EXCH.map((k) => <option value={k} selected={ex === k}>{k === 'UPCOM' ? 'UPCoM' : k}</option>)}</select></div>
+    <div><label for="st">Giá</label><select id="st" name="st"><option value="">Tất cả</option><option value="priced" selected={st === 'priced'}>Đã có giá</option><option value="nopr" selected={st === 'nopr'}>Chưa có giá</option></select></div>
+    <button class="btn" type="submit">Lọc</button>
+    {(ex || q || st) && <a class="btn ghost" href="/admin/ma-chung-khoan">Bỏ lọc</a>}
+  </form>
+
+  {all3 === 0 && <div class="msg">Chưa có mã nào. Bấm <b>① Đồng bộ danh sách mã</b> để nạp toàn bộ mã của HOSE, HNX và UPCoM.</div>}
+
+  <div class="box scroll">
+    <table class="t" style="min-width:820px">
+      <thead><tr><th>Mã</th><th>Tên</th><th>Sàn</th><th>Ngành</th><th class="r">Giá</th><th class="r">%</th><th class="r">Khối lượng</th><th>Cập nhật</th><th></th></tr></thead>
+      <tbody>
+        {rows.map((r) => (
+          <tr>
+            <td><a href={`/co-phieu/${r.symbol}`} target="_blank" rel="noopener"><b>{r.symbol}</b></a></td>
+            <td>{r.name}</td>
+            <td><span class="tag" style={`color:${COL[r.exchange] || '#64748b'}`}>{r.exchange === 'UPCOM' ? 'UPCoM' : r.exchange}</span></td>
+            <td>{r.sector || '—'}</td>
+            <td class="r">{r.price > 0 ? fmtNum(r.price) : '—'}</td>
+            <td class="r" style={`color:${r.change_pct > 0 ? '#16a34a' : r.change_pct < 0 ? '#dc2626' : 'inherit'}`}>{r.price > 0 ? (r.change_pct > 0 ? '+' : '') + fmtNum(r.change_pct) : ''}</td>
+            <td class="r">{r.volume || ''}</td>
+            <td><small>{r.updated_at ? fmtDate(r.updated_at) : '—'}</small></td>
+            <td style="white-space:nowrap">
+              <form method="post" style="display:inline"><input type="hidden" name="act" value="one" /><input type="hidden" name="symbol" value={r.symbol} /><button class="btn ghost sm" type="submit" title="Làm mới giá mã này">Làm mới</button></form>
+              <form method="post" style="display:inline" onsubmit="return confirm('Xóa mã này khỏi danh sách?')"><input type="hidden" name="act" value="delete" /><input type="hidden" name="symbol" value={r.symbol} /><button class="btn red sm" type="submit">Xóa</button></form>
+            </td>
+          </tr>
+        ))}
+        {rows.length === 0 && all3 > 0 && <tr><td colspan="9" style="text-align:center;opacity:.7;padding:20px">Không có mã nào khớp bộ lọc.</td></tr>}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pager">
+    <span>{cur > 1 ? <a class="btn ghost sm" href={url({ p: cur - 1 })}>← Trước</a> : ''}</span>
+    <span class="meta">Trang {cur}/{pages} · {total} mã</span>
+    <span>{cur < pages ? <a class="btn ghost sm" href={url({ p: cur + 1 })}>Sau →</a> : ''}</span>
+  </div>
+</Admin>
