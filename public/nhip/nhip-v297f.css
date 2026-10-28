@@ -1,0 +1,82 @@
+/* NHỊP V2.97f — Nhịp AI & Phân tích AI: hàng đầu [Mã][Mục AI] gọn · hàng công cụ dưới ô chat đều chiều cao */
+/* Hàng đầu: ô mã vừa phải, Mục AI hiện đủ chữ, cả hàng thấp hơn (36px) */
+html body .aix .aix-top { display:flex; align-items:center; gap:8px; min-width:0 }
+html body #view .aix .aix-top .aix-sym,
+html body .aix .aix-top .aix-sym {
+  flex:0 0 74px; width:74px; min-width:0; max-width:74px; height:36px; min-height:36px !important;
+  box-sizing:border-box; padding:0 8px !important; font-size:16px !important; font-weight:700; text-align:center; border-radius:11px }
+html body .aix .aix-top .aix-cur,
+html body #view .aix .aix-top .aix-cur {
+  flex:1 1 0; width:auto; max-width:none; min-width:0; height:36px; min-height:36px; box-sizing:border-box;
+  padding:0 12px; gap:7px; border-radius:11px; font-size:13px; line-height:1 }
+html body .aix .aix-top .aix-cur small { font-size:11px }
+html body .aix .aix-top .aix-cur svg { width:15px; height:15px }
+@media (max-width:360px) { html body .aix .aix-top .aix-cur small { display:none } }
+
+/* Dưới ô chat: dấu +, chọn AI (Tự động chuyển), micro, nút gửi — CÙNG cao 34px, gọn nhưng không quá nhỏ */
+html body .aix .aix-tools { display:flex; align-items:center; gap:6px; padding-top:0 }
+html body .aix .aix-tools .aix-tb,
+html body .aix .aix-tools .aix-send {
+  flex:0 0 34px; width:34px; height:34px; min-height:34px !important; box-sizing:border-box; padding:0 }
+html body .aix .aix-tools .aix-tb svg { width:17px; height:17px }
+html body .aix .aix-tools .aix-send svg.i-go { width:16px; height:16px }
+html body .aix .aix-tools .aix-send svg.i-stop { width:13px; height:13px }
+html body .aix .aix-tools .aix-pv,
+html body #view .aix .aix-tools .aix-pv {
+  flex:0 1 150px; width:auto; min-width:92px; max-width:42%; height:34px; min-height:34px !important; box-sizing:border-box;
+  padding:0 8px !important; font-size:12px !important; font-weight:600; line-height:34px; border-radius:999px }
+html body .aix .aix-tools .aix-lt { flex:1 1 0; min-width:0 }
+/* Khoảng cách vừa phải giữa các nút và viền khung chat: nút không chạm/đè viền */
+html body .aix .aix-box { padding:8px 12px 12px 14px; box-sizing:border-box }
+html body .aix .aix-tools { margin:2px 0 0; padding:0 }
+html body .aix .aix-f textarea.aix-q,
+html body .aix .aix-f textarea.aix-q:focus,
+html body .aix .aix-f textarea.aix-q:focus-visible { outline:none !important; box-shadow:none !important; border:0 !important; resize:none !important }
+
+/* Menu Mục AI (bảng chọn mục): nút thon hơn, chữ giảm 1px */
+html body .aix .aix-modes.aix-g { padding:8px 10px; gap:6px }
+html body .aix .aix-modes.aix-g button,
+html body .aix.page .aix-modes.aix-g button {
+  min-height:28px !important; height:28px; padding:0 11px; font-size:12px; line-height:1; border-radius:14px }
+html body .aix:not(.page) .aix-modes.aix-g button { width:100%; font-size:12px; min-height:30px !important; height:30px; padding:0 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+html body .aix .aix-grp { gap:4px }
+html body .aix .aix-grp>em { font-size:10.5px }
+html body .aix.page .aix-grp { gap:8px }
+html body .aix.page .aix-grp>em { width:140px; font-size:11px }
+html body .aix.page .aix-grp>div { gap:5px }
+html body .aix.page .aix-modes.aix-g { gap:6px }
+
+/* ===== V2.97i — PHÒNG LIVE: cửa sổ AI gọn như Phân tích AI · cửa sổ Biểu đồ có thanh công cụ như mục Biểu đồ ===== */
+/* AI trong Live: hàng đầu [Mã][Mục AI ▾] */
+.lv-tw .lv-aitop { display:flex; align-items:center; gap:8px; min-width:0 }
+.lv-tw .lv-aisym { flex:0 0 74px; width:74px !important; max-width:74px; height:36px; box-sizing:border-box; padding:0 8px; text-align:center;
+  font:inherit; font-size:16px; font-weight:700; text-transform:uppercase; border:1px solid var(--line,#e0eeef); background:var(--surface,#fff); color:inherit; border-radius:11px }
+.lv-tw .lv-aisym[readonly] { opacity:.8 }
+.lv-tw .lv-aicur { flex:1 1 0; min-width:0; height:36px; box-sizing:border-box; display:flex; align-items:center; gap:7px; padding:0 12px;
+  border:1px solid var(--line,#e0eeef); background:var(--surface,#fff); color:inherit; border-radius:11px; font:inherit; font-size:13px; font-weight:700; cursor:pointer; text-align:left; overflow:hidden }
+.lv-tw .lv-aicur span { flex:none; color:var(--muted,#71879b); font-weight:600 }
+.lv-tw .lv-aicur b { flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.lv-tw .lv-aicur small { flex:none; margin-left:auto; font-size:11px; font-weight:600; color:var(--muted,#71879b); white-space:nowrap }
+.lv-tw .lv-aicur svg { flex:none; transition:transform .15s }
+.lv-tw .lv-aicur[aria-expanded="true"] svg { transform:rotate(180deg) }
+.lv-tw .lv-aipanel { display:flex; flex-direction:column; gap:6px; margin-top:6px; padding:8px 10px; border:1px solid var(--line,#e0eeef); border-radius:12px; background:var(--surface,#fff); max-height:46vh; overflow-y:auto }
+.lv-tw .lv-aig { display:flex; align-items:center; gap:8px }
+.lv-tw .lv-aig>em { flex:none; width:84px; font-style:normal; font-size:10.5px; font-weight:700; color:var(--muted,#71879b) }
+.lv-tw .lv-aig>div { display:flex; flex-wrap:wrap; gap:5px; min-width:0 }
+.lv-tw .lv-aipanel .lv-b { min-height:28px; height:28px; padding:0 11px; font-size:12px; border-radius:14px; line-height:1 }
+.lv-tw .lv-aipanel .lv-chk { font-size:12px }
+@media (max-width:520px) { .lv-tw .lv-aig { flex-direction:column; align-items:flex-start; gap:3px } .lv-tw .lv-aig>em { width:auto } }
+.lv-tw .lv-aihd { padding:.3em .5em 0; font-size:12px }
+/* Biểu đồ trong Live: thanh công cụ một hàng như mục Biểu đồ */
+.lv-tw[data-k="chart"] .lv-tbody { display:flex; flex-direction:column; overflow:hidden }
+.lv-tw .lv-cxbar { gap:5px; padding-bottom:2px }
+.lv-tw .lv-cxbar .lv-b { min-height:28px; height:28px; padding:0 11px; font-size:12px; border-radius:999px; line-height:1 }
+.lv-tw .lv-cxbar .lv-sel { height:28px; border-radius:999px; font-size:12px; padding:0 8px !important; line-height:26px }
+.lv-tw .lv-pop.sm { right:auto; left:.5em; top:.3em; min-width:11em; max-width:92%; padding:.5em .6em; border-width:1px }
+/* thanh công cụ vẽ nằm ngang, ngay dưới hàng công cụ */
+.lv-tw[data-k="chart"] .lv-rail { flex:none; width:auto; flex-direction:row; align-items:center; overflow-x:auto; overflow-y:hidden;
+  padding:.2em .35em; gap:.1em; border-right:0; border-bottom:1px solid var(--line,#e0eeef); min-height:2.3em; scrollbar-width:none }
+.lv-tw[data-k="chart"] .lv-rail::-webkit-scrollbar { display:none }
+.lv-tw[data-k="chart"] .lv-rail button { min-width:2.1em; min-height:2em }
+.lv-tw[data-k="chart"] .lv-rsep { width:1px; height:1.4em; margin:0 .25em; background:var(--line,#e0eeef) }
+.lv-tw[data-k="chart"] .lv-chs { border-top:0 }

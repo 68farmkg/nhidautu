@@ -1,0 +1,160 @@
+/* NHIP v2.68 — KHỐI THÔNG TIN MÃ Ở ĐẦU TRANG BIỂU ĐỒ + PHÂN TÍCH (PC, ≥801px)
+   Một bộ quy tắc DUY NHẤT thay cho các lớp chồng nhau (trade-ui / pc-layout / pc-actions / pc-fixes / symbol-picker).
+   Nguyên tắc:
+   1) Luôn là 1 thẻ gọn, luôn đúng 2 hàng:  Hàng 1 = [thông tin mã] … [Mua|Bán]   Hàng 2 = [ô mã · Xem] [Theo dõi] [Hỏi AI]
+   2) Thông tin mã = Mã ⌄ sàn·ngành │ giá + thay đổi │ Mở·Cao·Thấp·KL. Tự xuống dòng THEO ĐỘ RỘNG THỰC (kể cả khi menu trái
+      chiếm chỗ); khi xuống dòng thì Mở·Cao·Thấp·KL thành 1 thanh ngang gọn, KHÔNG bao giờ xếp dọc kéo dài bảng.
+   3) Không đổi điện thoại (≤800px) và biểu đồ nhúng trong Giao dịch. */
+@media(min-width:801px){
+  html body .cp:not(.cp-embed)>.cp-top{
+    display:grid!important;position:static!important;
+    grid-template-columns:minmax(0,1fr) minmax(104px,128px) minmax(104px,128px)!important;
+    grid-template-rows:auto auto!important;
+    gap:10px 10px!important;align-items:center!important;
+    padding:12px 16px!important;margin:0 0 12px!important;
+    background:var(--surface,#fff);border:1px solid var(--line,#dde3e8);border-radius:16px;
+  }
+
+  /* ---------- Hàng 1 trái: thông tin mã (tự xuống dòng gọn) ---------- */
+  html body .cp:not(.cp-embed)>.cp-top>.cp-id{
+    grid-column:1!important;grid-row:1!important;min-width:0;
+    display:flex!important;flex-flow:row wrap;align-items:center;align-content:flex-start;gap:6px 16px;
+  }
+  html body .cp:not(.cp-embed)>.cp-top>.cp-id .eyebrow{display:none!important}
+  /* mã + sàn/ngành: dính liền nhau, luôn cùng 1 nhóm */
+  html body .cp:not(.cp-embed)>.cp-top>.cp-id h1#cp-sym{flex:none;margin:0!important;font-size:28px!important;line-height:1.1}
+  html body .cp:not(.cp-embed)>.cp-top>.cp-id #cp-sub{
+    flex:0 1 auto;min-width:0;max-width:min(200px,100%);margin:0;
+    display:flex;flex-direction:row;align-items:center;gap:8px;font-size:13px;
+  }
+  html body .cp:not(.cp-embed)>.cp-top>.cp-id #cp-sub .cx-sector{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* giá + thay đổi */
+  html body .cp:not(.cp-embed)>.cp-top>.cp-id #cp-px{
+    flex:none;margin:0;display:flex;flex-direction:column;align-items:flex-start;gap:1px;
+  }
+  html body .cp:not(.cp-embed)>.cp-top>.cp-id #cp-px .big{font-size:26px;line-height:1.05;font-variant-numeric:tabular-nums}
+  html body .cp:not(.cp-embed)>.cp-top>.cp-id #cp-px>span{font-size:13px;font-weight:700;white-space:nowrap}
+
+  /* Mở · Cao · Thấp · KL: 1 thanh ngang, không khung từng ô, chú thích 1 dòng nhỏ bên dưới */
+  html body .cp:not(.cp-embed)>.cp-top>.cp-id #cp-ohlc{
+    flex:1 1 290px;min-width:0;max-width:none;margin:0;
+    display:flex;flex-direction:column-reverse;gap:3px;
+    padding:5px 12px;border-radius:12px;background:var(--surface2,rgba(127,160,190,.10));
+  }
+  html body .cp:not(.cp-embed) .cp-ohlc .oh-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px 14px}
+  html body .cp:not(.cp-embed) .cp-ohlc .oh{min-width:0;padding:0;border:0;background:transparent;border-radius:0;display:flex;flex-direction:column;gap:1px}
+  html body .cp:not(.cp-embed) .cp-ohlc .oh span{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text2,#5b7186)}
+  html body .cp:not(.cp-embed) .cp-ohlc .oh b{font-size:14px;line-height:1.25;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  html body .cp:not(.cp-embed) .cp-ohlc .oh-cap{
+    display:flex;flex-wrap:nowrap;align-items:center;gap:6px;margin:0;min-width:0;
+    font-size:11px;font-weight:600;line-height:1.3;color:var(--text2,#5b7186);
+  }
+  html body .cp:not(.cp-embed) .cp-ohlc .oh-cap>span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  html body .cp:not(.cp-embed) .cp-ohlc .oh-cap .qchip{flex:none}
+
+  /* ---------- Cụm nút: gỡ khung nhóm để mỗi nút vào đúng ô lưới ---------- */
+  html body .cp:not(.cp-embed)>.cp-top>.cp-actions{display:contents!important}
+  html body .cp:not(.cp-embed)>.cp-top .cp-actions .tp-bs{
+    grid-column:2/4!important;grid-row:1!important;align-self:start!important;justify-self:stretch!important;
+    width:auto!important;min-width:0!important;contain:inline-size;
+  }
+  html body .cp:not(.cp-embed)>.cp-top>.cp-search{
+    grid-column:1!important;grid-row:2!important;min-width:0;display:flex;gap:8px;
+  }
+  html body .cp:not(.cp-embed)>.cp-top>.cp-search input{flex:1 1 auto;width:auto;min-width:0}
+  html body .cp:not(.cp-embed)>.cp-top .cp-actions #aw{grid-column:2!important;grid-row:2!important;width:100%!important;min-width:0!important}
+  html body .cp:not(.cp-embed)>.cp-top .cp-actions #ak{grid-column:3!important;grid-row:2!important;width:100%!important;min-width:0!important}
+  html body .cp:not(.cp-embed)>.cp-top .cp-actions .btn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:8px!important;padding-right:8px!important}
+}
+
+/* Cửa sổ hẹp (801–1000px): rút gọn cỡ chữ/khoảng cách để vẫn đủ 2 hàng gọn */
+@media(min-width:801px) and (max-width:1000px){
+  html body .cp:not(.cp-embed)>.cp-top{padding:10px 12px!important;gap:8px 8px!important;grid-template-columns:minmax(0,1fr) minmax(96px,116px) minmax(96px,116px)!important}
+  html body .cp:not(.cp-embed)>.cp-top>.cp-id{gap:6px 14px}
+  html body .cp:not(.cp-embed)>.cp-top>.cp-id h1#cp-sym{font-size:24px!important}
+  html body .cp:not(.cp-embed)>.cp-top>.cp-id #cp-px .big{font-size:23px}
+  html body .cp:not(.cp-embed)>.cp-top>.cp-id #cp-px>span{font-size:12.5px}
+  html body .cp:not(.cp-embed)>.cp-top>.cp-id #cp-ohlc{flex-basis:100%;padding:5px 12px}
+  html body .cp:not(.cp-embed) .cp-ohlc .oh b{font-size:13.5px}
+}
+
+/* ===== v2.68b — Trạng thái phiên ("Đã đóng phiên" / "● Trực tiếp · trễ …") =====
+   Trước: chip nằm CHEN GIỮA giá và Mở·Cao·Thấp·KL, chiếm ~110px ngang và đẩy thông tin mã.
+   Nay: chip thuộc về nhóm nhận diện mã nên nằm NGAY DƯỚI "Mã · sàn·ngành"; giá và Mở·Cao·Thấp·KL được trả lại chỗ.
+   Bố cục PC rộng (≥1200px): [Mã ⌄ sàn·ngành]  [giá]  [Mở·Cao·Thấp·KL ……]
+                              [● trạng thái ]  [±%  ]
+   Cửa sổ nhỏ hơn: chip là 1 viên nhỏ đứng cạnh giá, tự xuống dòng cùng nhóm. */
+@media(min-width:801px){
+  html body .cp:not(.cp-embed)>.cp-top>.cp-id #nl-chip{flex:none;margin:0!important;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:11.5px}
+}
+@media(min-width:1200px){
+  html body .cp:not(.cp-embed)>.cp-top>.cp-id{
+    display:grid!important;grid-template-columns:auto auto auto minmax(0,1fr)!important;grid-template-rows:auto auto;
+    column-gap:20px;row-gap:5px;align-items:center;align-content:center;
+  }
+  html body .cp:not(.cp-embed)>.cp-top>.cp-id h1#cp-sym{grid-column:1!important;grid-row:1!important}
+  html body .cp:not(.cp-embed)>.cp-top>.cp-id #cp-sub{grid-column:2!important;grid-row:1!important}
+  html body .cp:not(.cp-embed)>.cp-top>.cp-id #nl-chip{grid-column:1/3!important;grid-row:2!important;justify-self:start}
+  html body .cp:not(.cp-embed)>.cp-top>.cp-id #cp-px{grid-column:3!important;grid-row:1/3!important;align-self:center}
+  html body .cp:not(.cp-embed)>.cp-top>.cp-id #cp-ohlc{grid-column:4!important;grid-row:1/3!important;align-self:center;flex:none}
+}
+
+/* ===== v2.68c — MỤC GIAO DỊCH (PC ≥1101px): khối thông tin mã =====
+   Trước: 4 cột chia đều nên khoảng trống lớn; 5 ô Trần/Sàn/TC/KL/Giá trị bị bẻ 3 cột × 2 hàng (≤1280px) lệch nhau;
+   nút Mua/Bán xếp dọc cao ~90px làm cả hàng phồng lên.
+   Nay: 1 hàng gọn  [Mã ⌄ sàn / tên · ngành] │ [Giá / thay đổi] │ [TRẦN · TC · SÀN · KL · GIÁ TRỊ] │ [Mua | Bán]
+   - Thứ tự Trần · TC · Sàn đúng như bảng giá (cao → thấp), mỗi ô 1 dòng nhãn + 1 dòng số.
+   - Mua | Bán nằm ngang, cao 42px. Cửa sổ 1101–1199px: dải số liệu xuống hàng 2 (full chiều ngang), không bẻ cột.
+   Điện thoại/máy tính bảng (≤1100px) KHÔNG đổi. */
+@media(min-width:1101px){
+  html body .tp-head{
+    grid-template-columns:minmax(170px,230px) auto minmax(0,1fr) auto!important;
+    gap:10px 18px!important;align-items:center!important;padding:12px 16px!important;
+  }
+  html body .tp-head .tp-id{grid-column:1!important;grid-row:1!important;align-self:center!important}
+  html body .tp-head .tp-px{grid-column:2!important;grid-row:1!important;align-self:center!important;align-items:flex-start!important;text-align:left!important;gap:2px;padding:0 4px}
+  html body .tp-head .tp-px b{font-size:28px!important;line-height:1.05}
+  html body .tp-head .tp-px span{font-size:13px!important;white-space:nowrap}
+
+  html body .tp-head .tp-stats{
+    grid-column:3!important;grid-row:1!important;align-self:center;
+    display:grid!important;grid-template-columns:repeat(5,max-content)!important;justify-content:space-between;gap:4px 12px!important;
+    margin:0;padding:2px 0 2px 18px!important;border-left:1px solid var(--line)!important;border-top:0!important;
+  }
+  html body .tp-head .tp-stats>div{min-width:0;display:flex;flex-direction:column;gap:2px}
+  html body .tp-head .tp-stats dt{font-size:10.5px;letter-spacing:.05em;white-space:nowrap}
+  html body .tp-head .tp-stats dd{font-size:14.5px;line-height:1.2;white-space:nowrap}
+  /* thứ tự như bảng giá: Trần · TC · Sàn · KL · Giá trị (DOM: Trần, Sàn, TC, KL, Giá trị) */
+  html body .tp-head .tp-stats>div:nth-child(1){order:1}
+  html body .tp-head .tp-stats>div:nth-child(3){order:2}
+  html body .tp-head .tp-stats>div:nth-child(2){order:3}
+  html body .tp-head .tp-stats>div:nth-child(4){order:4}
+  html body .tp-head .tp-stats>div:nth-child(5){order:5}
+
+  html body .tp-head .tp-act{
+    grid-column:4!important;grid-row:1!important;align-self:center!important;justify-self:end!important;
+    display:grid!important;grid-template-columns:1fr 1fr;gap:8px;width:196px!important;
+  }
+  html body .tp-head .tp-act>.tp-b,html body .tp-head .tp-act>.tp-s{width:100%!important;min-width:0!important;min-height:42px!important;height:42px;padding:0 10px!important;border-radius:11px;font-size:15px}
+
+  /* hàng phụ: dải theo dõi + thanh tài khoản giữ nguyên, chỉ thu khoảng cách cho khớp */
+  html body .tp-head .tp-wl{grid-row:2!important;padding-top:10px}
+  html body .tp-head .tp-accbar{grid-row:3!important}
+}
+/* 1101–1199px: không đủ chỗ cho cả 4 khối trên 1 hàng → dải số liệu xuống hàng 2, vẫn 5 ô đều, không bẻ cột */
+@media(min-width:1101px) and (max-width:1199px){
+  html body .tp-head{grid-template-columns:minmax(170px,1fr) auto auto!important}
+  html body .tp-head .tp-px{grid-column:2!important}
+  html body .tp-head .tp-act{grid-column:3!important}
+  html body .tp-head .tp-stats{grid-column:1/-1!important;grid-row:2!important;padding:10px 0 0!important;border-left:0!important;border-top:1px solid var(--line)!important}
+  html body .tp-head .tp-wl{grid-row:3!important}
+  html body .tp-head .tp-accbar{grid-row:4!important}
+}
+
+/* ===== v2.68d — ĐIỆN THOẠI (≤800px), Biểu đồ + Phân tích: nút Mua/Bán trong bảng thông tin mã cao bằng nút Mua/Bán ở mục Giao dịch =====
+   Giao dịch (điện thoại): .tp-b/.tp-s cao 36px. Biểu đồ/Phân tích trước đây 40px (nhip-mobile-head.css) → đồng bộ 36px.
+   Chỉ áp dụng cho khối #mh-head (chỉ có ở điện thoại). PC (≥801px) và mục Giao dịch không đổi. */
+@media(max-width:800px){
+  html body .cp.mh-on>.mh-head .tp-act a.tp-b,
+  html body .cp.mh-on>.mh-head .tp-act a.tp-s{min-height:36px!important;height:36px!important}
+}

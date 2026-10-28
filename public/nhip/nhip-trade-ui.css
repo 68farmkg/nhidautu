@@ -1,0 +1,146 @@
+/* NHIP v2.7 — GIAO DIỆN NHẬP LỆNH THỐNG NHẤT (theo mẫu phiếu lệnh: [−] ô số [+] + chip nhanh)
+   Áp dụng cho: Lệnh chờ · TP/SL danh mục · Popup đặt lệnh trên biểu đồ · Thêm/gộp vị thế · Ghi tay.
+   Nạp SAU cùng các css khác nên ghi đè kiểu cũ, không đổi logic. */
+:root{--nx-r:10px;--nx-h:40px;--nx-btn:38px;--nx-gap:4px}
+
+/* ---- Nhãn ô nhập ---- */
+body .od-fields label>span,body .pt-fields label>span,body .nx-f>span,body .ol-pop label{font-size:11px;font-weight:700;color:var(--text2,var(--muted));letter-spacing:.03em}
+
+/* ---- Bộ tăng/giảm: lưới 3 cột [−][ô][+] ---- */
+body .od-st,body .ol-st,body .nx-step,body .pt-fields .od-st{display:grid;grid-template-columns:var(--nx-btn) minmax(0,1fr) var(--nx-btn);gap:var(--nx-gap)}
+body .od-st button,body .ol-st button,body .nx-step button{all:unset;box-sizing:border-box;display:grid;place-items:center;min-height:var(--nx-h);width:auto;border:1px solid var(--line,#e3e8ed);background:var(--surface);color:var(--text);border-radius:var(--nx-r);font-size:18px;font-weight:600;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;transition:background .12s,transform .08s}
+body .od-st button:first-child,body .od-st button:last-child,body .ol-st button:first-child,body .ol-st button:last-child{border-radius:var(--nx-r)}
+body .od-st button:active,body .ol-st button:active,body .nx-step button:active{transform:scale(.94);background:var(--surface2,rgba(127,127,127,.1))}
+body .od-st button:focus-visible,body .ol-st button:focus-visible,body .nx-step button:focus-visible,body .nx-chips button:focus-visible{outline:2px solid var(--brand,#14c29a);outline-offset:1px}
+body .od-st .od-in,body .ol-st input,body .nx-step input,body .pt-fields .od-in{box-sizing:border-box;width:100%;min-width:0;min-height:var(--nx-h);height:auto;padding:6px 8px;border:1px solid var(--line,#e3e8ed);border-radius:var(--nx-r);background:var(--surface);color:var(--text);font:inherit;font-size:15px;font-weight:700;text-align:center}
+body .od-st .od-in:focus,body .ol-st input:focus,body .nx-step input:focus{outline:2px solid var(--brand,#14c29a);outline-offset:-1px}
+body .nx-step input::placeholder,body .od-st .od-in::placeholder{font-weight:500;opacity:.55}
+
+/* ---- Hai ô cạnh nhau (số lượng | giá) ---- */
+body .od-fields,body .pt-fields,body .nx-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+body .nx-f{display:flex;flex-direction:column;gap:4px;min-width:0}
+body .nx-f>input:not([type=checkbox]),body .nx-f>select{box-sizing:border-box;width:100%;min-height:var(--nx-h);padding:6px 10px;border:1px solid var(--line,#e3e8ed);border-radius:var(--nx-r);background:var(--surface);color:var(--text);font:inherit;font-size:14px}
+@media(max-width:340px){body .od-fields,body .pt-fields,body .nx-grid{grid-template-columns:1fr}}
+
+/* ---- Chip nhanh dạng viên thuốc ---- */
+body .od-chips,body .pt-chips,body .ol-chips,body .nx-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+body .od-chips button,body .pt-chips button,body .ol-chips button,body .nx-chips button{all:unset;box-sizing:border-box;display:inline-grid;place-items:center;min-height:32px;padding:4px 12px;border:1px solid var(--line,#e3e8ed);background:var(--surface);color:var(--text);border-radius:16px;font-family:inherit;font-size:12.5px;font-weight:600;line-height:1;cursor:pointer;-webkit-tap-highlight-color:transparent}
+body .od-chips button:active,body .pt-chips button:active,body .ol-chips button:active,body .nx-chips button:active{background:var(--surface2,rgba(127,127,127,.12))}
+body .pt-chips button:disabled{opacity:.4;cursor:not-allowed}
+body .od-cl,body .ol-chips .ol-cl,body .pt-chips>b{font-size:11.5px;font-weight:800;padding:0 2px}
+
+/* ---- Hộp chứa form: bo góc, viền nhẹ như phiếu lệnh ---- */
+body .od-add,body .pt-form{border-radius:12px;gap:10px}
+body .ol-pop{border-radius:12px;gap:10px;width:260px}
+
+/* ---- Nút hành động chính cùng cỡ với nút Mua/Bán ---- */
+body .od-go,body .pt-go,body .ol-ok{min-height:44px;border-radius:12px;font-weight:800;font-size:15px}
+
+/* ---- Hàng chọn loại lệnh (TP/SL, chờ mua...) cùng kiểu thanh Mua/Bán ---- */
+body .od-kinds,body .pt-kinds{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;padding:3px;border-radius:12px;background:var(--surface2,rgba(127,127,127,.08))}
+body .od-kinds button,body .pt-kinds button{min-height:40px;border-radius:10px}
+
+/* ---- Ô tick/checkbox ---- */
+body .nx-chk{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;min-height:36px}
+body .nx-chk input{width:18px;height:18px;min-height:0;flex:none}
+
+/* ---- Form Danh mục (Thêm/gộp vị thế, Ghi tay) ---- */
+body .nx-form{display:flex;flex-direction:column;gap:10px;margin:8px 0}
+body .nx-form .nx-f>span{font-size:11px}
+body .nx-form .btn{min-height:44px;border-radius:12px;font-weight:800}
+body .nx-form .nx-wide{grid-column:1/-1}
+@media(prefers-reduced-motion:reduce){body .od-st button,body .ol-st button,body .nx-step button{transition:none}}
+
+/* ---- V2.7.7: Mua/Bán nằm riêng 1 dòng, Theo dõi + Hỏi AI nằm dòng dưới (Biểu đồ & Phân tích) ---- */
+.cp-top .cp-actions{display:grid!important;grid-template-columns:1fr 1fr;gap:8px;flex-direction:row;align-items:stretch;min-width:0}
+.cp-top .cp-actions .tp-bs{grid-column:1/-1;grid-row:1;width:100%}
+.cp-top .cp-actions .btn{grid-row:2;min-width:0;width:100%;flex:none;white-space:nowrap}
+@media(min-width:701px){.cp-top .cp-actions{min-width:260px}}
+
+/* ---- V2.7.8: cụm nút gộp lên cùng khối mã/giá, nằm góc phải-dưới của khối đó; ô tìm mã xuống hàng dưới ---- */
+@media(min-width:701px){
+  .cp-top{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto!important;gap:8px 14px!important;align-items:end!important}
+  .cp-top>.cp-id{grid-column:1 / 3!important;grid-row:1!important;min-width:0}
+  .cp-top>.cp-actions{grid-column:3!important;grid-row:1!important;align-self:end!important;justify-self:end!important;width:auto!important;min-width:260px}
+  .cp-top>.cp-search{grid-column:1 / 3!important;grid-row:2!important}
+}
+
+/* ---- V2.7.9: ĐIỆN THOẠI (≤700px) — cụm nút lên góc trên-phải khối mã/giá, 2 dòng: [Mua|Bán] / [Theo dõi|Hỏi AI]. PC không đổi ---- */
+@media(max-width:700px){
+  .cp-top{position:relative!important}
+  .cp-top>.cp-id .cp-px{margin-top:14px}
+  .cp-top>.cp-actions{position:absolute!important;top:0;right:0;left:auto!important;grid-column:auto!important;grid-row:auto!important;width:168px!important;min-width:0!important;gap:6px!important;grid-template-columns:1fr 1fr!important;z-index:2}
+  .cp-top .cp-actions .tp-bs{gap:6px}
+  .cp-top .cp-actions .tp-bs a{min-height:34px;border-radius:10px;font-size:13px;font-weight:800}
+  .cp-top .cp-actions .btn{min-height:32px!important;padding:4px 5px!important;font-size:12px;border-radius:10px;overflow:hidden;white-space:nowrap}
+  .cp-top>.cp-search{grid-column:1/-1!important}
+}
+
+/* ---- V2.7.10: chữ tự co trong ô — nút Theo dõi (Biểu đồ) & dòng mã theo dõi (Giao dịch). Cỡ chữ do nats.js hạ từng bước nên KHÔNG dùng !important cho font-size ---- */
+.tp-wr{overflow:hidden;box-sizing:border-box;gap:6px;grid-template-columns:minmax(0,1fr) auto auto}
+.tp-wr .tp-wsy b{flex:none}
+.tp-wr .ex-tag{font-size:.8em!important;height:auto!important;line-height:1.5!important;padding:0 .45em!important;margin-left:.35em!important;flex:none;white-space:nowrap}
+.tp-wr>span{white-space:nowrap}
+
+/* v2.7.16 — nút −/+ gọn: nút hẹp, ô nhập chiếm phần lớn; 2 ô cạnh nhau tự xuống dòng khi hẹp */
+:root{--nx-r:8px;--nx-h:36px;--nx-btn:30px;--nx-gap:3px}
+html body .od-st,html body .ol-st,html body .nx-step,html body .tr-step,html body .pt-fields .od-st{display:grid!important;grid-template-columns:var(--nx-btn) minmax(64px,1fr) var(--nx-btn)!important;gap:var(--nx-gap)!important;width:100%;min-width:0}
+html body .od-st button,html body .ol-st button,html body .nx-step button,html body .tr-step button{width:var(--nx-btn)!important;min-width:0!important;min-height:var(--nx-h)!important;height:var(--nx-h);padding:0!important;font-size:16px!important;line-height:1;border-radius:var(--nx-r)!important}
+html body .od-st .od-in,html body .ol-st input,html body .nx-step input,html body .tr-step input{min-width:0!important;width:100%!important;min-height:var(--nx-h)!important;height:var(--nx-h);padding:0 6px!important;text-align:center;font-size:15px}
+html body .od-fields,html body .pt-fields,html body .nx-grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))!important}
+
+/* ===== v2.8 — THANH CHỌN NHANH DÙNG CHUNG (.nx-seg): nằm ngay dưới ô nhập, 1 hàng, kiểu phân đoạn gọn như mẫu Chờ mua =====
+   Áp dụng: Chờ mua (giá / KL / TP / SL) · Lệnh thường Mua/Bán · Popup đặt lệnh trên biểu đồ · TP/SL danh mục · Thêm vị thế · Ghi tay */
+html body .nx-seg{display:grid!important;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:2px!important;padding:2px;margin:0!important;border-radius:10px;background:var(--surface2,rgba(127,127,127,.09));align-items:stretch;width:100%;box-sizing:border-box}
+html body .nx-seg button{display:flex!important;align-items:center;justify-content:center;min-width:0;min-height:26px!important;height:26px;padding:0 2px!important;border:0!important;border-radius:8px!important;background:transparent!important;box-shadow:none;color:var(--text2)!important;font:700 11.5px/1 inherit!important;white-space:nowrap;overflow:hidden;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+html body .nx-seg button:hover{background:var(--surface,#fff)!important;box-shadow:0 1px 2px rgba(20,40,60,.14)}
+html body .nx-seg button:active{background:var(--brand-soft,var(--sel))!important}
+html body .nx-seg button:disabled{opacity:.4;cursor:not-allowed}
+html body .nx-seg button.up,html body .nx-seg button.pt-c-tp{color:var(--up)!important}
+html body .nx-seg button.dn,html body .nx-seg button.pt-c-sl{color:var(--dn)!important}
+/* ô + thanh nhanh ngay dưới nhau */
+html body .od-fg,html body .tr-fg,html body .ol-fg,html body .pt-fg,html body .nx-fg{display:grid;gap:4px;min-width:0;align-content:start}
+html body .tr-grid.tr-g1,html body .nx-grid.nx-g1,html body .pt-fields{grid-template-columns:minmax(0,1fr)!important;gap:8px!important}
+html body .ol-pop .ol-fg label{display:grid;gap:3px}
+html body .tr-more{gap:6px}
+html body .tr-more button{min-height:28px;padding:2px 10px;font-size:12px}
+/* gợi ý nhanh TP/SL danh mục: nhãn + thanh phân đoạn trên cùng 1 hàng */
+html body .pt-qrow{display:grid!important;grid-template-columns:auto minmax(0,1fr);gap:6px;align-items:center}
+html body .pt-qrow>b{min-width:54px;font-size:11.5px}
+html body .pt-qrow .nx-seg button{font-size:11px!important}
+/* TP/SL của Chờ mua: không khung viền, không tiêu đề "Sau khi mua khớp" */
+html body .od-fx{margin:0;padding:0;border:0}
+
+/* ===== v2.9 — THANH KÉO (nhip-slider.js) nằm dưới thanh chọn nhanh, chạy theo ô nhập ===== */
+html body input.nx-rng{-webkit-appearance:none;appearance:none;display:block;width:100%;height:22px;margin:0;padding:0;background:transparent;cursor:pointer;touch-action:pan-y;--p:0%}
+html body input.nx-rng[hidden]{display:none}
+html body input.nx-rng::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(to right,var(--brand,#14c29a) var(--p),var(--line2,#d3dbe3) var(--p))}
+html body input.nx-rng::-moz-range-track{height:4px;border-radius:2px;background:var(--line2,#d3dbe3)}
+html body input.nx-rng::-moz-range-progress{height:4px;border-radius:2px;background:var(--brand,#14c29a)}
+html body input.nx-rng::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;margin-top:-8px;border-radius:50%;background:var(--surface,#fff);border:2px solid var(--brand,#14c29a);box-shadow:0 1px 3px rgba(20,40,60,.25)}
+html body input.nx-rng::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--surface,#fff);border:2px solid var(--brand,#14c29a);box-shadow:0 1px 3px rgba(20,40,60,.25)}
+html body input.nx-rng:focus-visible{outline:2px solid var(--brand,#14c29a);outline-offset:2px;border-radius:6px}
+/* v2.49 — Phiếu xác nhận mua/bán: gọn, gom nhóm, nút thấp hơn */
+html body .tr-cf{gap:8px}
+html body .tr-cf .tr-cf-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-right:2px}
+html body .tr-cf .tr-cf-h h3{font-size:17px;line-height:1.25}
+html body .tr-cf .tr-cf-ex{flex:none;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:.04em;color:var(--brand-ink,var(--brand,#16845b));background:color-mix(in srgb,var(--brand,#16845b) 12%,var(--surface,#fff));border:1px solid color-mix(in srgb,var(--brand,#16845b) 28%,transparent)}
+html body .tr-cf .tr-who{grid-template-columns:1fr 1fr;gap:8px}
+html body .tr-cf .tr-who>div{padding:7px 10px;min-width:0}
+html body .tr-cf .tr-who b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html body .tr-cf .tr-sum{gap:3px;padding:8px 12px;border:1px solid var(--line,#e3e8ed);border-style:solid;background:var(--surface2,rgba(127,127,127,.06))}
+html body .tr-cf .tr-sum>div{align-items:baseline;line-height:1.45}
+html body .tr-cf .tr-sum>div b{text-align:right;font-variant-numeric:tabular-nums}
+html body .tr-cf .tr-sum .tr-sh{display:block;margin:2px 0 1px;font-size:10.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted,#5f6f82)}
+html body .tr-cf .tr-sum .tr-sh:not(:first-child){margin-top:6px;padding-top:7px;border-top:1px dashed var(--line2,#d3dbe3)}
+html body .tr-cf .tr-sum .tr-tot{margin:4px -6px 0;padding:7px 8px;border:0;border-radius:9px;background:color-mix(in srgb,var(--brand,#16845b) 10%,var(--surface,#fff))}
+html body .tr-cf .tr-sum .tr-tot span{font-weight:700;color:var(--text,#253442)}
+html body .tr-cf .tr-sum .tr-tot b{font-size:16px}
+html body .tr-cf .tr-sum b.up{color:var(--up,#0b9f77)}html body .tr-cf .tr-sum b.dn{color:var(--dn,#d64550)}
+/* nút thấp hơn, cân đối: Quay lại hẹp, Xác nhận rộng */
+html body .tr-cf>.tr-row:last-child{padding:10px 16px 12px}
+html body .tr-cf .tr-row{gap:8px}
+html body .tr-cf .tr-row button{min-height:38px;height:38px;font-size:14px;border-radius:10px}
+html body .tr-cf .tr-row button.btn{flex:0 0 30%}
+html body .tr-cf .tr-row .tr-go{flex:1 1 0;min-height:38px;font-size:14px}
+html body .tr-cf .tr-row button.btn,html body .tr-cf .tr-row button.tr-go{min-height:38px;height:38px;padding-top:0;padding-bottom:0;line-height:1}

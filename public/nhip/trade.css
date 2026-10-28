@@ -1,0 +1,195 @@
+/* ===== v1.68 · KHÁCH HÀNG (trang Danh mục) + MUA/BÁN trong ĐA KHUNG ===== */
+/* --- Khách hàng ở trang Danh mục --- */
+.pf-hrow{flex-wrap:wrap}
+.pf-hrow select{min-width:0;max-width:100%}
+.cu-ctx{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.cu-chip{display:inline-flex;flex-direction:column;gap:1px;padding:7px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);min-width:0}
+.cu-chip i{font-style:normal;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--text2,#6b7a89);font-weight:700}
+.cu-chip b{font-size:15px}.cu-chip small{color:var(--text2,#6b7a89);font-size:12px}
+.cu-box{width:min(640px,100%)}
+.cu-q{width:100%;margin:12px 0 8px;box-sizing:border-box}
+.cu-row{border:1px solid var(--line);border-radius:14px;padding:12px;margin:0 0 10px;background:var(--surface)}
+.cu-hd{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.cu-hd>div{display:flex;flex-direction:column;gap:2px;min-width:0}.cu-hd b{font-size:15.5px}
+.cu-num{text-align:right}
+.cu-pfs{list-style:none;margin:8px 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.cu-pfs li{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 8px;border-radius:10px;background:var(--surface2,rgba(127,127,127,.07))}
+.cu-go{border:0;background:none;color:var(--brand-ink,var(--text));font:700 13.5px inherit;cursor:pointer;padding:4px 0;text-align:left}
+.cu-x{margin-left:auto;min-width:32px;min-height:32px;border:1px solid var(--line);background:var(--surface);color:var(--text2);border-radius:8px;cursor:pointer}
+.cu-free{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.cu-tag{display:inline-block;padding:1px 6px;border-radius:8px;background:var(--brand-soft,rgba(20,194,154,.12));color:var(--brand-ink,var(--text));font-size:10.5px;font-weight:700}
+.cu-tx td,.cu-tx th{vertical-align:top}
+@media(max-width:700px){.pf-hrow select{flex:1 1 100%}.pf-hrow .btn{flex:1 1 auto}.cu-num{text-align:left}}
+
+/* --- Khối Mua/Bán trong đa khung --- */
+.tr{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:10px 12px;min-width:0}
+.tr-h{display:flex;align-items:center;gap:8px;margin-bottom:8px}.tr-h b{font-size:14.5px}
+.tr-px{margin-left:auto;font-size:12.5px;color:var(--text2);font-weight:600}
+.tr-x{margin-left:8px;width:34px;height:34px;border:1px solid var(--line);background:var(--surface);color:var(--text2);border-radius:10px;cursor:pointer;font-size:15px}
+.tr-body{display:flex;flex-direction:column;gap:10px}
+.tr select,.tr input[type=text],.tr input:not([type]),.tr input[inputmode]{width:100%;box-sizing:border-box;min-height:40px;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:10px;padding:6px 10px;font:inherit;font-size:14px}
+.tr-acct{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tr-acct label,.tr-f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.tr-acct label span,.tr-f span{font-size:11px;font-weight:700;color:var(--text2);letter-spacing:.03em}
+.tr-hold{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:8px 10px;border-radius:10px;background:var(--surface2,rgba(127,127,127,.07));font-size:12.5px}
+.tr-side{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:3px;border-radius:12px;background:var(--surface2,rgba(127,127,127,.08))}
+.tr-side button,.tr-bar .tr-buy,.tr-bar .tr-sell{min-height:42px;border:0;border-radius:10px;background:transparent;color:var(--text2);font:800 15px inherit;cursor:pointer}
+.tr-side .tr-buy.on,.tr-bar .tr-buy{background:var(--up,#16bd8c);color:#fff}
+.tr-side .tr-sell.on,.tr-bar .tr-sell{background:var(--down,#ee7580);color:#fff}
+.tr-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tr-step{display:grid;grid-template-columns:30px minmax(64px,1fr) 30px;gap:3px}
+.tr-step button{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:10px;font-size:18px;cursor:pointer;min-height:40px}
+.tr-step input{text-align:center;font-weight:700}
+.tr-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tr-chips button{min-height:32px;padding:4px 10px;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:16px;font:600 12.5px inherit;cursor:pointer}
+.tr-link{border:0;background:none;color:var(--brand-ink,var(--text));font:700 12.5px inherit;cursor:pointer;text-decoration:underline;padding:4px 2px}
+.tr-chips .tr-link{min-height:0;border:0}
+.tr-chk{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer}.tr-chk input{width:18px;height:18px;min-height:0}
+#tr-dyn{display:flex;flex-direction:column;gap:10px}
+.tr-sum{display:flex;flex-direction:column;gap:4px;padding:10px;border-radius:10px;border:1px dashed var(--line2,var(--line))}
+.tr-sum>div{display:flex;justify-content:space-between;gap:10px;font-size:13px}.tr-sum span{color:var(--text2)}
+.tr-sum .tr-tot{padding-top:5px;margin-top:2px;border-top:1px solid var(--line);font-size:14.5px}.tr-sum .tr-tot b{font-size:15.5px}
+.tr-msg{margin:0;padding:7px 10px;border-radius:9px;font-size:12.5px;line-height:1.4}
+.tr-msg.err{background:rgba(238,117,128,.14);color:var(--down,#d64550)}.tr-msg.warn{background:rgba(240,170,40,.16);color:#9a6200}
+html[data-theme="dark"] .tr-msg.warn{color:#f4c15a}
+.tr-go{width:100%;min-height:46px;border:0;border-radius:12px;color:#fff;font:800 15px inherit;cursor:pointer}
+.tr-go.buy{background:var(--up,#16bd8c)}.tr-go.sell{background:var(--down,#ee7580)}
+.tr-go:disabled{opacity:.45;cursor:not-allowed}
+.tr-note{margin:0;font-size:11.5px;color:var(--text2);line-height:1.45}
+.tr-mini{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:10px;background:var(--surface2,rgba(127,127,127,.07))}
+.tr-row{display:flex;gap:8px;flex-wrap:wrap}.tr-row>*{flex:1 1 auto}
+.tr-rec{display:flex;flex-direction:column;gap:6px;padding-top:8px;border-top:1px solid var(--line)}
+.tr-rh{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
+.tr-rr{display:grid;grid-template-columns:44px auto 1fr;gap:8px;align-items:baseline;font-size:12.5px}.tr-rr small{text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tr-empty{margin:0;font-size:12.5px}
+/* xác nhận */
+.tr-ov{position:fixed;inset:0;z-index:95;background:rgba(10,20,30,.55);display:flex;align-items:center;justify-content:center;padding:14px}
+.tr-cf{width:min(440px,100%);max-height:92dvh;overflow:auto;background:var(--surface,#fff);color:var(--text);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 20px 60px #0006}
+.tr-cf h3{margin:0;font-size:17px}
+.tr-who{display:grid;grid-template-columns:1fr 1fr;gap:8px}.tr-who>div{display:flex;flex-direction:column;gap:1px;padding:8px 10px;border-radius:10px;background:var(--surface2,rgba(127,127,127,.08))}
+.tr-who span{font-size:10.5px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}.tr-who b{font-size:14.5px}
+.tr-cf .tr-row .btn{min-height:46px}
+/* điện thoại: thanh Mua/Bán cố định phía dưới (trên thanh điều hướng) + bảng trượt */
+.tr-bar{display:none}
+.mc.is-m .tr-bar{display:grid;grid-template-columns:minmax(0,1fr) 78px 78px;gap:8px;align-items:center;position:fixed;left:0;right:0;z-index:60;bottom:calc(var(--navh,62px) + var(--safeb,0px));padding:8px 10px;background:var(--bar,var(--surface));border-top:1px solid var(--line);box-shadow:0 -6px 18px #0000001f}
+.is-full .mc.is-m .tr-bar{bottom:0;padding-bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:75}
+.tr-who-b{display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:0;min-height:44px;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:10px;padding:4px 10px;cursor:pointer;text-align:left}
+.tr-who-b i{font-style:normal;font-size:10px;color:var(--text2);letter-spacing:.05em;text-transform:uppercase;font-weight:700}
+.tr-who-b b{font-size:13px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mc.is-m .mc-trade{min-height:0;padding-bottom:70px}
+.tr-bg{position:fixed;inset:0;z-index:80;background:rgba(10,20,30,.5)}
+.tr.is-sheet{position:fixed;left:0;right:0;bottom:0;z-index:85;max-height:88dvh;overflow:auto;border-radius:20px 20px 0 0;border-bottom:0;padding:12px 14px calc(16px + env(safe-area-inset-bottom,0px));box-shadow:0 -14px 40px #0006;animation:trup .18s ease-out}
+.is-full .tr.is-sheet{z-index:90}.is-full .tr-bg{z-index:88}
+@keyframes trup{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
+@media(max-width:380px){.tr-acct,.tr-who{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.tr.is-sheet{animation:none}}
+
+/* v2 · Trading workspace */
+.trade-page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.trade-symbol-label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700;color:var(--text2);min-width:180px}
+.trade-symbol-label select{min-height:42px;padding:8px 12px;border:1px solid var(--line);border-radius:11px;background:var(--surface);color:var(--text);font:inherit}
+.trade-workspace{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(340px,0.85fr);gap:14px;align-items:start}
+.trade-chart-panel,.trade-ticket-panel{min-width:0;padding:14px}
+.trade-quote{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:2px 2px 12px;border-bottom:1px solid var(--line)}
+.trade-quote>div{display:flex;flex-direction:column;gap:3px;margin-right:auto}
+.trade-quote>div span{font-size:18px;font-weight:800}
+.trade-quote small,.trade-chart-foot{font-size:11px;color:var(--text2)}
+.trade-quote>b{font-size:23px;font-variant-numeric:tabular-nums}
+.trade-chart{height:440px;min-width:0;width:100%;margin-top:8px}
+.trade-chart-foot{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;padding-top:8px}
+.trade-ticket-panel{position:sticky;top:12px}
+.tr-risk-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tr-risk-grid input{width:100%;box-sizing:border-box;min-height:40px;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:10px;padding:6px 10px;font:inherit;font-size:14px}
+.tr-risk-preview{display:grid;grid-template-columns:1fr auto;gap:5px 10px;padding:9px 10px;border-radius:10px;background:var(--surface2,rgba(127,127,127,.07));font-size:12px}
+.tr-risk-preview span{color:var(--text2)}
+@media(max-width:900px){.trade-workspace{grid-template-columns:minmax(0,1fr)}.trade-ticket-panel{position:static}.trade-chart{height:360px}}
+@media(max-width:540px){.trade-chart-panel,.trade-ticket-panel{padding:10px}.trade-chart{height:300px}.trade-quote>b{font-size:20px}.tr-risk-grid{grid-template-columns:1fr 1fr;gap:6px}.tr-risk-grid input{font-size:13px;padding:6px}.trade-symbol-label{width:100%}}
+
+.trade-quick-link{display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:4px 9px;border-radius:9px;background:var(--brand-soft,rgba(20,194,154,.14));color:var(--brand-ink,var(--text));font-size:12px;font-weight:800;text-decoration:none;white-space:nowrap}.trade-quick-link:hover{filter:brightness(.96)}
+
+/* ===== v1.69.3 · Trang Giao dịch kiểu terminal ===== */
+.tp{display:flex;flex-direction:column;gap:12px}
+.tp-head{display:grid;grid-template-columns:minmax(150px,210px) auto minmax(0,1fr) auto;gap:12px 22px;align-items:center;padding:12px 16px}
+.tp-id{display:flex;flex-direction:column;gap:3px;min-width:0}.tp-pick{display:block}.tp-pick span{display:none}
+.tp-pick select{min-height:40px;padding:6px 10px;border:1px solid var(--line);border-radius:11px;background:var(--surface);color:var(--text);font:800 15px inherit;width:100%}
+.tp-id small{color:var(--text2);font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tp-px{display:flex;flex-direction:column;gap:2px}.tp-px b{font-size:30px;line-height:1.05;font-variant-numeric:tabular-nums}.tp-px span{font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.tp-stats{display:grid;grid-template-columns:repeat(5,minmax(70px,1fr));gap:6px 14px;margin:0;padding-left:20px;border-left:1px solid var(--line)}
+.tp-stats div{display:flex;flex-direction:column;gap:1px;min-width:0}.tp-stats dt{font-size:10.5px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}.tp-stats dd{margin:0;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.tp-rf{color:#d49a00}.tp-ce{color:#a855f7}.tp-fl{color:#0ea5c6}
+.tp-act{display:flex;gap:8px;align-items:center}
+.tp-head .tp-wl{grid-column:1/-1;grid-row:auto}
+.tp-star{min-height:40px;padding:6px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);font:700 13px inherit;cursor:pointer;white-space:nowrap}.tp-star.on{background:var(--brand-soft,rgba(20,194,154,.14));color:var(--brand-ink,var(--text));border-color:transparent}
+.tp-b,.tp-s{min-width:78px;min-height:40px;border:0;border-radius:10px;color:#fff;font:800 15px inherit;cursor:pointer}.tp-b{background:var(--up,#16bd8c)}.tp-s{background:var(--down,#ee7580)}
+.tp-seg{display:none}
+.tp-body{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:12px;align-items:start}
+.tp-wl{grid-column:1/-1;display:flex;gap:10px;align-items:center;min-width:0;padding-top:10px;border-top:1px solid var(--line)}
+.tp-wt{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:3px;border-radius:10px;background:var(--surface2,rgba(127,127,127,.09));flex:0 0 auto;min-width:150px}
+.tp-wt button{min-height:30px;border:0;border-radius:8px;background:transparent;color:var(--text2);font:700 12.5px inherit;cursor:pointer}.tp-wt button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px #0002}
+.tp-wlist{display:flex;flex-direction:row;flex:1 1 auto;min-width:0;overflow-x:auto;gap:6px;scrollbar-width:thin}
+.tp-wr{flex:0 0 auto;min-width:130px;border:1px solid var(--line);display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;min-height:38px;padding:4px 8px;border:0;border-radius:9px;background:transparent;color:var(--text);font:600 13px inherit;cursor:pointer;text-align:left;font-variant-numeric:tabular-nums}.tp-wr:hover{background:var(--surface2,rgba(127,127,127,.08))}.tp-wr.on{background:var(--brand-soft,rgba(20,194,154,.14))}.tp-wr b{font-weight:800}.tp-wr span:last-child{min-width:58px;text-align:right}
+.tp-e{margin:6px 4px;font-size:12.5px}
+.tp-mid{display:flex;flex-direction:column;gap:12px;min-width:0}
+.tp-chart,.tp-info,.tp-ticket{min-width:0;padding:12px 14px}
+.tp-tools{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.tp-rng,.tp-tabs{display:inline-flex;gap:2px;padding:3px;border-radius:10px;background:var(--surface2,rgba(127,127,127,.09))}
+.tp-rng button,.tp-tabs button{min-width:38px;min-height:30px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:var(--text2);font:700 12.5px inherit;cursor:pointer;white-space:nowrap}.tp-rng button.on,.tp-tabs button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px #0002}
+.tp-upd{margin-left:auto;font-size:11.5px;color:var(--text2)}
+.tp-ref{width:34px;height:34px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);font-size:16px;cursor:pointer}
+.tp-chart .trade-chart{height:480px;margin-top:0}
+.tp-foot{margin:6px 0 0;font-size:11px;color:var(--text2)}
+.tp-tabs{margin-bottom:10px;max-width:100%;overflow-x:auto}
+.tp-ig{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 22px}.tp-ig div{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}.tp-ig span{color:var(--text2)}.tp-ig b{font-variant-numeric:tabular-nums}
+.tp-tw{overflow-x:auto}.tp-t{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}.tp-t th{padding:6px 8px;text-align:right;color:var(--text2);font-size:11.5px;font-weight:700;border-bottom:1px solid var(--line);white-space:nowrap}.tp-t td{padding:8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}.tp-t th:first-child,.tp-t td:first-child{text-align:left}
+.tp-ta{display:flex;gap:6px;justify-content:flex-end}.tp-mb,.tp-ms{min-height:28px;padding:0 10px;border:0;border-radius:7px;color:#fff;font:700 12px inherit;cursor:pointer}.tp-mb{background:var(--up,#16bd8c)}.tp-ms{background:var(--down,#ee7580)}
+.tp-ticket{position:sticky;top:12px;max-height:calc(100dvh - 24px);overflow:auto}
+.tp-th{margin:0 0 10px;font-size:15px}
+.tp-ticket .tr{border:0;padding:0;background:none}.tp-ticket .tr-h{display:none}
+.tp-ticket .tr-side{padding:4px}.tp-ticket .tr-side button{min-height:46px;font-size:15.5px}
+.tp-ticket .tr-sum{background:var(--surface2,rgba(127,127,127,.06));border-style:solid;border-color:transparent}
+.tp-ticket .tr-go{min-height:50px;font-size:16px}
+@media(max-width:1280px){.tp-body{grid-template-columns:minmax(0,1fr) 340px}.tp-stats{grid-template-columns:repeat(3,minmax(70px,1fr))}.tp-ig{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:1100px){.tp-head{grid-template-columns:minmax(150px,210px) auto auto}.tp-stats{grid-column:1/-1;grid-row:2;padding:10px 0 0;border-left:0;border-top:1px solid var(--line);grid-template-columns:repeat(5,minmax(70px,1fr))}.tp-act{justify-self:end}
+.tp-body{grid-template-columns:minmax(0,1fr) 340px}}
+@media(max-width:900px){.tp-head{grid-template-columns:1fr auto;padding:12px}.tp-stats{grid-row:auto;grid-template-columns:repeat(5,1fr);gap:6px}.tp-stats dd{font-size:12.5px}.tp-act{grid-column:1/-1;justify-self:stretch}.tp-star{flex:1}.tp-b,.tp-s{flex:1}
+.tp-seg{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line)}.tp-seg button{min-height:42px;border:0;border-bottom:2px solid transparent;background:none;color:var(--text2);font:700 14px inherit;cursor:pointer}.tp-seg button.on{color:var(--brand-ink,var(--text));border-bottom-color:var(--brand,#14c29a)}
+.tp-body{grid-template-columns:minmax(0,1fr)}.tp-ticket{position:static;max-height:none}.tp-chart .trade-chart{height:340px}.tp-upd{display:none}.tp-rng{flex:1}.tp-rng button{flex:1}
+.tp[data-v="chart"] .tp-ticket,.tp[data-v="chart"] .tp-info,.tp[data-v="order"] .tp-chart,.tp[data-v="order"] .tp-info,.tp[data-v="order"] .tp-wl,.tp[data-v="info"] .tp-chart,.tp[data-v="info"] .tp-ticket,.tp[data-v="info"] .tp-wl{display:none}}
+@media(max-width:540px){.tp-px b{font-size:26px}.tp-chart,.tp-info,.tp-ticket{padding:10px}.tp-chart .trade-chart{height:300px}.tp-ig{grid-template-columns:1fr}}
+/* thanh Mua / Bán trên hàng Theo dõi · Hỏi AI (Biểu đồ & Phân tích) */
+.tp-bs{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+.tp-bs a{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:12px;color:#fff;font:800 15px inherit;text-decoration:none;box-shadow:0 2px 8px #0002}
+.tp-bs .tp-bb{background:var(--up,#16bd8c)}.tp-bs .tp-bsl{background:var(--down,#ee7580)}.tp-bs a:active{filter:brightness(.92)}
+
+/* v1.69.4 · loại lệnh, tài khoản, tab dữ liệu danh mục */
+.tr-ot{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}.tr-ot button{min-height:34px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--text2);font:700 12.5px inherit;cursor:pointer}.tr-ot button.on{background:var(--brand-soft,rgba(20,194,154,.14));color:var(--brand-ink,var(--text));border-color:transparent}
+.tp-ticket .tr input:disabled{opacity:.6}
+.tp-acct{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:10px}.tp-acct:empty{display:none}.tp-acct div{display:flex;flex-direction:column;gap:2px;padding:7px 9px;border-radius:10px;background:var(--surface2,rgba(127,127,127,.07));min-width:0}.tp-acct span{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.04em}.tp-acct b{font-size:12.5px;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis}
+.tp-h3{margin:14px 0 6px;font-size:13px}.tp-ig+.tp-h3{margin-top:14px}
+.tp-bar{display:grid;grid-template-columns:56px 1fr 52px;gap:8px;align-items:center;margin:5px 0;font-size:12.5px}.tp-bar i{height:8px;border-radius:5px;background:var(--surface2,rgba(127,127,127,.12));overflow:hidden}.tp-bar u{display:block;height:100%;background:var(--brand,#14c29a);border-radius:5px}.tp-bar b{text-align:right}
+@media(max-width:540px){.tp-acct b{font-size:11.5px}}
+
+/* v1.69.5 · biểu đồ = mẫu Phân tích; sửa tab đè chữ trên điện thoại */
+.tp-chart{padding:0;border:0;background:none;box-shadow:none;min-width:0}
+.tp-chart .cp-embed{padding:0;margin:0}.tp-chart .cp-embed .cp-top{display:none}.tp-chart .cp-embed .cp-grid{display:block}
+.tp-chart .tp-foot{margin:6px 4px 0}
+.tp-tabs{display:flex;overflow-x:auto;scrollbar-width:none;max-width:100%}.tp-tabs::-webkit-scrollbar{display:none}.tp-tabs button{flex:0 0 auto}
+@media(max-width:900px){.tp-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;gap:3px}.tp-tabs button{min-width:0;padding:0 4px;min-height:34px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+
+/* v1.69.6: thanh "mở phiếu lệnh" trên điện thoại sau khi bấm Mua/Bán ở tab Danh mục — vẫn xem được biểu đồ đúng mã */
+.tp-gobar{display:none}
+@media(max-width:900px){.tp-gobar:not([hidden]){display:block;position:sticky;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:5;margin:8px 0 0}.tp-gobar button{width:100%;min-height:48px;border:0;border-radius:12px;color:#fff;font:800 15px inherit;box-shadow:0 4px 14px #0003;cursor:pointer}.tp-gobar .tp-go-buy{background:var(--up,#16bd8c)}.tp-gobar .tp-go-sell{background:var(--down,#ee7580)}}
+/* v1.69.7: trong trang Giao dịch đã có nút Mua/Bán ở thanh đầu, ẩn cặp nút trùng của biểu đồ nhúng */
+.tp-chart .cp-actions .tp-bs{display:none}
+
+/* v1.71 · Phiếu BÁN = thanh lý vị thế đang giữ (không bán khống) */
+.tr-liq{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:10px;background:var(--surface2,rgba(127,127,127,.07));border:1px solid var(--line)}
+.tr-liq-h{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13.5px}
+.tr-liq-g{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px}
+.tr-liq-g div{display:flex;justify-content:space-between;gap:6px;font-size:12.5px}.tr-liq-g span{color:var(--text2)}.tr-liq-g b{font-variant-numeric:tabular-nums}
+.tr-liq small{font-size:11px;line-height:1.4}
+.tr-tag{padding:2px 8px;border-radius:10px;font-size:11.5px;font-weight:800;background:rgba(127,127,127,.15);color:var(--text2)}
+.tr-tag.up{background:rgba(22,189,140,.16);color:var(--up,#16bd8c)}.tr-tag.dn{background:rgba(238,117,128,.16);color:var(--down,#d64550)}
+
+/* v1.73.2 — nút Mua/Bán tắt khi đang xem chỉ số */
+.tp-bs a.is-off{opacity:.4;filter:grayscale(.6);cursor:not-allowed}

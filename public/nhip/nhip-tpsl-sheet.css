@@ -1,0 +1,86 @@
+/* NHỊP v2.40 — cửa sổ đặt TP/SL + ô TP/SL trong bảng danh mục + thẻ Sức mua gọn 1 dòng */
+html.tps-lock{overflow:hidden}
+.tps-ov{position:fixed;inset:0;z-index:6500;background:rgba(10,20,30,.45);display:flex;align-items:flex-end;justify-content:center;animation:tpsFade .15s ease-out}
+.tps-sheet{box-sizing:border-box;width:100%;max-width:560px;max-height:92vh;max-height:92dvh;display:flex;flex-direction:column;background:var(--surface,#fff);color:var(--text,#253442);border-radius:18px 18px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.25);padding-bottom:env(safe-area-inset-bottom,0);animation:tpsUp .2s ease-out}
+.tps-grab{width:38px;height:4px;border-radius:3px;background:var(--line,rgba(127,127,127,.4));margin:8px auto 0;flex:none}
+.tps-h{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 14px 8px;flex:none;border-bottom:1px solid var(--line,rgba(127,127,127,.2))}
+.tps-h b{font-size:15px}
+.tps-x{all:unset;box-sizing:border-box;width:32px;height:32px;display:grid;place-items:center;border-radius:8px;cursor:pointer;color:var(--text2,#6b7a89);font-size:15px}
+.tps-x:hover,.tps-x:focus-visible{background:rgba(127,127,127,.15)}
+.tps-b{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:10px 14px 16px}
+@media(min-width:700px){.tps-ov{align-items:center}.tps-sheet{border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.3);animation:tpsFade .15s ease-out}.tps-grab{display:none}}
+@keyframes tpsUp{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
+@keyframes tpsFade{from{opacity:0}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.tps-ov,.tps-sheet{animation:none}}
+/* ô TP / SL trong bảng Danh mục (trang Giao dịch): cả ô là một nút bấm */
+.tp-t .pt-open{all:unset;box-sizing:border-box;display:block;margin-left:auto;min-width:112px;padding:3px 8px;border-radius:8px;cursor:pointer;text-align:right;white-space:nowrap;font-size:12.5px;line-height:1.35;border:1px dashed var(--line,rgba(127,127,127,.4));-webkit-tap-highlight-color:transparent}
+.tp-t .pt-open:hover,.tp-t .pt-open:focus-visible{background:rgba(127,127,127,.1);border-style:solid}
+.tp-t .pt-open .pt-ln{display:block;font-weight:700}
+.tp-t .pt-open .pt-none{color:var(--brand,#0b9f77);font-weight:700;text-decoration:none}
+/* Thẻ "Sức mua": nhãn luôn 1 dòng → 3 thẻ cao bằng nhau, không kéo dài bảng */
+.tp-acct span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:540px){.tp-acct .tp-sub{display:none}.tp-acct div{padding:7px 8px}}
+/* Thẻ Giá vốn trên biểu đồ bấm được */
+.ol-tag.ol-t-cost{cursor:pointer}
+/* v2.41 nút Mua/Bán trong bảng Danh mục không bị bẻ chữ dọc */
+.tp-t .tp-ta{flex-wrap:nowrap}.tp-t .tp-mb,.tp-t .tp-ms{white-space:nowrap;min-width:44px;padding:0 10px;writing-mode:horizontal-tb}
+
+/* v2.43 — bảng TP/SL gọn: tóm tắt 2×2, kịch bản 3 ô, lệnh đang đặt dạng thẻ (không cuộn ngang), nút Đặt căn giữa */
+html body .tps-b .pt{gap:8px}
+html body .tps-b .pt-sum{grid-template-columns:1fr 1fr!important;gap:3px 12px;padding:8px 10px}
+html body .tps-b .pt-sum div{font-size:12.5px;flex-direction:column;gap:0;justify-content:flex-start}
+html body .tps-b .pt-sum span{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+html body .tps-b .pt-sum b{font-size:14px}
+html body .pt-cov{font-size:12px;gap:2px 12px}
+html body .pt-scn{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:7px 8px}
+html body .pt-scn div{display:flex;flex-direction:column;gap:1px;min-width:0}
+html body .pt-scn span{font-size:10.5px}html body .pt-scn b{font-size:12.5px;white-space:nowrap}
+html body .pt-note{font-size:11.5px;line-height:1.35}
+html body .pt-go{display:grid!important;place-items:center;text-align:center;line-height:1.2;padding:0 12px}
+html body .pt-oc{padding:7px 10px;font-size:12.5px}
+html body .pt-ol{display:flex;flex-direction:column;gap:8px}
+html body .pt-oi{padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+html body .pt-oi.is-hit{background:rgba(240,170,40,.12);border-color:rgba(240,170,40,.5)}
+html body .pt-oi-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;font-size:12px}
+html body .pt-oi-h>b:first-child{font-size:13px}
+html body .pt-oi-d{color:var(--text2)}
+html body .pt-oi-h .pt-act{margin-left:auto;display:flex;align-items:center;gap:6px}
+html body .pt-oi-f{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:8px;align-items:end}
+html body .pt-oi-f label{display:flex;flex-direction:column;gap:2px;min-width:0}
+html body .pt-oi-f small,html body .pt-oi-pl small{font-size:10.5px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.03em}
+html body .pt-oi-f .od-in.sm{width:100%;box-sizing:border-box;min-height:34px;text-align:right;font-weight:700}
+html body .pt-oi-pl{display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:78px;padding-bottom:7px;font-size:12.5px;white-space:nowrap}
+html body .pt-oi .od-fill{min-height:30px;padding:0 10px;border:0;border-radius:8px;background:var(--brand,#0b9f77);color:#fff;font:700 12px inherit;cursor:pointer}
+html body .pt-oi .od-del{min-width:32px;min-height:30px;border:1px solid var(--line);background:var(--surface);color:var(--text2);border-radius:8px;cursor:pointer}
+html body .pt-scn span{line-height:1.2}
+
+/* v2.46 — bảng TP/SL gọn trong MỘT khung nhìn: giá | KL cạnh nhau, gợi ý chỉ của loại đang chọn, nút đặt thấp hơn (chữ giữ nguyên) */
+html body .tps-b{padding:8px 12px 12px}
+html body .tps-b .pt{gap:6px;--nx-h:34px;--nx-btn:32px;--nx-gap:4px}
+html body .tps-b .pt-sum{padding:6px 10px;gap:2px 12px}
+html body .tps-b .pt-sum b{font-size:13.5px}
+html body .tps-b .pt-cov{font-size:11.5px}
+html body .tps-b .pt-scn{padding:5px 8px}
+html body .tps-b .pt-note{font-size:11px}
+html body .tps-b .pt-q{gap:5px}
+html body .tps-b .pt-q-h{font-size:11.5px}
+html body .tps-b .pt-seg button{min-height:26px;padding:0 9px;font-size:11.5px}
+html body .tps-b .pt-qrow{display:block!important}
+html body .tps-b .pt-qrow .nx-seg{display:flex;width:100%}
+html body .tps-b .pt-qrow .nx-seg button,html body .tps-b .pt-qchips button{min-height:28px!important;height:28px;font-size:11.5px!important;padding:0 8px}
+html body .tps-b .pt-form{padding:8px;gap:6px}
+html body .tps-b .pt-kinds button{min-height:32px!important;height:32px;font-size:12.5px!important}
+html body .tps-b .pt-fields{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important}
+html body .tps-b .pt-fields label>span{font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+html body .tps-b .pt-fields .od-st{grid-template-columns:var(--nx-btn) minmax(0,1fr) var(--nx-btn)!important}
+html body .tps-b .pt-fields .od-in{font-size:14px;font-weight:700;padding:4px 4px;text-align:center}
+html body .tps-b .pt-qchips{margin:0}
+html body .tps-b .pt-dyn{gap:5px}
+html body .tps-b .pt-oc{padding:5px 8px;font-size:12px;gap:2px 8px}
+html body .tps-b .pt-oc small{font-size:10.5px}
+html body .tps-b .od-msg{margin:0;padding:4px 8px;font-size:11.5px;line-height:1.3}
+html body .tps-b .pt-go{height:36px!important;min-height:36px!important;font-size:15px;border-radius:10px}
+html body .tps-b .pt-h3{margin-top:2px;font-size:11px}
+html body .tps-b .pt-foot{font-size:10.5px;line-height:1.35}
+html body .tps-b .pt-oi{padding:6px 8px}
+html body .tps-b .pt-oi-h{margin-bottom:4px}

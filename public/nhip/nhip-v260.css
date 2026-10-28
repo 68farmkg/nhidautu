@@ -1,0 +1,39 @@
+/* NHỊP v2.60 — (1) nút Mua/Bán dài hơn, Mua trên – Bán dưới (CHỈ PC)
+   (2) Tin đã lưu: nút Bỏ lưu + Ghim lên đầu  (3) Danh mục (điện thoại): nút AI ngang hàng tiêu đề */
+
+/* (1) PC ≥1101px: xếp dọc, kéo dài; điện thoại/tablet giữ nguyên */
+@media(min-width:1101px){
+  html body .tp-head .tp-act{display:flex;flex-direction:column;flex-wrap:nowrap;align-items:stretch;justify-content:center;gap:8px;width:clamp(150px,13vw,210px);justify-self:end}
+  html body .tp-head .tp-act>.tp-b,html body .tp-head .tp-act>.tp-s{width:100%;flex:none;min-width:0;min-height:40px;padding:0 18px;font-size:15px;letter-spacing:.2px}
+}
+
+/* (2) Tin đã lưu */
+html body .nw-svrow{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;width:100%;cursor:default}
+html body .nw-svrow .nw-svt{flex:1 1 140px;min-width:0;border:0;background:none;padding:0;margin:0;font:inherit;color:inherit;text-align:left;cursor:pointer}
+html body .nw-svrow .nw-svt span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html body .nw-svrow .nw-svt:hover span{text-decoration:underline}
+html body .nw-svrow .nw-sva{display:inline-flex;flex:none;gap:6px}
+html body .nw-svrow .nw-svb{height:26px;padding:0 10px;border:1px solid var(--line,#d5dee7);border-radius:999px;background:transparent;color:var(--text2,#5b7186);font:600 12px inherit;white-space:nowrap;cursor:pointer}
+html body .nw-svrow .nw-svb:hover{color:var(--text,#16222e);border-color:currentColor}
+html body .nw-svrow .nw-pin.on{background:rgba(47,109,246,.14);color:var(--house,#2f6df6);border-color:var(--house,#2f6df6)}
+html body .nw-svrow .nw-unsave:hover{color:#d64545}
+html body .nw-svrow.pinned{background:rgba(47,109,246,.06);border-radius:8px}
+
+/* (3) Điện thoại: nút AI cùng hàng với "TÀI SẢN CỦA BẠN" + tiêu đề, nằm bên phải */
+@media(max-width:900px){
+  html body #view .view-h:has(>#pf-ai){display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:center!important;justify-content:space-between;gap:10px}
+  html body #view .view-h:has(>#pf-ai)>:first-child{flex:1 1 0;min-width:0}
+  html body #view .view-h:has(>#pf-ai) h1{font-size:19px}
+  html body #view .view-h>#pf-ai{flex:0 0 auto!important;width:auto!important;max-width:44%;height:auto;min-height:38px;padding:6px 12px;font-size:12.5px;line-height:1.25;white-space:normal;text-align:center;margin-left:auto;align-self:center}
+}
+
+/* (4) Điện thoại: nút "Cập nhật" (Dashboard, Thị trường, Tin tức) ghim góc phải, ngang hàng nhãn nhỏ + tiêu đề lớn.
+   Dùng class .vh-upd (không phụ thuộc :has) để chắc chắn chạy trên mọi trình duyệt. */
+@media(max-width:900px){
+  html body #view .view-h.vh-upd{position:relative!important;display:block!important}
+  html body #view .view-h.vh-upd>:first-child{display:block!important;width:auto!important;min-width:0}
+  html body #view .view-h.vh-upd .eyebrow,html body #view .view-h.vh-upd h1{padding-right:100px!important}
+  html body #view .view-h.vh-upd>.row{display:block!important;position:static!important;width:0;height:0;margin:0;padding:0}
+  html body #view .view-h.vh-upd #db-refresh,html body #view .view-h.vh-upd #rl,html body #view .view-h.vh-upd #nr{position:absolute!important;top:0;right:0;left:auto;margin:0!important;width:auto!important;height:34px;min-height:34px;padding:0 12px;font-size:13.5px;line-height:1;white-space:nowrap;border-radius:10px;z-index:1}
+  html body #view .view-h.vh-upd>:first-child p{margin-top:8px!important;clear:both}
+}
