@@ -1,0 +1,16 @@
+/* NHIP Data Quality v2.1 (thêm inspect(input,{limitPct}) đếm phiên vượt biên độ): OHLC, chronology, timestamp, volume and outlier diagnostics. */
+(function(){'use strict';
+  function timeOf(x){var v=x&&(x.timestamp??x.time??x.date);if(v==null||v==='')return null;if(typeof v==='number'){if(Number.isInteger(v)&&v>=19000101&&v<=22001231){var s=String(v);return Date.parse(s.slice(0,4)+'-'+s.slice(4,6)+'-'+s.slice(6,8)+'T00:00:00Z');}var ms=Math.abs(v)<1e12?v*1000:v;return Number.isFinite(ms)?ms:null;}var t=Date.parse(v);return Number.isFinite(t)?t:null;}
+  function inspect(input,opt){var lim=opt&&Number(opt.limitPct)>0?Number(opt.limitPct)/100*1.02+0.0005:null,limitBreaches=0;var a=Array.isArray(input)?input:[],invalid=0,missingVolume=0,zeroVolume=0,duplicateTimes=0,outOfOrder=0,largeGaps=0,missingTimestamp=0,extremeMoves=0,prevTime=null,prevClose=null,seen=new Set(),valid=0;
+    a.forEach(function(x){var o=Number(x&&x.open),h=Number(x&&x.high),l=Number(x&&x.low),c=Number(x&&x.close);var ok=[o,h,l,c].every(Number.isFinite)&&o>0&&h>0&&l>0&&c>0&&h>=Math.max(o,c,l)&&l<=Math.min(o,c,h);if(!ok)invalid++;else{valid++;if(prevClose!=null&&c>0&&Math.abs(c/prevClose-1)>=0.25)extremeMoves++;if(lim!==null&&prevClose!=null&&Math.abs(c/prevClose-1)>lim)limitBreaches++;prevClose=c;}
+      var v=x&&x.volume;if(v==null||v===''||!Number.isFinite(Number(v))||Number(v)<0)missingVolume++;else if(Number(v)===0)zeroVolume++;
+      var t=timeOf(x);if(t==null)missingTimestamp++;else{if(seen.has(t))duplicateTimes++;seen.add(t);if(prevTime!=null){if(t<prevTime)outOfOrder++;else if(t-prevTime>10*86400000)largeGaps++;}prevTime=t;}
+    });
+    var warnings=[];if(!a.length)warnings.push('Không có nến');if(invalid)warnings.push(invalid+' nến có OHLC không hợp lệ');if(duplicateTimes)warnings.push(duplicateTimes+' mốc thời gian trùng');if(outOfOrder)warnings.push(outOfOrder+' bước thời gian sai thứ tự');if(largeGaps)warnings.push(largeGaps+' khoảng cách thời gian >10 ngày (cần rà soát ngày nghỉ/thiếu phiên)');if(missingTimestamp)warnings.push(missingTimestamp+' nến thiếu/không đọc được thời gian');if(missingVolume)warnings.push(missingVolume+' nến thiếu khối lượng');if(zeroVolume)warnings.push(zeroVolume+' nến có khối lượng bằng 0');if(extremeMoves)warnings.push(extremeMoves+' biến động đóng cửa ≥25% giữa hai nến hợp lệ liên tiếp (cần xác minh điều chỉnh giá/sự kiện)');
+    if(limitBreaches)warnings.push(limitBreaches+' phiên đóng cửa vượt biên độ giá của sàn (có thể do chưa điều chỉnh cổ tức/chia tách/ngày đầu niêm yết)');
+    var score=a.length?Math.round(Math.max(0,100- invalid/a.length*45-duplicateTimes/a.length*30-outOfOrder/a.length*25-missingTimestamp/a.length*10-missingVolume/a.length*5-largeGaps/a.length*3-extremeMoves/a.length*3)):0;
+    var grade=score>=95?'Tốt':score>=80?'Cần rà soát':'Rủi ro dữ liệu cao';
+    return {total:a.length,valid:valid,invalid:invalid,missingVolume:missingVolume,zeroVolume:zeroVolume,duplicateTimes:duplicateTimes,outOfOrder:outOfOrder,largeGaps:largeGaps,missingTimestamp:missingTimestamp,extremeMoves:extremeMoves,limitBreaches:limitBreaches,qualityScore:score,grade:grade,ready:a.length>0&&valid>0&&duplicateTimes===0&&outOfOrder===0,warnings:warnings};
+  }
+  window.NHIPDataQuality={inspect:inspect,timeOf:timeOf};
+})();

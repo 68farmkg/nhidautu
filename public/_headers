@@ -1,0 +1,6 @@
+/nhip/
+  Cache-Control: no-cache
+/nhip/index.html
+  Cache-Control: no-cache
+/nhip/sw.js
+  Cache-Control: no-cache
