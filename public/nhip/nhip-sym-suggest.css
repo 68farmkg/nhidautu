@@ -1,0 +1,16 @@
+/* NHIP V2.50 — khung gợi ý mã dưới ô nhập (Danh mục · Lịch sử · Cài đặt) */
+#nsg{position:fixed;z-index:6500;display:flex;flex-direction:column;box-sizing:border-box;background:var(--surface,#fff);color:var(--text,#173b5d);border:1px solid var(--line2,var(--line,#d6e3e6));border-radius:14px;box-shadow:0 14px 38px rgba(10,30,45,.28);overflow:hidden;animation:nsgin .12s ease-out}
+#nsg[hidden]{display:none}
+@keyframes nsgin{from{opacity:.4;transform:translateY(-4px)}to{opacity:1;transform:none}}
+#nsg .nsg-hd{flex:none;padding:7px 12px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted,#71879b);background:var(--surface2,#f6fbff);border-bottom:1px solid var(--line,#e0eeef)}
+#nsg .nsg-ls{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:4px}
+#nsg .nsg-it{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 10px;border-radius:10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#nsg .nsg-it:hover,#nsg .nsg-it.act{background:var(--brand-soft,#e4f8f2)}
+#nsg .nsg-it>b{flex:0 0 58px;font-size:14.5px;font-weight:800;letter-spacing:.2px}
+#nsg .nsg-n{flex:1;min-width:0;display:flex;flex-direction:column;gap:0}
+#nsg .nsg-n em{font-style:normal;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#nsg .nsg-n small{font-size:11px;color:var(--muted,#71879b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#nsg .nsg-em{padding:16px 12px;text-align:center;font-size:12.5px;color:var(--muted,#71879b)}
+
+/* V3.11 — gợi ý mã nằm TRÊN cửa sổ công cụ của phòng Live (cửa sổ z-index 100010) */
+#nsg.nsg-live{z-index:2147482000}

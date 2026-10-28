@@ -1,0 +1,68 @@
+/* NHỊP V3.01 — Thẻ tin gọn: nút ✦ AI phân tích nhanh + nút ☆ lưu tin nằm CHUNG một hàng chân thẻ,
+   không còn đè lên tiêu đề. Áp dụng cho mọi dòng tin dạng .nws (Dashboard · Phân tích · Thị trường · Biểu đồ). */
+.nws{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:"body body" "line line" "ai sv";
+  align-items:center;
+  position:relative;
+  padding:0;
+  overflow:hidden;
+  border:1px solid var(--line,#e0eeef);
+  border-radius:14px;
+  background:var(--surface,#fff);
+  transition:border-color .15s,box-shadow .15s;
+}
+html[data-theme="dark"] .nws{background:#16232e;border-color:#263845}
+html[data-skin] .nws{background:var(--surface);border-color:var(--line)}
+.nws:hover,.nws:focus-within{border-color:color-mix(in srgb,var(--house,var(--brand,#0eb889)) 55%,var(--line,#e0eeef))}
+
+/* phần nội dung: không viền riêng, chừa lề đều, không cần chừa chỗ cho ngôi sao nữa */
+.nws .newsitem,
+html[data-skin] .nws .newsitem,
+html[data-theme="dark"] .nws .newsitem,
+html[data-den="compact"] .nws .newsitem{
+  grid-area:body;
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  padding:12px 14px 10px!important;
+  min-width:0;
+}
+.nws .newsitem strong{font-size:14px!important;line-height:1.42;margin-bottom:5px}
+.nws .newsitem p{font-size:12.5px!important;line-height:1.5;margin:0}
+.nws .nws-src{font-size:11px!important;margin:0 0 6px}
+
+/* đường kẻ mảnh ngăn nội dung / chân thẻ */
+.nws::before{content:"";grid-area:line;height:1px;margin:0 14px;background:var(--line,#e0eeef);opacity:.7}
+
+/* chân thẻ: AI bên trái, lưu tin bên phải, cùng chiều cao 32px */
+.nws > .nr-ai,.nws > .nr-ai-row{
+  grid-area:ai;justify-self:start;margin:8px 0 8px 12px;
+  min-height:32px;padding:0 12px;font-size:12.5px;gap:6px;
+  border-radius:999px;
+  background:color-mix(in srgb,var(--house,var(--brand,#0eb889)) 12%,transparent);
+  border:1px solid color-mix(in srgb,var(--house,var(--brand,#0eb889)) 40%,transparent);
+}
+.nws > .nr-ai > span{white-space:nowrap}
+.nws .sv-news{
+  grid-area:sv;position:static!important;margin:8px 12px 8px 8px;
+  min-width:32px;height:32px;padding:0!important;border-radius:999px;
+  font-size:15px;
+}
+.nws .sv-news span{display:none!important}
+.nws .sv-news[aria-pressed="false"]{background:transparent}
+
+/* màn rộng: vẫn giữ chân thẻ, cho nút lưu hiện chữ */
+@media(min-width:900px){
+  .nws .newsitem{padding:14px 16px 12px!important}
+  .nws .sv-news{padding:0 12px!important;min-width:32px}
+  .nws .sv-news span{display:inline!important}
+  .nws > .nr-ai,.nws > .nr-ai-row{margin-left:14px}
+  .nws::before{margin:0 16px}
+}
+@media(max-width:360px){.nws > .nr-ai{padding:0 10px;font-size:12px}}
+
+/* tin điểm nhấn (Dashboard) & tin theo dõi: nút AI gọn, không đè nội dung */
+.nr-ai-inl{margin:6px 0 2px;min-height:30px;padding:0 11px;font-size:12px}

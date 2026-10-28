@@ -1,0 +1,154 @@
+/* NHIP V2.17 — SỬA GIAO DIỆN ĐIỆN THOẠI (nạp SAU CÙNG, không đổi dữ liệu/logic)
+   1) Lịch sử: hàng tab vuốt ngang được trở lại.
+      Nguyên nhân: nats.css đặt `html[data-skin] .tf.tabs{overflow:visible}` (độ ưu tiên cao hơn mobile.css) → hàng bị cắt mà không cuộn được.
+   2) Phân tích AI: hàng chế độ (Tự động · Thị trường · …) và hàng chọn AI gọn hơn, VẪN cuộn ngang để thêm thành phần sau này.
+   3) Giao dịch › "Lệnh trên biểu đồ": nút Ẩn/Hiện/Mờ gọn, mỗi nhóm lệnh xếp 2 dòng nên Hiện/Mờ không che chữ.
+      Nguyên nhân nút to: nhip-responsive.css có `#view :is(.btn,button){min-height:36px}` (có ID) thắng mọi min-height nhỏ của bảng lệnh. */
+
+/* ============ 1. LỊCH SỬ — hàng tab cuộn ngang ============ */
+@media (max-width: 900px) and (pointer: coarse) {
+  html[data-skin] .tf.tabs:not(#tabs):not(#an-tabs) {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x pan-y;
+    scrollbar-width: none;
+    max-width: 100%;
+  }
+  html[data-skin] .tf.tabs:not(#tabs):not(#an-tabs)::-webkit-scrollbar { display: none; }
+  html[data-skin] .tf.tabs:not(#tabs):not(#an-tabs) > button {
+    flex: 0 0 auto;
+    min-width: max-content;
+    white-space: nowrap;
+  }
+}
+
+/* ============ 2. PHÂN TÍCH AI — hàng chế độ + hàng chọn AI gọn (vẫn cuộn ngang) ============ */
+@media (max-width: 700px) {
+  html body .aix { gap: 6px; }
+  html body .aix .aix-modes:not(.aix-g) {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 5px;
+    margin: 0;
+    padding: 0 0 2px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x pan-y;
+    scrollbar-width: none;
+  }
+  html body .aix .aix-modes:not(.aix-g)::-webkit-scrollbar { display: none; }
+  html body .aix .aix-modes:not(.aix-g) button {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 30px;
+    min-height: 30px !important;
+    min-width: 0;
+    padding: 0 12px;
+    border-radius: 15px;
+    font-size: 12.5px;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  html body .aix .aix-ctx { gap: 6px; align-items: center; }
+  /* trên trang Phân tích AI, nhãn "📍 Phân tích AI" luôn giống tiêu đề trang → bỏ để ô chọn AI rộng hơn */
+  html body .aix.page .aix-ctx .aix-pg { display: none; }
+  html body .aix .aix-ctx .aix-pg { font-size: 11.5px; }
+  html body .aix .aix-ctx select,
+  html body .aix .aix-ctx input {
+    height: 32px;
+    min-height: 32px !important;
+    padding: 0 9px !important;
+    font-size: 13.5px !important;
+    border-radius: 9px;
+  }
+  html body .aix .aix-ctx select { flex: 1 1 0; min-width: 0; }
+  /* ô Mã chỉ hiện ở chế độ Tự động/Cổ phiếu; #view :is(input){width:auto} từng làm nó rộng ~190px và ép ô chọn AI */
+  html body .aix .aix-ctx .aix-sym { width: 76px !important; max-width: 76px; flex: 0 0 76px !important; }
+  html body .aix .aix-warn { font-size: 11.5px; line-height: 1.35; }
+}
+/* iPhone/iPad Safari tự phóng to khi ô nhập < 16px → giữ 16px riêng cho Safari iOS, chỉ giảm chiều cao */
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 700px) {
+    html body .aix .aix-ctx select,
+    html body .aix .aix-ctx input { font-size: 16px !important; }
+  }
+}
+
+/* ============ 3. GIAO DỊCH — bảng "Lệnh trên biểu đồ" gọn, không che chữ ============ */
+/* khung: rộng tối đa theo biểu đồ, cuộn trong khi quá cao */
+html body .ol-lg:not(.ol-mc-lg) { max-width: min(380px, calc(100% - 12px)); }
+@media (max-width: 600px) {
+  html body .ol-lg:not(.ol-mc-lg) { max-width: calc(100% - 12px); }
+}
+html body .ol-lg .ol-lg-b { max-height: min(230px, 36dvh); padding: 0 6px 6px; gap: 4px; }
+
+/* mọi nút trong bảng: bỏ min-height 36px của #view, tự đặt chiều cao nhỏ gọn */
+html body .ol-lg button { min-height: 0 !important; }
+
+/* tiêu đề + nút Thu gọn */
+html body .ol-lg .ol-lg-h { min-height: 30px !important; padding: 2px 4px 2px 10px; }
+html body .ol-lg .ol-lg-tg {
+  min-height: 26px; padding: 0 8px 0 10px; gap: 3px;
+  font-size: 11px; border-width: 1px;
+}
+html body .ol-lg .ol-lg-tg svg { width: 13px; height: 13px; }
+html body .ol-lg .ol-lg-tgb { align-self: center; margin: 3px 0; }
+
+/* hàng "Tất cả": thanh Ẩn | Hiện | Mờ mảnh, cùng một kiểu với nút từng nhóm */
+html body .ol-lg .ol-lg-all { padding: 0 8px 4px; gap: 8px; }
+html body .ol-lg .ol-lg-vm {
+  border-width: 1px; border-radius: 8px; height: 24px; align-items: stretch;
+}
+html body .ol-lg .ol-lg-vm button {
+  min-width: 42px; height: 24px; min-height: 24px !important;
+  padding: 0 10px; font-size: 11px; line-height: 1;
+}
+html body .ol-lg .ol-lg-vm button + button { border-left-width: 1px; }
+
+/* mỗi nhóm lệnh: 2 dòng
+     dòng 1:  [A]  Mua 56.600 ×300 ▲TP … ▼SL …      (chữ được xuống dòng thoải mái)
+     dòng 2:  [Hiện|Mờ]                  [＋TP][＋SL][✎]                                  */
+html body .ol-lg .ol-lg-r {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "chip t t" "vm vm a";
+  align-items: center;
+  gap: 4px 6px;
+  padding: 5px 6px;
+  min-height: 0;
+  flex-wrap: nowrap;
+}
+html body .ol-lg .ol-lg-r > .ol-lg-vm { grid-area: vm; justify-self: start; }
+html body .ol-lg .ol-lg-r > .ol-lg-t   { grid-area: t; min-width: 0; overflow-wrap: break-word; line-height: 1.4; font-size: 11.5px; }
+html body .ol-lg .ol-lg-r > .ol-lg-a   { grid-area: a; justify-self: end; gap: 4px; }
+html body .ol-lg .ol-lg-r > :not(.ol-lg-vm):not(.ol-lg-t):not(.ol-lg-a) { grid-area: chip; align-self: start; margin-top: 1px; }
+html body .ol-lg .ol-lg-t em { white-space: nowrap; }
+
+/* nút ＋TP ＋SL ✎ nhỏ gọn */
+html body .ol-lg .ol-lg-a button {
+  height: 24px; min-height: 24px !important; padding: 0 8px;
+  font-size: 11px; line-height: 1; border-radius: 6px;
+  display: inline-grid; place-items: center;
+}
+html body .ol-lg .ol-lg-a .ol-lg-e { width: 26px; padding: 0; }
+
+/* nút bật/tắt tự khớp */
+html body .ol-lg .ol-lg-auto { min-height: 24px !important; padding: 0 9px; display: inline-flex; align-items: center; margin-top: 2px; }
+
+/* V2.37 — Phân tích › Vùng giá: 2 thẻ đều nhau, nhãn ngắn một dòng, số to, ghi chú nhỏ bên dưới */
+html body #view .level-grid.lv-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+html body #view .level-grid.lv-two .lv-c{display:flex;flex-direction:column;gap:2px;min-width:0;padding:12px 14px;border-radius:12px}
+html body #view .level-grid.lv-two .lv-c span{margin:0;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+html body #view .level-grid.lv-two .lv-c b{font-size:22px;line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap}
+html body #view .level-grid.lv-two .lv-c small{font-size:11.5px;color:var(--muted,#7a8e98);white-space:nowrap}
+html body #view .level-grid.lv-two .lv-c em{font-style:normal;font-size:12px;font-weight:700;color:var(--text2,#5b7186);white-space:nowrap}
+html body #view .level-grid.lv-two .lv-s{border-left:3px solid var(--brand-line,#14c29a)}
+html body #view .level-grid.lv-two .lv-r{border-left:3px solid #e0a23a}

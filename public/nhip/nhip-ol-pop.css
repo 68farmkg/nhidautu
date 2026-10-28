@@ -1,0 +1,39 @@
+/* NHIP v2.9.1 — POPUP LỆNH TRÊN BIỂU ĐỒ: một kiểu duy nhất, cỡ cố định, gọn, không thanh cuộn.
+   Nạp SAU CÙNG. Trước đây nats.js tự zoom 60–100% mỗi lần vẽ lại nên popup lúc to lúc nhỏ và hiện thanh cuộn.
+   Bố cục: Giá + KL chiếm cả hàng; Take profit | Stop loss nằm cạnh nhau → thấp hơn ~35%. */
+html body .ol-pop{
+  box-sizing:border-box;padding:10px 12px;gap:6px 10px;width:min(380px,calc(100vw - 24px))!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  zoom:1!important;overflow:visible!important;max-height:none!important;
+  font-size:12px}
+html body .ol-pop>.ol-ph,
+html body .ol-pop>.ol-fg:not(.ol-xl-tp):not(.ol-xl-sl),
+html body .ol-pop>.ol-m,
+html body .ol-pop>.ol-pb{grid-column:1/-1}
+html body .ol-pop .ol-ph{min-height:22px}
+html body .ol-pop .ol-ph b{font-size:13px}
+html body .ol-pop .ol-ph button{padding:2px 6px}
+html body .ol-pop .ol-fg{gap:2px}
+html body .ol-pop .ol-fg label{gap:2px;font-size:11px}
+/* ô nhập + nút −/+ thấp hơn */
+html body .ol-pop{--nx-h:32px;--nx-btn:32px}
+html body .ol-pop .ol-st button{font-size:15px!important}
+html body .ol-pop .ol-st input{font-size:14px!important;font-weight:700}
+html body .ol-pop .ol-st input::placeholder{font-size:11px}
+/* thanh chọn nhanh + thanh kéo mỏng */
+html body .ol-pop .nx-seg button{min-height:22px!important;height:22px;font-size:11px!important}
+html body .ol-pop input.nx-rng{height:14px}
+html body .ol-pop input.nx-rng::-webkit-slider-thumb{width:16px;height:16px;margin-top:-6px}
+/* dòng ước tính lãi/lỗ: 1 dòng nhỏ, không phình khung */
+html body .ol-pop .ol-est{display:block;font-size:10.5px;line-height:1.25;white-space:normal}
+html body .ol-pop .ol-m{padding:4px 8px;font-size:11.5px;line-height:1.3}
+html body .ol-pop .ol-pb button{min-height:34px}
+html body .ol-pop .ol-ok{min-height:36px!important;font-size:14px!important}
+/* màn hình thấp (laptop nhỏ): bỏ thanh kéo để popup vẫn nằm gọn, không cuộn */
+@media (max-height:620px){html body .ol-pop input.nx-rng{display:none!important}}
+@media (max-height:480px){html body .ol-pop .nx-seg{display:none!important}}
+/* điện thoại hẹp: TP/SL xếp dọc */
+@media (max-width:360px){
+  html body .ol-pop{grid-template-columns:minmax(0,1fr)}
+  html body .ol-pop>.ol-fg{grid-column:1/-1!important}
+}

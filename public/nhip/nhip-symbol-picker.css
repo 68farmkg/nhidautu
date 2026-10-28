@@ -1,0 +1,104 @@
+/* NHIP · V2.30 — Bộ chọn mã (Biểu đồ + Phân tích). Nền không tối: lớp phía sau trong suốt, chỉ dùng để chạm ra ngoài là đóng. */
+html body .cp-id h1#cp-sym.spk-trg{display:flex;align-items:center;gap:10px;width:fit-content;max-width:100%;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;border-radius:10px}
+h1#cp-sym.spk-trg::after{content:"";flex:0 0 auto;width:.26em;height:.26em;border-right:.07em solid currentColor;border-bottom:.07em solid currentColor;transform:rotate(45deg) translate(-8%,-8%);opacity:.5;transition:transform .15s,opacity .15s}
+h1#cp-sym.spk-trg[aria-expanded="true"]::after{transform:rotate(225deg) translate(-8%,-8%);opacity:.9}
+h1#cp-sym.spk-trg:hover::after{opacity:.9}
+h1#cp-sym.spk-trg:focus-visible{outline:2px solid var(--brand-line,#14c29a);outline-offset:4px}
+
+#spk{position:fixed;inset:0;z-index:95;width:auto;max-width:none;max-height:none}
+#spk[hidden]{display:none}
+#spk .spk-bg{position:absolute;inset:0;background:transparent}
+#spk .spk-box{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;height:min(74dvh,640px);background:var(--surface,#fff);color:var(--text,#173b5d);
+  border:1px solid var(--line2,var(--line,#e0eeef));border-bottom:0;border-radius:22px 22px 0 0;box-shadow:0 -12px 40px #0003;padding:8px 14px 0;animation:spkup .18s ease-out}
+@keyframes spkup{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
+#spk .spk-grip{width:42px;height:4px;border-radius:4px;background:var(--line2,#d6e3e6);margin:2px auto 8px;flex:none}
+#spk .spk-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;flex:none;margin:0 2px 8px}
+#spk .spk-tt{min-width:0;display:flex;flex-direction:column;gap:2px}
+#spk .spk-tt b{font-size:16px;font-weight:800;letter-spacing:.01em}
+#spk .spk-tt span{font-size:12px;color:var(--muted,#71879b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#spk .spk-x{flex:none;width:36px;height:36px;border-radius:12px;border:1px solid var(--line,#e0eeef);background:var(--surface2,#f6fbff);color:var(--text,inherit);font-size:22px;line-height:1;cursor:pointer}
+#spk .spk-sr{flex:none;margin-bottom:8px}
+#spk .spk-sr input{width:100%;min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line2,var(--line,#e0eeef));background:var(--surface2,#f6fbff);color:var(--text,inherit);font:inherit;font-size:16px;box-sizing:border-box;outline:0}
+#spk .spk-sr input:focus{border-color:var(--brand-line,#14c29a);box-shadow:0 0 0 3px var(--brand-soft,#e4f8f2)}
+#spk .spk-list{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;margin:0 -6px;padding:0 6px calc(12px + env(safe-area-inset-bottom,0px))}
+#spk .spk-gh{position:sticky;top:0;z-index:1;padding:6px 8px;font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--muted,#71879b);background:var(--surface,#fff);text-transform:uppercase}
+#spk .spk-it{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:8px 10px;border:0;border-radius:12px;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#spk .spk-it:hover,#spk .spk-it.act{background:var(--surface2,#f1f6f8)}
+#spk .spk-it.on{background:var(--brand-soft,#e4f8f2);color:var(--brand-ink,inherit)}
+#spk .spk-s{flex:0 0 64px;font-size:15px;font-weight:800;letter-spacing:.2px}
+#spk .spk-n{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+#spk .spk-nm{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#spk .spk-n small{font-size:11.5px;color:var(--muted,#71879b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#spk .spk-ck{flex:none;width:7px;height:12px;border-right:2.5px solid currentColor;border-bottom:2.5px solid currentColor;transform:rotate(45deg) translateY(-2px)}
+#spk .spk-empty{padding:28px 12px;text-align:center;font-size:14px;line-height:1.5;color:var(--muted,#71879b)}
+#spk .spk-empty b{color:var(--text,inherit)}
+
+/* Máy tính / màn hình rộng: hộp nhỏ nằm ngay dưới tên mã */
+@media (min-width:901px){
+  #spk .spk-box.pop{right:auto;bottom:auto;height:min(520px,calc(100dvh - 24px));border-radius:16px;border-bottom:1px solid var(--line2,var(--line,#e0eeef));box-shadow:0 18px 50px #173b5d33;padding-top:12px;animation:none}
+  #spk .spk-box.pop .spk-grip{display:none}
+}
+
+/* V2.35 — Trang Giao dịch: khối tên mã giống trang Biểu đồ (mã to + mũi tên, tag sàn, tên công ty · ngành) */
+html body .tp-head .tp-id{gap:4px;min-width:0}
+html body .tp-symbtn{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;width:fit-content;max-width:100%;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;border-radius:10px;color:var(--text,inherit)}
+html body .tp-symbtn b{font-size:34px;line-height:1.05;font-weight:800;letter-spacing:-.8px}
+html body .tp-symbtn::after{content:"";flex:0 0 auto;width:.26em;height:.26em;font-size:34px;border-right:.07em solid currentColor;border-bottom:.07em solid currentColor;transform:rotate(45deg) translate(-8%,-8%);opacity:.5;transition:transform .15s,opacity .15s}
+html body .tp-symbtn[aria-expanded="true"]::after{transform:rotate(225deg) translate(-8%,-8%);opacity:.9}
+html body .tp-symbtn:hover::after{opacity:.9}
+html body .tp-symbtn:focus-visible{outline:2px solid var(--brand-line,#14c29a);outline-offset:4px}
+@media(max-width:540px){html body .tp-symbtn b,html body .tp-symbtn::after{font-size:30px}}
+
+/* V2.37 — Đầu trang Giao dịch gọn: [MÃ ⌄ · tag sàn] / [Tên công ty · Ngành] một dòng; giá căn phải, cùng hàng với mã */
+html body .tp-head .tp-id{display:flex;flex-direction:column;gap:3px;min-width:0;align-self:start}
+html body .tp-head .tp-idtop{display:flex;align-items:center;gap:10px;min-width:0}
+html body .tp-head .tp-idtop .tp-ex{flex:none;display:inline-flex;align-items:center}
+html body .tp-head .tp-idtop .tp-ex .ex-tag{margin:0;height:22px;padding:0 8px;font-size:11.5px}
+html body .tp-head small#trade-co{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;line-height:1.3;color:var(--text2,#5b7186)}
+html body .tp-head small#trade-co span{display:inline;font-weight:700;color:var(--text,inherit)}
+html body .tp-head small#trade-co em{display:inline;font-style:normal}
+html body .tp-head small#trade-co em::before{content:" · ";color:var(--text2,#5b7186)}
+@media(max-width:900px){
+  html body .tp-head{gap:8px 12px;padding:12px}
+  html body .tp-head .tp-px{align-self:start;align-items:flex-end;text-align:right;min-width:0}
+  html body .tp-head .tp-px b{font-size:28px}
+  html body .tp-head .tp-px span{font-size:13px;white-space:nowrap}
+  html body .tp-head .tp-id{grid-column:1/2}
+  html body .tp-head small#trade-co{grid-column:1/-1}
+}
+@media(max-width:420px){
+  html body .tp-symbtn b,html body .tp-symbtn::after{font-size:28px}
+  html body .tp-head .tp-px b{font-size:25px}
+  html body .tp-head .tp-px span{font-size:12px}
+}
+
+/* V2.39 — Biểu đồ + Phân tích: khối đầu trang gọn và dễ đọc
+   Hàng 1: MÃ ⌄ · tag sàn · ngành (một hàng) | Hàng 2: giá + thay đổi | Hàng 3: lưới Mở / Cao / Thấp / KL (chữ đậm, rõ) */
+html body .cp-top>.cp-id{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:12px;row-gap:4px;align-items:center;align-content:start;min-width:0}
+html body .cp-top>.cp-id .eyebrow{grid-column:1/-1}
+html body .cp-top>.cp-id h1#cp-sym{grid-column:1;margin:0!important;font-size:34px!important;line-height:1.05}
+html body .cp-top>.cp-id #cp-sub{grid-column:2;display:flex;flex-direction:row;align-items:center;gap:8px;min-width:0;margin:0;font-size:13px}
+html body .cp-top>.cp-id #cp-sub .cx-ex{flex:none;display:inline-flex;align-items:center;line-height:1}
+html body .cp-top>.cp-id #cp-sub .ex-tag{margin:0!important}
+html body .cp-top>.cp-id #cp-sub .cx-sector{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.25;color:var(--text2,#5b7186);font-weight:600}
+html body .cp-top>.cp-id #cp-px{grid-column:1/-1;display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 12px;margin:2px 0 0}
+html body .cp-top>.cp-id #cp-px .big{font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums}
+html body .cp-top>.cp-id #cp-px>span{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+html body .cp-top>.cp-id #cp-ohlc{grid-column:1/-1;margin-top:6px;max-width:620px}
+html body .cp-ohlc .oh-cap{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin:0 0 6px;font-size:12.5px;font-weight:600;line-height:1.35;color:var(--text2,#4d6376)}
+html body .cp-ohlc .oh-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+html body .cp-ohlc .oh{min-width:0;padding:6px 9px;border:1px solid var(--line,#e0eeef);border-radius:10px;background:var(--surface2,#f6fbff)}
+html body .cp-ohlc .oh span{display:block;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--text2,#4d6376)}
+html body .cp-ohlc .oh b{display:block;font-size:15px;line-height:1.3;font-weight:800;color:var(--text,#173b5d);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html body .cp-ohlc .oh b.up{color:var(--up,#0e9f6e)}
+html body .cp-ohlc .oh b.dn{color:var(--dn,#e0505a)}
+@media(max-width:700px){
+  /* cột phải dành chỗ cho cụm nút Mua/Bán/Theo dõi/Hỏi AI đang nằm góc trên-phải */
+  html body .cp-top>.cp-id{grid-template-columns:auto minmax(0,1fr) 176px;min-height:84px;column-gap:10px}
+  html body .cp-top>.cp-id #cp-sub{grid-column:2}
+  html body .cp-top>.cp-id #cp-px{grid-column:1/3;margin-top:0}
+  html body .cp-top>.cp-id #cp-ohlc{grid-column:1/-1;margin-top:4px;max-width:none}
+  html body .cp-top>.cp-id h1#cp-sym{font-size:30px!important}
+  html body .cp-top>.cp-id #cp-px .big{font-size:28px}
+  html body .cp-top>.cp-id #cp-px>span{font-size:13px}
+}

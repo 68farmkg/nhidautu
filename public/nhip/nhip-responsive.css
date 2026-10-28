@@ -1,0 +1,50 @@
+/* NHIP Responsive UI hardening — appended layer; preserves existing app logic */
+:root{--ui-gap:clamp(8px,1.1vw,16px);--ui-radius:clamp(10px,1vw,16px);}
+*,*::before,*::after{box-sizing:border-box;}
+html{width:100%;max-width:100%;overflow-x:clip;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+body{width:100%;max-width:100%;min-width:0;overflow-x:clip;overflow-wrap:anywhere;}
+img,svg,canvas,video,iframe{max-width:100%;}
+button,input,select,textarea{font:inherit;max-width:100%;}
+button{line-height:1.35;white-space:normal;overflow-wrap:anywhere;}
+input,select,textarea{min-width:0;}
+#view,.main,.shell,.sidebar,.topbar,.panel,.index-card,.content-grid,.dashboard-grid,.analysis-grid,.analysis-form,.tr-grid,.tr-risk-grid,.acc-grid,.aix-pagegrid,.an-grid,.an-mtf-grid,.fl-grid,.focus-grid,.mc-grid,.ms-grid,.nd-toolgrid,.nw-grid,.st-grid,.thm-grid,.pt-form,.pt-fields,.od-fields{min-width:0;}
+#view{width:100%;max-width:100%;}
+/* Flex/grid children must be allowed to shrink instead of pushing past their borders. */
+#view :is(.panel,.card,.row,.form-row,.field,.form-group,.panelhead,.toolbar,.top-actions,.watch-row,.acc-row,.nd-row,.tr-row,.wl-row,.cu-row,.rs-row,.pf-hrow,.pt-b-row){min-width:0;}
+#view :is(.content-grid,.dashboard-grid,.analysis-grid,.index-grid,.acc-grid,.al-grid,.an-grid,.an-bt-grid,.an-mtf-grid,.focus-grid,.level-grid,.mc-grid,.ms-grid,.nd-toolgrid,.nw-grid,.st-grid,.thm-grid,.tr-grid,.tr-risk-grid,.fl-grid){grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));}
+#view :is(h1,h2,h3,h4,p,label,small,strong,span,a,td,th,legend){overflow-wrap:anywhere;word-break:normal;}
+#view h1{font-size:clamp(1.25rem,2.2vw,2rem);line-height:1.2;}
+#view h2{font-size:clamp(1.05rem,1.5vw,1.35rem);line-height:1.3;}
+#view :is(.panel,.index-card,.card,.form-card){min-width:0;max-width:100%;}
+#view :is(input,select,textarea){width:auto;min-width:0;max-width:100%;}
+#view input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),#view select,#view textarea{min-height:38px;}
+#view textarea{width:100%;resize:vertical;}
+#view :is(.table-wrap,.db-table-wrap,.an-bt-table-wrap,.table-responsive,.orders-table-wrap,.watch-table-wrap){width:100%;max-width:100%;overflow-x:auto;overscroll-behavior-inline:contain;-webkit-overflow-scrolling:touch;}
+#view table{max-width:100%;border-collapse:separate;border-spacing:0;}
+#view :is(.table-wrap,.db-table-wrap,.an-bt-table-wrap,.table-responsive,.orders-table-wrap,.watch-table-wrap) table{min-width:620px;}
+#view th,#view td{overflow-wrap:anywhere;}
+/* Dialogs/popups: fit the viewport, keep the body scrollable, and never clip controls. */
+:is(.modal,.popup,.dialog,.nats-modal,.acc-modal,[role=dialog]){max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);}
+:is(.modal,.popup,.dialog,.nats-modal,.acc-modal,[role=dialog]) :is(.modal-content,.popup-content,.dialog-content,.modal-body,.body,.content){min-width:0;max-width:100%;max-height:calc(100dvh - 100px);overflow:auto;overscroll-behavior:contain;}
+:where(.modal-backdrop,.popup-backdrop,.overlay,[aria-modal=true]){padding:clamp(8px,2vw,24px);}
+:where(button,a,input,select,textarea,[tabindex]):focus-visible{outline:2px solid #268fda;outline-offset:2px;}
+@media(min-width:1200px){.shell{grid-template-columns:218px minmax(0,1fr);}.main{min-width:0;padding-inline:clamp(18px,2vw,32px);}#view .content-grid{grid-template-columns:minmax(0,1.7fr) minmax(280px,1fr);}}
+@media(max-width:1050px){.shell{grid-template-columns:175px minmax(0,1fr);} .main{min-width:0;}#view .content-grid{grid-template-columns:minmax(0,1fr);} }
+@media(max-width:720px){
+ .topbar{gap:8px;padding-inline:12px;min-width:0;}.brand{min-width:0;flex-shrink:1}.brandname{font-size:clamp(16px,4.6vw,22px);letter-spacing:.2px}.nhip-mark{width:30px;flex:0 0 30px}.top-actions{gap:6px;min-width:0}.top-actions .btn{font-size:11px;padding:8px;}
+ .main{padding:14px 10px 12px;min-width:0;width:100%;}.panel{padding:clamp(10px,3vw,14px);border-radius:12px;}
+ #view .panelhead{flex-wrap:wrap;align-items:flex-start;}#view .toolbar{flex-wrap:wrap;max-width:100%;}#view .toolbar>*{min-width:0;}
+ #view .index-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}#view .index-card{padding:10px;}
+ #view .index-card>strong{font-size:clamp(16px,4.8vw,21px);letter-spacing:-.3px;overflow-wrap:anywhere;}
+ #view :is(.content-grid,.dashboard-grid,.analysis-grid,.acc-grid,.al-grid,.an-grid,.an-bt-grid,.an-mtf-grid,.focus-grid,.level-grid,.mc-grid,.ms-grid,.nd-toolgrid,.nw-grid,.st-grid,.thm-grid,.tr-grid,.tr-risk-grid,.fl-grid){grid-template-columns:minmax(0,1fr);}
+ #view :is(.form-row,.field-row,.row,.toolbar,.actions,.button-row){flex-wrap:wrap;}
+ #view :is(input,select,textarea){font-size:max(14px,1em);} /* avoids mobile browser zoom and preserves readability */
+ #view :is(.btn,button){min-height:36px;}
+ #view :is(.table-wrap,.db-table-wrap,.an-bt-table-wrap,.table-responsive,.orders-table-wrap,.watch-table-wrap){margin-inline:0;width:100%;}
+ #view :is(.modal,.popup,.dialog,.nats-modal,.acc-modal,[role=dialog]){width:calc(100vw - 16px)!important;max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);margin:auto;}
+ #view :is(.modal,.popup,.dialog,.nats-modal,.acc-modal,[role=dialog]) :is(.modal-content,.popup-content,.dialog-content,.modal-body,.body,.content){max-height:calc(100dvh - 100px);}
+ .ai-widget{right:10px;bottom:max(10px,env(safe-area-inset-bottom));}.ai-panel{right:0;width:min(350px,calc(100vw - 20px));max-height:calc(100dvh - 100px);}
+ footer{min-width:0;}
+}
+@media(max-width:380px){.main{padding-inline:7px}.topbar{padding-inline:8px}.brand{gap:5px}.brandname{font-size:15px}.top-actions .btn{padding:7px 6px;font-size:10px}#view .index-grid{gap:6px}#view .index-card{padding:8px}#view .panel{padding:9px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}}

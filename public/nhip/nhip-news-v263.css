@@ -1,0 +1,52 @@
+/* v2.63 — Tin tức: 2 nút (Tin theo mã theo dõi | Tin đã lưu) gộp trong bảng lọc */
+#nf .nwp-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+#nf .nwp-tab{display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:40px;padding:6px 10px;border:1px solid var(--line2,#d3dbe3);border-radius:12px;background:transparent;color:var(--text,#253442);font:600 12.5px/1.25 inherit;text-align:left;cursor:pointer;min-width:0}
+#nf .nwp-tab span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis}
+#nf .nwp-tab b{flex:none;min-width:22px;padding:1px 7px;border-radius:999px;background:var(--chip,#eaeff4);font-size:12px;text-align:center}
+#nf .nwp-tab.on{background:var(--house,#2f6df6);border-color:var(--house,#2f6df6);color:#fff}
+#nf .nwp-tab.on b{background:#ffffff33;color:#fff}
+#nf .nwp{margin-top:8px;min-width:0}#nf .nwp[hidden]{display:none}
+.nwp-h{font-size:12px;color:var(--text3,#5b6c7d);margin:0 0 6px;line-height:1.45}
+.nwp-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
+.nwp-c,.nwp-gm button{height:28px;padding:0 11px;border-radius:999px;border:1px solid var(--line2,#d3dbe3);background:transparent;color:var(--text2,#3d5062);font:600 12px/1 inherit;cursor:pointer;white-space:nowrap}
+.nwp-c small{font-weight:500;opacity:.75}
+.nwp-c.on{background:var(--brand-soft,var(--sel,#e8f3ee));color:var(--brand-ink,var(--text,#253442));border-color:var(--house,#2f6df6)}
+.nwp-c.z{opacity:.55}.nwp-c.add{border-style:dashed}
+.nwp-gm{font-size:12px;color:var(--text3,#5b6c7d);display:flex;gap:6px;align-items:center;margin:0 0 6px;flex-wrap:wrap}
+.nwp-gm button{height:24px}
+.nwp-tool{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 6px}
+.nwp-tool input,.nwp-tool select{height:32px;min-width:0;border:1px solid var(--line2,#d3dbe3);border-radius:10px;background:transparent;color:inherit;padding:0 8px;font:inherit;font-size:12.5px}
+.nwp-tool input{flex:1 1 140px}
+.nwp-l{max-height:340px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;border-top:1px solid var(--line,#e3e8ed)}
+.nwp-row{display:flex;align-items:flex-start;gap:6px;padding:7px 2px;border-bottom:1px solid var(--line,#e3e8ed)}
+.nwp-row.pin{background:rgba(47,109,246,.06);border-radius:8px}
+.nwp-row.rd .nwp-tt{opacity:.7}
+.nwp-t{flex:1 1 auto;min-width:0;display:block;border:0;background:none;padding:0;margin:0;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.nwp-tt{display:block;font-weight:600;font-size:13px;line-height:1.35;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.nwp-t:hover .nwp-tt{text-decoration:underline}
+.nwp-m,.nwp-n{display:block;font-size:11.5px;color:var(--text3,#5b6c7d);margin-top:2px}
+.nwp-n{font-style:italic}
+.nwp-m i,.nwp-tg i{font-style:normal;font-weight:700;font-size:11px;padding:0 6px;border-radius:6px;background:var(--chip,#eaeff4);color:var(--text2,#3d5062)}
+.nwp-g{color:var(--house,#2f6df6)}.nwp-hi{color:#d64545}
+.nwp-tg{display:flex;gap:3px;flex:none}
+.nwp-a{display:flex;gap:2px;flex:none}
+.nwp-b{width:30px;height:30px;border:0;border-radius:8px;background:transparent;color:var(--text3,#5b6c7d);font-size:15px;cursor:pointer;line-height:1}
+.nwp-b:hover{background:var(--chip,#eaeff4)}.nwp-b.on{color:#e8a317}.nwp-b.del:hover{color:#d64545}
+.nwp-pr{width:9px;height:9px;border-radius:50%;flex:none;margin-top:6px;border:1.5px solid var(--line2,#b8c3cf)}
+.nwp-pr.p3{background:#e5484d;border-color:#e5484d}.nwp-pr.p2{background:#e8a317;border-color:#e8a317}.nwp-pr.p1{background:#8795ab;border-color:#8795ab}
+.nwp-e{padding:14px 4px;margin:0;font-size:12.5px}
+.nwp-f{font-size:11px;color:var(--text3,#5b6c7d);margin-top:6px}
+.nwp-md{position:fixed;inset:0;z-index:9999;background:#0008;display:flex;align-items:center;justify-content:center;padding:16px}
+.nwp-box{background:var(--surface,#fff);color:var(--text,#253442);border:1px solid var(--line,#e3e8ed);border-radius:14px;padding:16px;width:100%;max-width:420px;display:grid;gap:10px}
+.nwp-box label{display:grid;gap:4px;font-size:12px;color:var(--text3,#5b6c7d)}
+.nwp-box input,.nwp-box select,.nwp-box textarea{border:1px solid var(--line2,#d3dbe3);border-radius:10px;background:transparent;color:inherit;padding:8px 10px;font:inherit;font-size:14px;min-width:0}
+.nwp-ba{display:flex;gap:8px;justify-content:flex-end}
+@media(max-width:760px){.nwp-l{max-height:300px}.nwp-tg{display:none}}
+
+/* v2.63 — Cảnh báo: 2 nút gom góc trên-phải, đoạn mô tả nằm riêng bên dưới (không bao giờ chạm nhau) */
+html body #view .view-h.vh-al{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:flex-start!important;justify-content:space-between;gap:10px;margin-bottom:6px!important}
+html body #view .view-h.vh-al>.al-ht{flex:1 1 auto;min-width:0}
+html body #view .view-h.vh-al>.al-btns{display:flex!important;flex-direction:column;gap:6px;flex:0 0 auto;width:auto!important;margin:0!important}
+html body #view .view-h.vh-al .al-btns .btn{width:100%!important;height:34px;min-height:34px;padding:0 12px;font-size:13px;line-height:1;white-space:nowrap;margin:0!important;flex:none}
+html body #view p.al-sub{display:block;margin:2px 0 12px;font-size:12.5px;line-height:1.45;clear:both}
+@media(min-width:901px){html body #view .view-h.vh-al>.al-btns{flex-direction:row}html body #view .view-h.vh-al .al-btns .btn{width:auto!important}}

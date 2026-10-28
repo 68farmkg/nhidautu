@@ -1,0 +1,7 @@
+/* NHIP · V2.54 — Tin tức: chữ trong các ô nhãn (Doanh nghiệp, Vĩ mô, Kết quả kinh doanh…, mã VIC…) luôn CANH GIỮA ô, cả ngang lẫn dọc */
+.nw-tags{align-items:stretch}
+.nw-tags .nw-tag,.nw-tags .nw-sym,.nw-r .nw-tag,.nw-r .nw-sym,.nw-side .nw-tag,.nw-side .nw-sym{
+  display:inline-flex;align-items:center;justify-content:center;gap:4px;
+  text-align:center;line-height:1.2;min-height:32px;box-sizing:border-box;
+  padding-top:0;padding-bottom:0;vertical-align:middle}
+.nw-tags .nw-sym small{line-height:1.2;margin-left:0}

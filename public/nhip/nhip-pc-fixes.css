@@ -1,0 +1,49 @@
+/* NHIP v2.9.2 — (1) Thanh công cụ vẽ: thanh NGANG ngay dưới hàng "Nến đặc … Vẽ", thanh kéo ngang đẹp khi quá dài.
+                 (2) Nút "Đặt chờ mua" trong phiếu lệnh cao bằng nút "Mua" của lệnh thường. Nạp SAU CÙNG. */
+
+/* ---- (1) Thanh vẽ ngang, mọi biểu đồ trên PC ---- */
+@media (min-width:701px){
+  html body .cx-rail,html body .cx-rail.open{flex-direction:row;align-items:center;align-self:stretch;gap:2px;
+    padding:3px 6px;margin:6px 0 2px;border-radius:12px;max-height:none;width:100%;box-sizing:border-box;
+    overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;
+    scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--brand,#14c29a) 55%,transparent) transparent}
+  html body .cx-rail:not(.open){display:none}
+  html body .cx-rail button{flex:0 0 auto;width:32px;height:32px}
+  html body .cx-rail .cx-rsep{flex:0 0 1px;width:1px;height:20px;margin:0 4px;align-self:center}
+  /* thanh kéo ngang: mảnh, bo tròn, hiện rõ khi rê chuột */
+  html body .cx-rail::-webkit-scrollbar{height:6px}
+  html body .cx-rail::-webkit-scrollbar-track{background:transparent;margin:0 10px}
+  html body .cx-rail::-webkit-scrollbar-thumb{border-radius:999px;border:1px solid transparent;background-clip:padding-box;
+    background-color:color-mix(in srgb,var(--text2,#5f6f82) 35%,transparent);transition:background-color .15s}
+  html body .cx-rail:hover::-webkit-scrollbar-thumb{background-color:color-mix(in srgb,var(--brand,#14c29a) 70%,transparent)}
+  html body .cx-rail::-webkit-scrollbar-thumb:hover{background-color:var(--brand,#14c29a)}
+  /* thanh đã chuyển ra ngoài khung biểu đồ → trừ thêm chiều cao để biểu đồ vẫn vừa màn hình */
+  html body .cp .cx-rail.open~.cx-stage .cx-chart.kline-chart.kc-pro{height:clamp(400px,calc(100dvh - 350px),800px)}
+  html body .cp-main.is-full .cx-rail.open~.cx-stage .cx-chart.kline-chart.kc-pro{height:auto}
+}
+/* chế độ Đa khung: ẩn thanh vẽ cùng các phần khác */
+html body .cp-main.is-multi .cx-rail{display:none!important}
+
+/* ---- (2) Nút "Đặt … · MÃ" (lệnh chờ) = cỡ nút "Mua/Bán MÃ" (lệnh thường) ---- */
+html body .tp-ticket .od-go{min-height:50px!important;height:50px;padding:0 14px!important;font-size:16px!important;border-radius:12px;display:flex;align-items:center;justify-content:center;white-space:nowrap;width:100%;box-sizing:border-box}
+@media (min-width:901px){
+  html body .tp-ticket .od-go{min-height:38px!important;height:38px;padding:0 14px!important;font-size:14px!important;border-radius:10px}
+}
+
+/* NHỊP v2.44 — (1) Mua/Bán cao bằng Theo dõi/Hỏi AI trên Phân tích & Biểu đồ; (2) tab Cài đặt trên PC không tràn khung */
+html body .cp-top .cp-actions{--cp-bh:38px}
+@media(max-width:900px){html body .cp-top .cp-actions{--cp-bh:34px}}
+html body .cp-top .cp-actions .tp-bs a,
+html body .cp-top .cp-actions .btn{box-sizing:border-box;height:var(--cp-bh)!important;min-height:var(--cp-bh)!important;padding-top:0!important;padding-bottom:0!important;line-height:1;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;font-size:13px;font-weight:800}
+html body .cp-top .cp-actions .tp-bs a{display:flex;box-shadow:none}
+@media(min-width:801px){
+  html[data-skin] body #view .st-grid>.st-nav{flex-wrap:wrap!important;overflow:visible!important;height:auto!important;row-gap:4px!important}
+  html[data-skin] body #view .st-grid>.st-nav button{flex:0 0 auto!important;width:auto!important;height:auto!important;min-height:38px!important;min-width:max-content!important;padding:6px 12px!important;display:inline-flex!important;align-items:center;gap:6px;white-space:nowrap!important;line-height:1.2}
+  html body .st-nav button .st-sc{margin-left:0}
+}
+
+/* NHỊP v2.63 — PC (Biểu đồ & Phân tích): cụm Mua/Bán rộng đúng bằng cụm Theo dõi + Hỏi AI nằm ngay dưới
+   (trước đây cố định 230px nên lệch). contain:inline-size để Mua/Bán không tự ảnh hưởng bề rộng 2 cột. */
+@media(min-width:1101px){
+  html body .cp:not(.cp-embed)>.cp-top .cp-actions .tp-bs{grid-column:2/4!important;justify-self:stretch!important;width:auto!important;min-width:0!important;contain:inline-size}
+}

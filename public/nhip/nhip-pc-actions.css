@@ -1,0 +1,18 @@
+/* NHIP v2.67 — CHỈ PC (≥801px), Biểu đồ + Phân tích. Không đụng điện thoại (≤800px) và biểu đồ nhúng trong Giao dịch.
+   Quy tắc chung: nút Mua/Bán luôn đứng ngang hàng (cùng mép trên) với dòng chữ CAO NHẤT của khối đầu trang.
+   - Màn hình rộng (≥1101px): chữ cao nhất là hàng MỞ · CAO · THẤP · KL → Mua/Bán ngang hàng với hàng đó;
+     Theo dõi + Hỏi AI xuống cùng hàng ô nhập mã.
+   - Màn hình thu hẹp (801–1100px): chữ cao nhất là "PHÂN TÍCH KỸ THUẬT / BIỂU ĐỒ KỸ THUẬT" → cụm nút (Mua/Bán trên, Theo dõi/Hỏi AI dưới)
+     lên sát mép trên, ngang hàng với dòng đó. */
+@media(min-width:801px){
+  html body .cp:not(.cp-embed)>.cp-top>.cp-actions{align-self:start!important}
+}
+@media(min-width:1101px){
+  html body .cp:not(.cp-embed)>.cp-top{grid-template-columns:minmax(0,1fr) auto auto!important;align-items:center!important;gap:10px 12px!important}
+  html body .cp:not(.cp-embed)>.cp-top>.cp-id{grid-column:1!important;grid-row:1!important;min-width:0}
+  html body .cp:not(.cp-embed)>.cp-top>.cp-search{grid-column:1!important;grid-row:2!important;min-width:0}
+  html body .cp:not(.cp-embed)>.cp-top>.cp-actions{display:contents!important}
+  html body .cp:not(.cp-embed)>.cp-top .cp-actions .tp-bs{grid-column:2/4!important;grid-row:1!important;align-self:start!important;justify-self:stretch!important;width:auto!important;min-width:0!important;contain:inline-size}
+  html body .cp:not(.cp-embed)>.cp-top .cp-actions #aw{grid-column:2!important;grid-row:2!important;width:auto!important}
+  html body .cp:not(.cp-embed)>.cp-top .cp-actions #ak{grid-column:3!important;grid-row:2!important;width:auto!important}
+}

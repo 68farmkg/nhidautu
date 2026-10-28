@@ -1,0 +1,83 @@
+/* NHỊP · V2.2 — 3 nhà (HOSE · HNX · UPCoM): thanh chọn nhà + màu nhận diện theo nhà */
+html[data-house="HOSE"]{--house:#2f6df6;--house-soft:rgba(47,109,246,.12)}
+html[data-house="HNX"]{--house:#7c4dff;--house-soft:rgba(124,77,255,.12)}
+html[data-house="UPCOM"]{--house:#ea6a1f;--house-soft:rgba(234,106,31,.13)}
+.nh-strip{position:sticky;top:60px;z-index:40;display:flex;align-items:center;gap:14px;padding:6px 16px;background:var(--surface,#fff);border-bottom:2px solid var(--house,#2f6df6);min-width:0}
+.nh-tabs{display:flex;gap:6px;flex:0 0 auto;min-width:0}
+.nh-t{appearance:none;border:1px solid var(--line,#e0eeef);background:var(--surface2,#f6fbff);color:var(--text,#173b5d);border-radius:10px;padding:5px 14px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;cursor:pointer;min-height:40px;font:inherit;min-width:0}
+.nh-t b{font-size:14px;font-weight:800;letter-spacing:.2px}
+.nh-t small{font-size:11px;opacity:.75;white-space:nowrap}
+.nh-t.nh-HOSE{--hc:#2f6df6}.nh-t.nh-HNX{--hc:#7c4dff}.nh-t.nh-UPCOM{--hc:#ea6a1f}
+.nh-t:hover{border-color:var(--hc)}
+.nh-t.on{background:var(--hc);border-color:var(--hc);color:#fff}
+.nh-t.on small{opacity:.9}
+.nh-note{font-size:12.5px;color:var(--muted,#71879b);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nh-note b{color:var(--house)}
+html[data-theme="dark"] .nh-strip{background:#121f29}
+/* Thanh 3 sàn cũ trong trang Giao dịch / Lệnh chờ: nay do thanh nhà chung điều khiển */
+#tp-ex3,.od-xf{display:none!important}
+.view-h .eyebrow::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--house,#2f6df6);margin-right:6px;vertical-align:1px}
+@media(max-width:1100px){.nh-note{display:none}}
+@media(max-width:900px){.nh-strip{top:54px;padding:6px 10px}.nh-tabs{flex:1 1 auto}.nh-t{flex:1 1 0;padding:4px 6px}.nh-t small{display:none}.nh-t{min-height:40px}.nh-t b{font-size:15px}}
+@media(max-width:380px){.nh-strip{padding:5px 6px}.nh-tabs{gap:4px}}
+
+/* NHỊP · V2.3 — Danh mục → Giao dịch theo sàn (nối tới bảng đặt lệnh của sàn) + Tin đã lưu theo sàn */
+.pfx-gate{border-left:4px solid var(--house,#2f6df6)}
+.pfx-lead{margin:6px 0 12px;font-size:13.5px;line-height:1.55}
+.pfx-lead b{color:var(--house,#2f6df6)}
+.pfx-q{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.pfx-q .fld2{flex:1 1 170px;max-width:260px;margin:0;min-width:0}
+.pfx-q .fld2 input{text-transform:uppercase}
+.pfx-btns{display:flex;gap:8px;flex:0 0 auto}
+.pfx-btns .btn{min-width:88px;min-height:42px;border:0;color:#fff;font-weight:800}
+.pfx-btns .pfx-buy{background:var(--up,#16bd8c)}
+.pfx-btns .pfx-sell{background:var(--down,#ee7580)}
+.pfx-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0 2px}
+.pfx-gate .row{margin-top:10px}
+.pfx-led summary{cursor:pointer;list-style:none}
+.pfx-led summary::-webkit-details-marker{display:none}
+.pfx-led summary::after{content:"▾";float:right;opacity:.6}
+.pfx-led details[open] summary::after{content:"▴"}
+.pfx-led form{margin-top:12px}
+.pfx-h{display:inline-block;padding:1px 7px;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:.2px;color:#fff;vertical-align:1px}
+.pfx-HOSE{background:#2f6df6}.pfx-HNX{background:#7c4dff}.pfx-UPCOM{background:#ea6a1f}
+.pfx-f{flex-wrap:wrap;margin:6px 0 10px}
+.pfx-f button i{font-style:normal;font-size:11px;opacity:.7;margin-left:3px}
+.pfx-tbl td:last-child,.pfx-tbl th:last-child{text-align:right;white-space:nowrap}
+.pfx-bs{display:inline-flex;gap:5px}
+.pfx-m,.pfx-s{min-height:30px;min-width:46px;padding:0 10px;border:0;border-radius:8px;color:#fff;font:700 12px inherit;cursor:pointer}
+.pfx-m{background:var(--up,#16bd8c)}.pfx-s{background:var(--down,#ee7580)}
+.pfx-m:active,.pfx-s:active{filter:brightness(.92)}
+@media(max-width:560px){.pfx-q .fld2{max-width:none;flex:1 1 100%}.pfx-btns{width:100%}.pfx-btns .btn{flex:1}.pfx-tbl{min-width:640px}}
+
+/* v2.23 — nhãn phạm vi trong Cài đặt: "Chung" (cả 3 sàn) hoặc tên sàn */
+.st-nav button .st-sc{display:inline-block;margin-left:8px;padding:1px 7px;border-radius:999px;font-size:10.5px;font-weight:700;line-height:16px;vertical-align:middle;background:rgba(120,130,140,.16);color:var(--muted,#667)}
+.st-nav button .st-sc.ex{background:color-mix(in srgb,var(--house,#2f6df6) 16%,transparent);color:var(--house,#2f6df6)}
+.st-scope{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;margin:0 0 12px;padding:9px 12px;border-radius:10px;border:1px solid var(--line,#dde3e8);font-size:13px;line-height:1.45}
+.st-scope b{white-space:nowrap}
+.st-scope.sh{background:rgba(120,130,140,.08)}
+.st-scope.ex{background:color-mix(in srgb,var(--house,#2f6df6) 9%,transparent);border-color:color-mix(in srgb,var(--house,#2f6df6) 35%,transparent)}
+.st-scope.ex b{color:var(--house,#2f6df6)}
+@media(max-width:800px){.st-nav button .st-sc{display:none}}
+
+/* V2.29 — Xuất/nhập khách hàng: bố cục theo sàn đang đứng */
+.io-panel .io-intro{margin:6px 0 12px;font-size:12px;line-height:1.55}
+.io-box{border:1px solid var(--line,#e0eeef);border-radius:14px;padding:12px;margin-top:10px;background:var(--surface2,rgba(127,145,166,.045))}
+.io-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.io-head h3{margin:0;font-size:14px}
+.io-count{font-size:12px;color:var(--muted,#71879b);font-weight:700;white-space:nowrap}
+.io-list{max-height:240px;overflow:auto;display:flex;flex-direction:column;gap:6px;-webkit-overflow-scrolling:touch}
+.io-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line,#e0eeef);border-radius:10px;background:var(--surface,#fff);cursor:pointer;min-height:48px}
+.io-row:has(input:checked){border-color:var(--green,#0eb889);background:var(--mint,#eafaf4)}
+.io-row input{width:20px;height:20px;flex:0 0 auto;margin:0;accent-color:var(--green,#0eb889)}
+.io-nm{display:flex;flex-direction:column;min-width:0}
+.io-nm b{font-size:14px;overflow-wrap:anywhere}
+.io-nm small{font-size:12px;color:var(--muted,#71879b)}
+.io-empty{padding:14px 4px;margin:0;text-align:center;font-size:13px}
+.io-tools{display:flex;gap:8px;margin:10px 0}
+.io-tools .btn{flex:1}
+.io-wide{width:100%;padding:13px;font-size:14px}
+.io-wide:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.io-file{margin:0 0 10px}
+.io-file input{width:100%}
+.io-status{margin:12px 2px 0;font-size:12px}

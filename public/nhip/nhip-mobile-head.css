@@ -1,0 +1,39 @@
+/* NHIP v2.65 — CHỈ ĐIỆN THOẠI (≤800px; biểu đồ nhúng trong Giao dịch ≤900px).
+   Mọi luật đầu trang nằm trong @media(max-width:800px) VÀ chỉ chạy khi khối #mh-head đã dựng (.cp.mh-on) → PC không đổi. */
+
+/* Khối đầu trang mới: luôn ẩn trên PC */
+.mh-head{display:none!important}
+
+@media(max-width:800px){
+  html body .cp.mh-on>.mh-head{display:grid!important;margin:0 0 10px}
+
+  /* Khối cũ (BIỂU ĐỒ KỸ THUẬT / mã / giá / Mở-Cao-Thấp / nhãn trạng thái cạnh giá) được thay bằng #mh-head */
+  html body .cp.mh-on>.cp-top>.cp-id{display:none!important}
+
+  /* Hàng công cụ còn lại: [ô nhập mã][Xem][Theo dõi][Hỏi AI] một hàng, giống tab Biểu đồ trong Giao dịch; Mua/Bán đã nằm ở đầu trang */
+  html body .cp.mh-on>.cp-top{display:flex!important;flex-wrap:nowrap!important;align-items:center!important;gap:6px!important;margin:0 0 10px!important;padding:0!important;background:none!important;border:0!important;position:static!important}
+  html body .cp.mh-on>.cp-top>.cp-search{display:flex!important;flex:1 1 0!important;min-width:0!important;gap:4px!important;grid-column:auto!important;grid-row:auto!important}
+  html body .cp.mh-on>.cp-top>.cp-search input{flex:1 1 0;min-width:0;width:0;min-height:38px;padding:0 8px;font-size:14px}
+  html body .cp.mh-on>.cp-top>.cp-search .btn{flex:none;min-height:38px;height:38px;padding:0 10px;font-size:13px}
+  html body .cp.mh-on>.cp-top>.cp-actions{display:flex!important;flex:0 0 auto!important;width:auto!important;min-width:0!important;gap:4px!important;position:static!important;grid-column:auto!important;grid-row:auto!important;justify-self:auto!important;align-self:center!important}
+  html body .cp.mh-on>.cp-top .cp-actions .tp-bs{display:none!important}
+  html body .cp.mh-on>.cp-top .cp-actions .btn{flex:none!important;width:auto!important;min-width:0!important;height:38px!important;min-height:38px!important;padding:4px 8px!important;font-size:12px!important;white-space:nowrap}
+  html body .cp.mh-on>.cp-top .cp-actions #aw{width:98px!important;overflow:hidden}
+  html body .cp.mh-on>.cp-top .cp-actions #ak{width:74px!important}
+
+  /* Tên công ty · ngành (giống small#trade-co ở Giao dịch) */
+  html body .mh-head small.mh-co{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;line-height:1.3;color:var(--text2,#5b7186)}
+  html body .mh-head small.mh-co span{display:inline;font-weight:700;color:var(--text,inherit)}
+  html body .mh-head small.mh-co em{display:inline;font-style:normal}
+  html body .mh-head small.mh-co em::before{content:" · ";color:var(--text2,#5b7186)}
+
+  /* Mua / Bán là thẻ <a> (chuyển sang mục Giao dịch) — dáng giống nút ở Giao dịch */
+  html body .mh-head .tp-act{display:flex;gap:8px;align-items:center}
+  html body .mh-head .tp-act a.tp-b,html body .mh-head .tp-act a.tp-s{display:flex;align-items:center;justify-content:center;flex:1;min-width:0;min-height:40px;border-radius:10px;color:#fff;font:800 15px inherit;text-decoration:none;-webkit-tap-highlight-color:transparent}
+}
+
+/* Dòng trạng thái dưới biểu đồ (chỉ xuất hiện khi JS dựng bản điện thoại) */
+#cs .cs-st{display:flex;align-items:center;gap:8px;margin:2px 0 4px}
+#cs .cs-st .nl-chip{margin:0}
+#cs .cs-src{text-align:left!important;font-size:11.5px;line-height:1.45;color:var(--muted)}
+#cs .cs-src.qwarn{color:#8a5a00;font-weight:600}

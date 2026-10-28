@@ -1,0 +1,41 @@
+/* NHIP V2.7.11 — nút tam giác thu/mở công cụ */
+.nx-fold{display:flex;justify-content:center;align-items:center;height:22px;margin:-2px 0 4px;position:relative}
+.nx-fold::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--line,#e3e8ed)}
+.nx-fold-btn{position:relative;display:grid;place-items:center;width:46px;height:22px;padding:0;border:1px solid var(--line,#dcebed);border-radius:999px;background:var(--surface,#fff);color:var(--text2,#5b6b73);cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.08);transition:transform .15s,background .15s}
+.nx-fold-btn:hover{background:var(--surface2,#f1f5f7);color:var(--brand-ink,var(--text))}
+.nx-fold-btn:active{transform:scale(.94)}
+.nx-fold-btn:focus-visible{outline:2px solid var(--brand,#14c29a);outline-offset:2px}
+/* mở = tam giác hướng LÊN (mặc định); thu = hướng XUỐNG */
+.nx-fold-btn svg{transition:transform .18s}
+.nx-fold-btn.is-folded svg{transform:rotate(180deg)}
+/* khi THU: ẩn khung giờ + công cụ + thanh vẽ + dòng OHLC; chỉ còn thông tin mã và biểu đồ */
+html.nx-fold-on .cx-bar,html.nx-fold-on .cx-pop,html.nx-fold-on .cx-rail,html.nx-fold-on #cx-ro,html.nx-fold-on .cx-ro{display:none!important}
+html.nx-fold-on .nx-fold{margin-bottom:6px}
+
+/* ---- V2.7.12: MỤC GIAO DỊCH — biểu đồ nhúng ẩn toàn bộ thông tin mã (PHÂN TÍCH KỸ THUẬT, tên mã, sàn, giá, dòng Nến cuối…), chỉ giữ ô tìm mã + Xem, Theo dõi, Hỏi AI. Mục Biểu đồ/Phân tích không đổi ---- */
+.cp-embed .cp-top>.cp-id{display:none!important}
+.cp-embed .cp-top{display:flex!important;flex-wrap:nowrap;align-items:center!important;gap:8px!important;position:static!important;margin-bottom:8px}
+.cp-embed .cp-top>.cp-search{flex:1 1 auto;grid-column:auto!important;grid-row:auto!important;min-width:0}
+.cp-embed .cp-top>.cp-search input{flex:1;min-width:0;width:auto}
+.cp-embed .cp-top>.cp-actions{position:static!important;display:flex!important;flex:0 0 auto;width:auto!important;min-width:0!important;gap:6px!important;grid-column:auto!important;grid-row:auto!important;align-self:center!important;justify-self:auto!important}
+.cp-embed .cp-top .cp-actions .tp-bs{display:none!important}
+.cp-embed .cp-top .cp-actions .btn{grid-row:auto;width:auto;min-width:0;min-height:40px!important;padding:4px 12px!important;white-space:nowrap}
+@media(max-width:700px){
+  /* điện thoại: ô tìm mã + Xem + Theo dõi + Hỏi AI cùng 1 hàng */
+  .cp-embed .cp-top{flex-wrap:nowrap!important;gap:6px!important}
+  .cp-embed .cp-top>.cp-search{flex:1 1 0;min-width:0;gap:4px}
+  .cp-embed .cp-top>.cp-search input{flex:1 1 0;min-width:0;width:0;min-height:38px;padding:0 8px;font-size:14px}
+  .cp-embed .cp-top>.cp-search .btn{flex:none;min-height:38px;padding:0 10px;font-size:13px}
+  .cp-embed .cp-top>.cp-actions{flex:0 0 auto;gap:4px!important}
+  .cp-embed .cp-top .cp-actions .btn{flex:none;width:auto;min-height:38px!important;padding:4px 8px!important;font-size:12px}
+  .cp-embed .cp-top .cp-actions #aw{width:98px;overflow:hidden}
+  .cp-embed .cp-top .cp-actions #ak{width:74px}
+}
+
+/* v2.7.22 — nút thu/mở nhỏ gọn: chevron mảnh, không đè lên thanh khung giờ */
+html body .nx-fold{height:16px;margin:0 0 6px}
+html body .nx-fold::before{background:color-mix(in srgb,var(--line,#e3e8ed) 70%,transparent)}
+html body .nx-fold-btn{width:28px;height:16px;border-radius:999px;box-shadow:none;border:1px solid var(--line2,var(--line));background:var(--surface);color:var(--muted);opacity:.9}
+html body .nx-fold-btn:hover{opacity:1}
+html body .nx-fold-btn svg{width:12px;height:12px}
+html.nx-fold-on .nx-fold{margin-bottom:4px}
