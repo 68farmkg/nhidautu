@@ -1,0 +1,277 @@
+/* Nhịp Đầu Tư · Desktop refinement v1
+   Additive desktop-only layer. Mobile/tablet rules at <=900px remain untouched. */
+@media (min-width: 901px) {
+  :root {
+    --nhip-content-max: 1760px;
+    --nhip-radius: 14px;
+    --nhip-space: clamp(12px, 1.15vw, 20px);
+  }
+  html { scroll-behavior: auto; }
+  body {
+    min-width: 0;
+    background: var(--bg);
+    overflow-x: clip;
+  }
+  @supports not (overflow: clip) { body { overflow-x: hidden; } }
+  .topbar {
+    height: 64px;
+    padding-inline: clamp(20px, 2.2vw, 38px);
+    gap: 18px;
+    background: color-mix(in srgb, var(--bar, var(--surface)) 94%, transparent);
+    border-bottom-color: var(--line);
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--line) 55%, transparent);
+  }
+  @supports not (background: color-mix(in srgb, white 90%, transparent)) {
+    .topbar { background: var(--surface); }
+  }
+  .topbar .brand { gap: 10px; flex: 0 0 auto; }
+  .topbar .brand .nhip-mark { height: 31px; }
+  .topbar .brand .nhip-wm { height: 37px; }
+  .tagline { font-size: 12px; }
+  .top-actions { gap: 10px; }
+  .shell {
+    width: 100%;
+    max-width: var(--nhip-content-max);
+    min-height: calc(100vh - 64px);
+    margin-inline: auto;
+    grid-template-columns: clamp(190px, 15vw, 238px) minmax(0, 1fr);
+    align-items: stretch;
+  }
+  .sidebar {
+    position: sticky;
+    top: 64px;
+    height: calc(100vh - 64px);
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 24px 12px 18px 16px;
+    gap: 5px;
+    background: var(--surface);
+    border-right: 1px solid var(--line);
+  }
+  .side-label { padding: 4px 12px 12px; font-size: 10px; letter-spacing: 1.1px; }
+  .sidebar .nav {
+    min-height: 42px;
+    padding: 10px 12px;
+    gap: 10px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    color: var(--text2, var(--muted));
+    font-size: 13px;
+    font-weight: 600;
+    transition: background-color .16s ease, color .16s ease, border-color .16s ease;
+  }
+  .sidebar .nav.active {
+    background: var(--sel);
+    color: var(--brand-ink, var(--text));
+    border-color: var(--brand-line, var(--line));
+    font-weight: 750;
+  }
+  .sidebar .nav:hover { background: var(--surface2); color: var(--text); }
+  .side-footer { margin-top: auto; padding: 14px 10px 0; color: var(--muted); font-size: 11px; }
+  .main {
+    min-width: 0;
+    width: 100%;
+    padding: clamp(22px, 2vw, 34px) clamp(20px, 2.4vw, 42px) 24px;
+  }
+  #view { min-width: 0; width: 100%; }
+  .main > footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px 12px;
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 11px;
+  }
+  .main > footer span { margin-left: auto; }
+  .welcome { align-items: center; gap: 24px; padding: 4px 0 22px; }
+  .welcome h1 { font-size: clamp(27px, 2vw, 36px); letter-spacing: -1px; }
+  .welcome p { max-width: 64ch; line-height: 1.65; }
+  .search { width: min(390px, 38%); border-radius: 12px; box-shadow: var(--shadow); }
+  .panel, .index-card, .search {
+    min-width: 0;
+    border-radius: var(--nhip-radius);
+    border-color: var(--line);
+    box-shadow: var(--shadow);
+  }
+  .panel { padding: clamp(14px, 1.15vw, 20px); }
+  .index-grid { gap: 12px; }
+  .index-grid .index-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  .index-card { padding: clamp(13px, 1.1vw, 18px); }
+  .index-card > strong { font-size: clamp(21px, 1.7vw, 29px); letter-spacing: -.5px; }
+  .panel h2, .panel h3 { line-height: 1.35; }
+  .panel + .panel, .index-grid + .panel, .panel + .index-grid { margin-top: 14px; }
+  .tbl { border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; }
+  .tbl th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 10px 9px;
+    background: var(--surface2);
+    color: var(--text3, var(--muted));
+    font-size: 10.5px;
+    font-weight: 750;
+    letter-spacing: .025em;
+  }
+  .tbl td { padding: 11px 9px; border-top: 1px solid var(--line); }
+  .tbl tbody tr:hover { background: var(--surface2); }
+  .tw { max-width: 100%; min-width: 0; overflow-x: auto; overscroll-behavior-x: contain; }
+  .tw table { min-width: 600px; }
+  canvas, svg, .chart, .chart-wrap, .cp-main { max-width: 100%; }
+  .cp-main { min-width: 0; }
+  .ai-widget { right: max(24px, calc((100vw - var(--nhip-content-max)) / 2 + 24px)); bottom: 24px; }
+  .ai-launcher { width: 54px; height: 54px; }
+  button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--brand, #168f76);
+    outline-offset: 3px;
+  }
+  @media (min-width: 1200px) {
+    .main { padding-inline: clamp(28px, 2.5vw, 46px); }
+    .index-grid .index-grid { gap: 14px; }
+    .panel { padding: clamp(17px, 1.25vw, 22px); }
+  }
+  @media (min-width: 1600px) {
+    .shell { grid-template-columns: 238px minmax(0, 1fr); }
+    .main { padding-inline: 48px; }
+    .index-grid .index-grid { gap: 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  }
+}
+
+
+/* NHIP · Desktop layout correction v2
+   Desktop only: chart occupies a full row, its companion tabs/panel sit below.
+   News filters use normal document flow so all controls remain reachable.
+   Mobile styles are deliberately untouched. */
+@media (min-width: 901px) {
+  /* Biểu đồ + Phân tích: avoid a narrow chart/sidebar split. */
+  .cp-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 16px;
+    align-items: stretch;
+  }
+  .cp-grid > .cp-main {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
+  }
+  .cp-grid > .cp-side {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
+  }
+  .cp-side .tf.tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .cp-side .pane {
+    min-width: 0;
+  }
+  .cp-side .newslist,
+  .cp-side #p-wl,
+  .cp-side #p-sig,
+  .cp-side #an-ev,
+  .cp-side #an-ctx,
+  .cp-side #an-ai-result,
+  .cp-side #an-levels {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  /* The filters page should scroll with the page, not inside a sticky narrow column. */
+  .nw-grid {
+    grid-template-columns: minmax(250px, 0.82fr) minmax(0, 2.2fr) minmax(230px, 0.9fr);
+    align-items: start;
+    gap: 16px;
+  }
+  .nw-f {
+    position: static !important;
+    top: auto !important;
+    max-height: none !important;
+    height: auto !important;
+    min-width: 0;
+    overflow: visible !important;
+    align-self: start;
+  }
+  .nw-f .panel,
+  .nw-grid > .panel {
+    min-width: 0;
+  }
+  .nw-f input,
+  .nw-f select,
+  .nw-f button {
+    max-width: 100%;
+    min-width: 0;
+  }
+}
+
+
+/* NHIP · Desktop layout v3 (chỉ PC ≥1101px — điện thoại/máy tính bảng giữ nguyên)
+   Mục tiêu: PC có bố cục giống bản điện thoại:
+   - Biểu đồ + Phân tích: [mã, giá] → [ô tìm mã | nút] → biểu đồ full-width → tab phụ bên dưới.
+   - Tin tức: bộ lọc gọn (2 cột ô nhập) nằm gọn trong 1 màn hình, ghim khi cuộn. */
+@media (min-width: 1101px) {
+  /* --- Tiêu đề mã: hàng 1 = mã/giá, hàng 2 = tìm mã (trái) + nút (phải) --- */
+  .cp-top {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 10px 14px;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .cp-top > .cp-id { grid-column: 1 / -1; min-width: 0; }
+  .cp-top > .cp-search { grid-column: 1; }
+  .cp-top > .cp-actions { grid-column: 3; justify-self: end; }
+
+  /* --- Tin tức: 2 cột (bộ lọc | danh sách); khối phụ xuống dưới như bản điện thoại --- */
+  .nw-grid {
+    grid-template-columns: 320px minmax(0, 1fr) !important;
+    gap: 16px;
+    align-items: start;
+  }
+  .nw-grid > .nw-r { grid-column: 1 / -1; }
+
+  .nw-f {
+    position: sticky !important;
+    top: 76px !important;
+    max-height: calc(100vh - 92px) !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px 10px;
+    padding: 14px !important;
+    align-content: start;
+  }
+  .nw-f > .eyebrow,
+  .nw-f > .fld2:first-of-type,
+  .nw-f > #nf-r,
+  .nw-f > .nw-how { grid-column: 1 / -1; }
+  .nw-f .fld2 { gap: 3px; font-size: 11.5px; min-width: 0; }
+  .nw-f .fld2 input,
+  .nw-f .fld2 select {
+    min-height: 34px;
+    padding: 6px 8px;
+    font-size: 12.5px;
+    border-radius: 8px;
+    width: 100%;
+  }
+  .nw-f #nf-r { min-height: 34px; padding: 6px 12px; }
+  .nw-f .nw-how summary { min-height: 28px; }
+  .nw-st { margin: 0 0 10px; }
+}
+
+/* v3b · Tin tức (PC): thu gọn phần đầu trang để bộ lọc lên cao hơn, vừa màn hình */
+@media (min-width: 1101px) {
+  #view:has(.nw-grid) .view-h { margin: 0 0 8px; align-items: center; }
+  #view:has(.nw-grid) .view-h .muted { margin: 2px 0 0; }
+  #view:has(.nw-grid) .nw-tabs { margin: 0 0 6px; }
+  #view:has(.nw-grid) .nw-st { margin: 0 0 8px; min-height: 0; }
+}

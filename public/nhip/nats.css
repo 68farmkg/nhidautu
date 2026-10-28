@@ -1,0 +1,232 @@
+/* =====================================================================
+   NHIP Adaptive Trading Design System — NATS v2.0
+   Lớp thiết kế THỐNG NHẤT, nạp CUỐI CÙNG (sau desktop-fix.css).
+   Không đổi dữ liệu / logic. Màu skin, màu chủ đạo, quy ước tăng-giảm
+   (data-skin, data-brand, data-ud) của theme.css vẫn được giữ nguyên.
+   Nguyên tắc: không cắt chữ · không đè nhau · không tràn ngang trang ·
+   nút bấm đủ lớn · popup có 3 vùng (đầu / cuộn / hành động).
+   ===================================================================== */
+
+/* ---------- 1. TOKEN ---------- */
+:root{
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px;
+  --r-sm:8px;--r-md:12px;--r-lg:16px;
+  --tap:44px;                       /* vùng chạm tối thiểu cho thao tác chính */
+  --tap-s:38px;                     /* chip / nút phụ */
+  --fs-h1:clamp(22px,1.1vw + 18px,30px);
+  --fs-h2:clamp(17px,.5vw + 15px,20px);
+  --fs-body:15px;--fs-data:14px;--fs-cap:12px;
+  --focus:color-mix(in srgb,var(--brand,#14c29a) 70%,#000);
+}
+
+/* ---------- 2. NỀN TẢNG (chống tràn, chống cắt) ---------- */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-padding-bottom:calc(var(--navh,0px) + 96px)}
+body{
+  font-family:Inter,"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+  font-size:var(--fs-body);line-height:1.5;overflow-x:clip;
+  font-variant-numeric:tabular-nums;           /* số thẳng hàng: giá, KL, % */
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+button,input,select,textarea{font:inherit;min-width:0}
+button{touch-action:manipulation}
+img,svg:not(.ni):not(.nhip-mark):not(.nhip-wm),canvas,video{max-width:100%}
+h1,h2,h3,h4{overflow-wrap:anywhere;text-wrap:balance}
+/* mọi ô lưới/flex phải được phép co lại, nếu không nội dung dài sẽ đẩy tràn */
+.main,#view,.panel,.index-card,.content-grid>*,.view-h>*,.panelhead>*,.row>*{min-width:0}
+.panel,.index-card,.card{overflow-wrap:anywhere}
+:where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{
+  outline:2px solid var(--focus);outline-offset:2px;border-radius:var(--r-sm)}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+/* ---------- 3. CHỮ: không có chữ nhỏ hơn 11px; chữ chức năng ≥12px ---------- */
+html[data-skin] .market-badge,html[data-skin] .pill,html[data-skin] .eyebrow,
+html[data-skin] .tr-who span,html[data-skin] .tr-who-b i,html[data-skin] .side-footer{font-size:11px}
+html[data-skin] .index-card small,html[data-skin] .panel-sub,html[data-skin] .soft-text,
+html[data-skin] .source-note,html[data-skin] .quick button,html[data-skin] .legend{font-size:12px}
+html[data-skin] .view-h h1,html[data-skin] .welcome h1{font-size:var(--fs-h1);line-height:1.2;letter-spacing:-.02em}
+html[data-skin] .panelhead h2{font-size:var(--fs-h2)}
+
+/* ---------- 4. CHẠM: nút đủ lớn, ô nhập không bị iOS phóng to ---------- */
+@media(pointer:coarse){
+  html[data-skin] .btn,html[data-skin] select{min-height:var(--tap)}
+  html[data-skin] .cx-btn,html[data-skin] .tf button,html[data-skin] .chips button,
+  html[data-skin] .pf-tabs button,html[data-skin] .st-nav button{min-height:var(--tap-s)}
+  html[data-skin] input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),
+  html[data-skin] select,html[data-skin] textarea{font-size:16px;min-height:var(--tap)}
+}
+
+/* ---------- 5. THANH CÔNG CỤ BIỂU ĐỒ: không cắt chữ nút ---------- */
+html[data-skin] .cx-tools{flex-wrap:wrap;flex:0 1 auto;max-width:100%;min-width:0}
+html[data-skin] .cx-tools .cx-btn,html[data-skin] .cx-btn{
+  overflow:visible;text-overflow:clip;white-space:nowrap;min-width:max-content;flex:1 1 auto;padding-inline:10px}
+html[data-skin] .cx-tools .cx-ico{flex:0 0 auto;min-width:var(--tap-s)}
+
+/* hàng tab của trang Phân tích: xuống dòng thay vì tràn khỏi khung */
+html[data-skin] .tf.tabs{display:flex;flex-wrap:wrap;gap:6px;overflow:visible}
+html[data-skin] .tf.tabs>button{flex:1 1 auto;min-width:max-content}
+
+/* ---------- 6. HÀNG CUỘN NGANG (tab, khung thời gian) có gợi ý mờ dần ---------- */
+.nats-ov{-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scroll-snap-type:x proximity}
+.nats-ov>*{scroll-snap-align:start}
+.nats-ov.nats-r:not(.nats-l){-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent)}
+.nats-ov.nats-l:not(.nats-r){-webkit-mask-image:linear-gradient(90deg,transparent,#000 30px);mask-image:linear-gradient(90deg,transparent,#000 30px)}
+.nats-ov.nats-l.nats-r{-webkit-mask-image:linear-gradient(90deg,transparent,#000 30px,#000 calc(100% - 30px),transparent);mask-image:linear-gradient(90deg,transparent,#000 30px,#000 calc(100% - 30px),transparent)}
+
+/* ---------- 7. BẢNG DỮ LIỆU: cuộn ngang TRONG bảng, số căn phải, cột đầu cố định ---------- */
+.tw,.db-table-wrap,.tp-tw,.od-tw,.pt-tw{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+.tbl,.mc-tb,.od-t,.pt-t,.tp-t,.an-bt-table{font-variant-numeric:tabular-nums;font-size:var(--fs-data)}
+.tbl th,.od-t th,.pt-t th,.tp-t th{white-space:nowrap;font-weight:700}
+.tbl td,.od-t td,.pt-t td,.tp-t td{vertical-align:middle}
+:is(.tw,.db-table-wrap,.tp-tw,.od-tw,.pt-tw) :is(.tbl,.od-t,.pt-t,.tp-t) :is(th,td):first-child{
+  position:sticky;left:0;z-index:2;background:var(--surface);box-shadow:1px 0 0 var(--line)}
+
+/* ---------- 8. POPUP / PHIẾU LỆNH: đầu · thân cuộn · nút luôn thấy ---------- */
+.tr-ov,.acc-modal{
+  padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
+.tr-ov,.acc-modal{inset:auto;top:var(--vvt,0px);left:0;width:100%;height:var(--vvh,100dvh)}  /* khung popup bám đúng vùng nhìn thực → bàn phím ảo không che nút */
+.tr-cf,.acc-card{
+  max-height:min(92dvh,calc(var(--vvh,100dvh) - 24px));overflow-y:auto;overscroll-behavior:contain;overflow-wrap:anywhere}
+/* nút Xác nhận / Hủy dính đáy khung: không bao giờ bị đẩy ra ngoài vùng nhìn */
+.tr-cf>.tr-row:last-child{position:sticky;bottom:-16px;margin:0 -16px -16px;padding:12px 16px 16px;
+  background:var(--surface,#fff);border-top:1px solid var(--line);z-index:3}
+.tr.is-sheet{max-height:min(88dvh,var(--vvh,100dvh));overscroll-behavior:contain}
+@media(max-width:600px){
+  .tr-cf{width:100%;max-height:min(94dvh,calc(var(--vvh,100dvh) - 12px));border-radius:var(--r-lg)}
+  .tr-ov{align-items:flex-end;padding-bottom:0}
+  .tr-ov .tr-cf{border-bottom-left-radius:0;border-bottom-right-radius:0;padding-bottom:max(16px,env(safe-area-inset-bottom))}
+}
+
+/* ---------- 9. ĐIỆN THOẠI & TABLET DỌC ---------- */
+@media(max-width:900px){
+  /* thanh dưới: nhãn đủ chữ, không dấu "…" */
+  html[data-skin] #mnav a,html[data-skin] #mnav button{font-size:11px;letter-spacing:-.01em;padding:0 1px}
+  html[data-skin] #mnav span{overflow:visible;text-overflow:clip;max-width:none;white-space:nowrap}
+  html[data-skin] #mnav a,html[data-skin] #mnav button{min-height:var(--tap)}
+  /* chừa chỗ dưới cùng cho thanh điều hướng + vùng an toàn + nút AI */
+  html[data-skin] .main{padding-bottom:calc(var(--navh,62px) + env(safe-area-inset-bottom,0px) + 28px)!important}
+  /* hàng nút của tiêu đề trang: xuống dòng gọn, không chồng nhau */
+  html[data-skin] .view-h{flex-direction:column;align-items:stretch}
+  html[data-skin] .view-h>.row,html[data-skin] .view-h>.toolbar{flex-wrap:wrap;gap:8px}
+  html[data-skin] .view-h .btn{flex:1 1 auto}
+  /* thẻ chỉ số: tối đa 2 cột, thẻ rộng chiếm cả hàng */
+  html[data-skin] .index-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  html[data-skin] .content-grid{grid-template-columns:minmax(0,1fr)}
+  /* nhãn nhỏ (Top tăng, sàn…) không bị kéo giãn hết hàng khi tiêu đề thẻ xếp dọc */
+  html[data-skin] .panelhead>.pill,html[data-skin] .panelhead>.market-badge,html[data-skin] .panelhead>.ex-tag{align-self:flex-start;width:auto}
+}
+@media(max-width:360px){
+  html[data-skin] #mnav a,html[data-skin] #mnav button{font-size:10px}
+  html[data-skin] .index-grid{grid-template-columns:minmax(0,1fr)}
+  html[data-skin] .topbar .live{display:none}
+}
+
+/* ---------- 10. MÁY TÍNH: không gian làm việc có nhóm chức năng ---------- */
+.nats-grp{display:none}
+@media(min-width:901px){
+  html[data-skin] .sidebar{position:sticky;top:72px;align-self:start;height:calc(100dvh - 72px);overflow-y:auto;scrollbar-width:thin}
+  html[data-skin] .sidebar .side-label{display:none}
+  html[data-skin] .sidebar .nats-grp{display:block;margin:14px 12px 4px;font-size:11px;font-weight:800;letter-spacing:.09em;color:var(--text3,var(--muted))}
+  html[data-skin] .sidebar .nats-grp:first-of-type{margin-top:2px}
+  html[data-skin] .sidebar .nav{min-height:42px}
+  html[data-skin] .main{max-width:1440px}
+}
+/* PC bị thu hẹp thành thanh biểu tượng (desktop-fix): ẩn nhãn nhóm, vẫn có tooltip (title) */
+@media(max-width:900px) and (hover:hover) and (pointer:fine){html[data-skin] .sidebar .nats-grp{display:none}}
+
+@media print{.nats-grp{display:none}}
+
+/* =====================================================================
+   NATS v2.1 — sửa lỗi popup bị đè, bố cục PC 3 : 1, chữ tự co vừa ô
+   ===================================================================== */
+
+/* ---------- 11. POPUP LUÔN NẰM TRÊN CÙNG (không bị biểu đồ / thanh công cụ đè) ---------- */
+.tr-ov{z-index:4000}
+.ol-pop{z-index:4100}
+#toast{z-index:5000}
+/* Phiếu lệnh PC là phần tử "sticky" nên tạo lớp xếp chồng riêng; khi có popup thì nâng cả lớp lên trên biểu đồ */
+html.nats-modal .tp-ticket{z-index:4000}
+html.nats-modal .ai-widget{z-index:10}
+
+/* ---------- 12. POPUP: mọi thành phần co vừa MỘT khung, không cắt, không cuộn ----------
+   --zf (0.6 → 1) do nats.js tính: nội dung dài thì cả khung thu nhỏ đồng đều. */
+.tr-cf{
+  zoom:var(--zf,1);
+  width:min(calc(440px/var(--zf,1)),calc((100vw - 24px)/var(--zf,1)));
+  max-height:calc((var(--vvh,100dvh) - 24px)/var(--zf,1));
+  overflow-x:hidden}
+.tr-cf *{min-width:0}
+.tr-cf .tr-row{flex-wrap:nowrap}
+.tr-cf .tr-row>*{white-space:nowrap}
+.tr-cf dl,.tr-cf .tr-sum,.tr-cf .tr-kv{font-size:clamp(12px,3.4vw,14px)}
+
+/* Hộp thêm/sửa lệnh chờ trên biểu đồ: hiện giữa màn hình, nền mờ, không bị cắt bởi khung biểu đồ */
+.ol-pop{
+  position:fixed!important;left:50%!important;top:50%!important;right:auto!important;bottom:auto!important;
+  transform:translate(-50%,-50%);
+  width:min(380px,calc(100vw - 24px))!important;max-width:none!important;
+  max-height:none!important;overflow:visible;
+  box-shadow:0 0 0 200vmax rgba(10,20,30,.45),0 12px 40px rgba(0,0,0,.35)}
+.ol-pop *{min-width:0;max-width:100%}
+.ol-pop label,.ol-pop .ol-xh,.ol-pop .ol-m,.ol-pop .ol-est{overflow-wrap:anywhere}
+.ol-pop .ol-pb button{white-space:nowrap}
+.ol-pop input{font-size:16px}
+
+/* ---------- 13. CHỮ TỰ CO NHỎ để hiện đủ nội dung trong ô (nats.js hạ cỡ chữ từng bước) ---------- */
+#aw,.tp-star,.tp-b,.tp-s,.tp-go-buy,.tp-go-sell,.tr-go,.tp-seg button,.tp-wt button,
+.tp-rng button,.tp-tabs button,.ol-bar button,.ol-bt{white-space:nowrap}
+#aw,.tp-star{max-width:100%;min-width:0;flex:0 1 auto;overflow:hidden;text-overflow:clip;
+  padding-inline:clamp(8px,1vw,14px);font-size:clamp(11px,1.05vw,13px)}
+.cp-actions{min-width:0;max-width:100%}
+.cp-actions .btn{min-width:0;max-width:100%}
+.tp-act{min-width:0;flex-wrap:nowrap}
+.tp-act>*{min-width:0}
+.tp-b,.tp-s{min-width:0;padding-inline:clamp(10px,1.4vw,22px)}
+.tp-stats dd,.tp-px b,.tp-wr b,.tp-acct b{white-space:nowrap}
+[data-nfit]{white-space:nowrap}
+
+/* ---------- 14. PC (≥901px): hàng Theo dõi/Gần đây nằm trong khung thông tin mã, biểu đồ chiếm 3 phần – phiếu lệnh 1 phần ---------- */
+@media(min-width:901px){
+  html[data-skin] .tp-body{
+    grid-template-columns:minmax(0,3fr) minmax(260px,1fr);
+    grid-template-areas:"mid tk";
+    gap:12px;align-items:start}
+  html[data-skin] .tp-mid{grid-area:mid;min-width:0}
+  html[data-skin] .tp-ticket{grid-area:tk;min-width:0;overflow-x:hidden}
+  html[data-skin] .tp-ticket *{min-width:0}
+  html[data-skin] .tp-ticket input,html[data-skin] .tp-ticket select{max-width:100%}
+  html[data-skin] .tp-chart .trade-chart{height:clamp(420px,62vh,640px)}
+}
+
+/* ---------- V2.7.5: bảng lệnh chờ vừa khung, không còn thanh kéo ngang (PC + mobile) ---------- */
+.od-tw{overflow:visible;container-type:inline-size;max-width:100%}
+.od-t{width:100%;table-layout:fixed}
+.od-t th,.od-t td{white-space:normal;overflow-wrap:anywhere;padding:5px 4px}
+.od-t th:nth-child(1){width:17%}.od-t th:nth-child(2){width:18%}.od-t th:nth-child(3){width:20%}
+.od-t th:nth-child(4){width:13%}.od-t th:nth-child(5){width:20%}.od-t th:nth-child(6){width:12%}
+.od-t .od-in,.od-t .od-in.sm{min-width:0;width:100%;max-width:none;padding:0 6px;text-align:right}
+.od-t td.od-ta{text-align:right;white-space:nowrap}
+.od-t .od-sub .od-in.sm{width:100px}
+.od-so th:nth-child(2){width:26%}.od-so th:nth-child(3){width:28%}.od-so th:nth-child(4){width:16%}.od-so th:nth-child(5){width:22%}.od-so th:nth-child(6){width:8%}
+:is(.od-tw) .od-t :is(th,td):first-child{position:static;box-shadow:none;background:transparent}
+@container (max-width:560px){
+  .od-t,.od-t tbody{display:block;width:100%}
+  .od-t thead{display:none}
+  .od-t tr.od-sec{display:block}.od-t tr.od-sec th{display:block;width:auto}
+  .od-t tr.od-r{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px 8px;position:relative;padding:6px 26px 6px 0;border-bottom:1px solid var(--line)}
+  .od-t tr.od-r>td{display:block;width:auto;padding:0;border:0;text-align:left}
+  .od-t tr.od-r>td::before{display:block;font-size:10.5px;font-weight:700;color:var(--muted)}
+  .od-t tr.od-r>td:nth-child(2)::before{content:"KL"}
+  .od-t tr.od-r>td:nth-child(3)::before{content:"Giá đặt"}
+  .od-t tr.od-r>td:nth-child(4)::before{content:"So với giá HT"}
+  .od-t tr.od-r>td:nth-child(5)::before{content:"Trạng thái"}
+  .od-t tr.od-r>td:nth-child(5){grid-column:span 2}
+  .od-t tr.od-r>td:nth-child(6){position:absolute;top:4px;right:0;display:flex;align-items:center}
+  .od-t tr.od-r>td:nth-child(6)::before{content:none}
+  .od-t tr.od-r>td:nth-child(1){align-self:end}
+  .od-t.od-so tr.od-r{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .od-t.od-so tr.od-r>td:nth-child(5){grid-column:auto}
+  .od-t tr.od-sub{display:block;padding:0 0 6px;border-bottom:1px solid var(--line)}
+  .od-t tr.od-sub>td{display:block;padding:0;border:0;width:auto}
+  .od-t tr.od-sub>td:first-child{display:none}
+}

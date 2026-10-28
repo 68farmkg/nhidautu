@@ -1,0 +1,7 @@
+/* Nhịp Đầu Tư: nhận diện thương hiệu (chuỗi nhịp). Màu theo giao diện/màu chủ đạo đã chọn. */
+.topbar .brand{gap:11px}
+.topbar .brand .nhip-mark{height:36px;width:auto;flex:none;display:block;filter:none}
+.topbar .brand .brandname.nhip-name{background:none!important;-webkit-text-fill-color:currentColor;color:var(--text,#253442)!important;display:flex;align-items:center;font-size:0;letter-spacing:0}
+.topbar .brand .nhip-wm{height:44px;width:auto;display:block;overflow:visible}
+@media(max-width:720px){.topbar .brand .nhip-mark{height:31px}.topbar .brand .nhip-wm{height:38px}}
+.acc-brand .logo{filter:none}

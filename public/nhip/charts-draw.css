@@ -1,0 +1,69 @@
+/* NHIP · Bộ vẽ nâng cao v1.9. Phần chung chỉ áp cho phần tử MỚI (nd-*). PC và cảm ứng có luật riêng, không đụng bố cục sẵn có. */
+.nd-menu,.nd-bar,.nd-pan{position:fixed;z-index:300;box-sizing:border-box;background:var(--surface,#fff);color:var(--text,#173b5d);border:1px solid var(--line,#e3e8ed);box-shadow:0 14px 38px rgba(20,40,60,.22);font-size:13px}
+.nd-menu[hidden],.nd-bar[hidden],.nd-pan[hidden]{display:none}
+.nd-menu{min-width:230px;max-width:min(92vw,340px);padding:6px;border-radius:12px;max-height:80vh;overflow-y:auto}
+.nd-menu button{display:flex;justify-content:space-between;gap:18px;width:100%;padding:8px 10px;border:0;border-radius:8px;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.nd-menu button:hover:not(:disabled){background:var(--sel,#e8f3ee)}
+.nd-menu button:disabled{opacity:.4;cursor:default}
+.nd-menu kbd{opacity:.55;font:inherit;font-size:11.5px;white-space:nowrap}
+.nd-sep{display:block;height:1px;margin:4px 6px;background:var(--line,#e3e8ed)}
+.nd-bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px 8px;border-radius:12px;max-width:min(96vw,720px)}
+.nd-nm{font-size:12px;padding:0 4px;white-space:nowrap}
+.nd-sw{display:flex;align-items:center;gap:4px}
+.nd-sw button{width:20px;height:20px;border-radius:50%;border:2px solid var(--line2,#d3dbe3);padding:0;cursor:pointer}
+.nd-sw button.on{border-color:var(--text,#173b5d);box-shadow:0 0 0 2px var(--surface,#fff) inset}
+.nd-col{width:26px;height:24px;padding:0;border:0;background:none;cursor:pointer}
+.nd-bar select{padding:5px 6px;font-size:12px}
+.nd-f{display:flex;align-items:center;gap:4px;font-size:12px}
+.nd-f[hidden]{display:none}
+.nd-f input{width:84px}
+.nd-bar>button,.nd-ph button,.nd-row button{border:1px solid var(--line,#e3e8ed);background:var(--surface2,#f1f5f8);color:inherit;border-radius:8px;padding:5px 9px;font:inherit;font-size:12px;cursor:pointer}
+.nd-bar>button:hover,.nd-row button:hover{background:var(--sel,#e8f3ee)}
+.nd-pan{display:flex;flex-direction:column;border-radius:14px;overflow:hidden}
+.nd-pan[hidden]{display:none}
+.nd-ph{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line,#e3e8ed)}
+.nd-pl{overflow-y:auto;padding:6px;flex:1}
+.nd-row{display:flex;align-items:center;gap:8px;padding:6px;border-radius:9px}
+.nd-row.on{background:var(--sel,#e8f3ee)}
+.nd-row.off .nd-t{opacity:.45;text-decoration:line-through}
+.nd-row i{flex:0 0 12px;height:12px;border-radius:50%}
+.nd-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.nd-empty{margin:10px;color:var(--muted,#71879b)}
+.cx-rail #rl-cont.on{background:var(--sel);color:var(--brand-ink,var(--text))}
+/* ===== PC (chuột) ===== */
+@media (hover:hover) and (pointer:fine){
+  .nd-bar{transform:translateX(-50%)}
+  .nd-pan{right:18px;top:150px;width:280px;max-height:min(60vh,520px)}
+}
+/* ===== Cảm ứng (điện thoại / máy tính bảng): hiện dạng ngăn dưới màn hình ===== */
+@media (hover:none),(pointer:coarse){
+  .nd-menu,.nd-bar,.nd-pan{left:8px!important;right:8px;top:auto!important;bottom:calc(8px + env(safe-area-inset-bottom,0px));max-width:none;width:auto}
+  .nd-menu{border-radius:18px;padding:8px;min-width:0;max-height:70vh}
+  .nd-menu button{min-height:46px;font-size:15px;align-items:center}
+  .nd-bar{border-radius:18px;padding:10px;gap:8px;justify-content:flex-start}
+  .nd-sw button{width:28px;height:28px}
+  .nd-bar select,.nd-bar>button{min-height:38px;font-size:13px}
+  .nd-f input{width:110px}
+  .nd-pan{max-height:62vh;border-radius:18px}
+  .nd-row button{min-height:36px}
+  .cx-chart{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+}
+/* v2.0: tìm công cụ, chọn nhiều nét và thao tác nhóm */
+.nd-tools,.nd-bulk{display:flex;flex-wrap:wrap;gap:6px;padding:8px;border-bottom:1px solid var(--line,#e3e8ed)}
+.nd-tools input{flex:1;min-width:120px;padding:7px 9px;border:1px solid var(--line,#e3e8ed);border-radius:8px;background:var(--surface,#fff);color:inherit}
+.nd-tools button,.nd-bulk button,.nd-toolgrid button{border:1px solid var(--line,#e3e8ed);background:var(--surface2,#f1f5f8);color:inherit;border-radius:8px;padding:6px 8px;font:inherit;font-size:12px;cursor:pointer}
+.nd-toolgrid{display:flex;flex-wrap:wrap;gap:5px;padding:6px 0 10px;border-bottom:1px solid var(--line,#e3e8ed);margin-bottom:5px}
+.nd-toolgrid button{font-size:11px}
+.nd-pick{margin:0 2px;flex:0 0 auto;accent-color:var(--brand,#16bd8c)}
+.nd-row{min-width:0}
+@media (hover:hover) and (pointer:fine){.nd-pan{width:min(420px,42vw)}}
+@media (hover:none),(pointer:coarse){.nd-tools button,.nd-bulk button{min-height:38px;font-size:13px}.nd-toolgrid button{min-height:38px}}
+
+/* v3.19: thứ tự lớp — thanh thuộc tính (màu, nét…) và bảng nét vẽ nằm SAU menu chuột phải; menu có nút ✕ đóng trên điện thoại */
+.nd-bar,.nd-pan{z-index:300}
+.nd-menu{z-index:320}
+.nd-mh{display:none}
+@media (hover:none),(pointer:coarse){
+  .nd-mh{display:flex;align-items:center;justify-content:space-between;position:sticky;top:-8px;z-index:2;margin:-8px -8px 4px;padding:8px 10px 6px 14px;background:var(--surface,#fff);border-bottom:1px solid var(--line,#e3e8ed);border-radius:18px 18px 0 0;font-size:13px}
+  .nd-menu button.nd-mx{display:inline-flex;justify-content:center;width:40px;min-height:40px;padding:0;border:1px solid var(--line,#e3e8ed);background:var(--surface2,#f1f5f8);border-radius:10px;font-size:16px;flex:none}
+}

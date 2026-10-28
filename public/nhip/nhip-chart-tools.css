@@ -1,0 +1,51 @@
+/* NHIP V2.78 (gốc V2.77) — Bộ công cụ NHỊP (đầu hộp "Chỉ báo" của biểu đồ). Dùng biến theme sẵn có (--surface, --line, --text, --muted, --sel, --brand) nên theo mọi skin sáng/tối.
+   Điện thoại dọc: mỗi công cụ là một hàng đầy chiều rộng, chữ tự xuống dòng, không có thanh cuộn ngang. */
+.nt-wrap{margin:0 0 2px;padding:10px 10px 8px;border:1px solid var(--brand-line,var(--line));border-left:4px solid var(--brand,#14c29a);border-radius:12px;background:var(--sel,rgba(20,194,154,.08))}
+.nt-hd{display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;margin:0 0 4px}
+.nt-ttl{font:800 11.5px/1.2 inherit;letter-spacing:.06em;color:var(--brand-ink,var(--text))}
+.nt-sym{margin-left:auto;font:700 12.5px inherit;color:var(--text)}
+.nt-ex{display:inline-block;font:800 10.5px/1 inherit;padding:3px 7px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--text2,var(--text))}
+.nt-ex-HOSE{color:#0f766e;border-color:#0f766e}.nt-ex-HNX{color:#1d4ed8;border-color:#1d4ed8}.nt-ex-UPCOM{color:#a16207;border-color:#a16207}
+.nt-sub,.nt-msg,.nt-foot{margin:4px 0 6px;font-size:11.5px;line-height:1.5;color:var(--muted);overflow-wrap:anywhere}
+.nt-msg{font-size:12.5px;color:var(--text)}
+.nt-foot{margin:8px 0 0}
+.nt-list{display:flex;flex-direction:column;gap:6px}
+.nt-row{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;min-width:0;text-align:left;padding:9px 52px 9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);font:inherit;cursor:pointer;min-height:44px}
+.nt-row:hover{border-color:var(--brand-line,var(--brand,#14c29a))}
+.nt-row:focus-visible,.nt-go:focus-visible{outline:2px solid var(--brand,#2563eb);outline-offset:2px}
+.nt-row.on{border-color:var(--brand,#14c29a);background:var(--surface);box-shadow:inset 0 0 0 1px var(--brand,#14c29a)}
+.nt-row[disabled]{opacity:.55;cursor:not-allowed}
+.nt-main{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;min-width:0}
+.nt-name{font:700 13.5px inherit}
+.nt-role{font:600 10.5px/1 inherit;padding:3px 6px;border-radius:6px;background:var(--chip,rgba(120,130,140,.14));color:var(--text2,var(--muted))}
+.nt-r-score{background:rgba(20,194,154,.16);color:var(--brand-ink,var(--text))}
+.nt-chip{font:700 10.5px/1 inherit;padding:3px 7px;border-radius:99px;background:var(--chip,rgba(120,130,140,.14));color:var(--text2,var(--muted))}
+.nt-chip.nt-up{background:rgba(14,165,164,.16);color:#0f766e}.nt-chip.nt-dn{background:rgba(217,119,6,.16);color:#b45309}
+.nt-def,.nt-stat{font-size:11.5px;line-height:1.45;color:var(--muted);overflow-wrap:anywhere;word-break:break-word;max-width:100%}
+.nt-stat{color:var(--text2,var(--muted))}
+.nt-sw{position:absolute;right:10px;top:50%;width:34px;height:20px;margin-top:-10px;border-radius:99px;background:var(--line);transition:background .15s}
+.nt-sw::after{content:"";position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .15s}
+.nt-row.on .nt-sw{background:var(--brand,#14c29a)}.nt-row.on .nt-sw::after{transform:translateX(14px)}
+.nt-go{display:block;width:100%;min-height:42px;margin-top:4px;border:1px solid var(--brand,#14c29a);background:var(--surface);color:var(--brand-ink,var(--text));border-radius:10px;font:700 13px inherit;cursor:pointer}
+/* vùng ngăn cách giữa Bộ công cụ NHỊP (trên) và chỉ báo thông thường (dưới) */
+.nt-sep{display:flex;align-items:center;gap:8px;margin:12px 0 8px}
+.nt-sep::before,.nt-sep::after{content:"";flex:1;height:2px;background:var(--line);border-radius:2px}
+.nt-sep span{font:700 11px/1 inherit;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+@media (max-width:380px){.nt-row{padding-right:48px}.nt-name{font-size:13px}}
+@media (prefers-reduced-motion:reduce){.nt-sw,.nt-sw::after{transition:none}}
+
+/* V2.78 — mọi khung 1p → 1 tháng + chế độ Đa khung */
+.nt-warn{margin:4px 0 8px;padding:7px 9px;border-radius:8px;border:1px solid rgba(217,119,6,.45);background:rgba(217,119,6,.10);font-size:11.5px;line-height:1.5;color:var(--text);overflow-wrap:anywhere}
+.nt-note{margin:8px 0 0;padding:6px 9px;border-radius:8px;background:var(--chip,rgba(120,130,140,.14));font-size:12px;line-height:1.45;color:var(--text);overflow-wrap:anywhere}
+.nt-note.err{background:rgba(217,119,6,.16);color:#b45309}
+.nt-frs{display:flex;flex-wrap:wrap;gap:4px;max-width:100%;margin:2px 0 1px}
+.nt-fr{font:600 10.5px/1 inherit;padding:3px 6px;border-radius:6px;background:var(--chip,rgba(120,130,140,.14));color:var(--text2,var(--muted));white-space:nowrap}
+.nt-fr-up{background:rgba(14,165,164,.16);color:#0f766e}.nt-fr-dn{background:rgba(217,119,6,.16);color:#b45309}.nt-fr-off{opacity:.65}
+.mc{position:relative}
+.nt-mcbtn{min-height:36px;white-space:nowrap}
+.nt-mcbtn.on{border-color:var(--brand,#14c29a);color:var(--brand-ink,var(--text))}
+.nt-mcpop{position:absolute;z-index:40;left:0;right:0;top:46px;max-height:min(72dvh,620px);overflow-y:auto;overflow-x:hidden;padding:10px 10px 8px;border:1px solid var(--brand-line,var(--line));border-left:4px solid var(--brand,#14c29a);border-radius:12px;background:var(--surface,#fff);box-shadow:0 10px 30px rgba(0,0,0,.22)}
+.nt-mcpop[hidden]{display:none}
+.nt-mcpop .nt-hd{padding-right:34px}
+.nt-mcx{position:absolute;right:8px;top:8px;width:30px;height:30px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text);font:700 14px/1 inherit;cursor:pointer}
+@media (min-width:900px){.nt-mcpop{left:auto;width:min(460px,100%)}}

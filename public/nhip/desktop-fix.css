@@ -1,0 +1,228 @@
+/* NHIP · Sửa lỗi giao diện PC v1.12
+   CHỈ áp dụng cho máy tính (chuột: hover + pointer:fine). Điện thoại/máy tính bảng cảm ứng KHÔNG bị ảnh hưởng.
+   Nạp SAU CÙNG để ghi đè các quy tắc ≤900px vốn dành cho điện thoại. */
+
+/* ===== (1) Khung gợi ý mã tự vẽ (thay hộp datalist mặc định của trình duyệt) ===== */
+.nx-sg{position:fixed;z-index:200;box-sizing:border-box;min-width:220px;max-height:min(340px,50vh);overflow-y:auto;overscroll-behavior:contain;
+  background:var(--surface,#fff);color:var(--text,#173b5d);border:1px solid var(--line,#e0eeef);border-radius:12px;
+  box-shadow:0 14px 38px rgba(20,40,60,.18);padding:6px;scrollbar-width:thin}
+.nx-sg[hidden]{display:none}
+.nx-sg .nx-it{display:flex;align-items:baseline;gap:10px;width:100%;padding:8px 10px;border:0;border-radius:8px;background:none;color:inherit;
+  font:inherit;text-align:left;cursor:pointer}
+.nx-sg .nx-it b{flex:0 0 auto;min-width:48px;font-size:13.5px;font-weight:800;letter-spacing:.2px}
+.nx-sg .nx-it span{flex:1;min-width:0;font-size:12px;color:var(--muted,#71879b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nx-sg .nx-it:hover,.nx-sg .nx-it.on{background:var(--sel,var(--brand-soft,#e4f8f2));color:var(--brand-ink,inherit)}
+.nx-sg .nx-it.on span,.nx-sg .nx-it:hover span{color:inherit;opacity:.8}
+.nx-sg .nx-empty{padding:10px;font-size:12px;color:var(--muted,#71879b)}
+/* ẩn hộp datalist gốc của trình duyệt trên PC */
+@media (hover:hover) and (pointer:fine){
+  input[list]::-webkit-calendar-picker-indicator{display:none!important}
+}
+
+/* ===== (2) Thanh công cụ biểu đồ: luôn thấy đủ nút, tự xuống dòng thay vì bị cắt ===== */
+@media (hover:hover) and (pointer:fine){
+  .cx-bar{flex-wrap:wrap!important;overflow:visible!important;row-gap:6px}
+  .cx-bar .tf{flex:0 1 auto!important;flex-wrap:wrap!important;overflow:visible!important;min-width:0;margin-left:0;padding:2px 0}
+  .tf,.chips.tf,.st-nav{flex-wrap:wrap!important;overflow-x:visible!important}
+  .cp-main,.cp-grid,.cp-top{min-width:0}
+}
+
+/* ===== (3) PC thu hẹp cửa sổ: giữ THANH BÊN, không đổi sang thanh dưới của điện thoại ===== */
+@media (max-width:900px) and (hover:hover) and (pointer:fine){
+  :root{--navh:0px}
+  #mnav,#msheet{display:none!important}
+  html.ms-open,html.ms-open body{overflow:visible!important}
+
+  html[data-skin] .topbar{height:60px;padding:0 16px;gap:12px}
+  .tagline{display:none}
+
+  html[data-skin] .shell{display:grid!important;grid-template-columns:190px minmax(0,1fr);width:100%;min-height:calc(100vh - 60px);align-items:stretch}
+  html[data-skin] .sidebar{display:flex!important;flex-direction:column!important;position:sticky!important;top:60px!important;bottom:auto!important;left:auto;right:auto;
+    z-index:5;width:auto!important;height:calc(100vh - 60px)!important;min-height:0!important;overflow-y:auto;overflow-x:hidden;
+    padding:18px 10px!important;gap:4px;border:0!important;border-right:1px solid var(--line)!important;box-shadow:none!important;backdrop-filter:none}
+  html[data-skin] .sidebar .side-label{display:block!important;padding:2px 10px 10px}
+  html[data-skin] .sidebar .side-footer{display:block!important}
+  html[data-skin] .sidebar .side-note{display:none!important}
+  html[data-skin] .sidebar .nav{flex:0 0 auto;flex-direction:row;align-items:center;gap:10px;padding:10px 12px;min-height:40px;font-size:13px;
+    text-align:left;white-space:nowrap;border-radius:10px}
+  html[data-skin] .sidebar .nav .ni{width:21px;height:21px}
+  .main{padding:20px 18px 24px!important}
+  footer{padding-bottom:20px!important}
+  .ai-widget{bottom:24px;right:20px}
+  .aiw{left:auto;right:18px;width:380px;bottom:96px;height:min(560px,72vh)}
+  #toast{bottom:24px}
+}
+
+/* Cửa sổ rất hẹp: thu thanh bên thành cột biểu tượng (vẫn luôn hiển thị) */
+@media (max-width:720px) and (hover:hover) and (pointer:fine){
+  html[data-skin] .shell{grid-template-columns:64px minmax(0,1fr)}
+  html[data-skin] .sidebar{padding:14px 8px!important;align-items:center}
+  html[data-skin] .sidebar .side-label,html[data-skin] .sidebar .side-footer{display:none!important}
+  html[data-skin] .sidebar .nav{position:relative;justify-content:center;width:44px;padding:10px 0}
+  html[data-skin] .sidebar .nav span{display:none}
+  html[data-skin] .sidebar .nav .al-badge{position:absolute;top:2px;right:0;transform:scale(.8)}
+  .main{padding:16px 12px 20px!important}
+  .aiw{left:auto;right:12px;width:min(380px,calc(100vw - 88px))}
+}
+
+
+/* ===== (4) HOVER THEO TỪNG THEME (PC) — v2 =====
+   Nguyên nhân lỗi: extra.css có `.tbl tr.go:hover{background:#f3fbf8}` (màu sáng cứng) → ở theme Tối/Xanh đậm,
+   chữ sáng nằm trên nền sáng nên không đọc được.
+   Cách sửa: mọi hover trên PC lấy màu từ 3 biến theo theme (--hv-bg, --hv-bg2, --hv-line), tính từ --surface + màu thương hiệu,
+   nên đổi theme (Sáng/Tối/Dịu/Xanh đậm) hay đổi màu thương hiệu đều tự đúng, không còn màu cứng. */
+html[data-skin]{--hv-bg:var(--sel);--hv-bg2:var(--sel);--hv-line:var(--line2)}
+@supports (background:color-mix(in srgb,red 10%,white)){
+  html[data-skin]{--hv-line:color-mix(in srgb,var(--brand) 42%,var(--line))}
+  html[data-skin="light"]{--hv-bg:color-mix(in srgb,var(--brand) 6%,var(--surface));--hv-bg2:color-mix(in srgb,var(--brand) 12%,var(--surface))}
+  html[data-skin="soft"]{--hv-bg:color-mix(in srgb,var(--brand) 7%,var(--surface));--hv-bg2:color-mix(in srgb,var(--brand) 13%,var(--surface))}
+  html[data-skin="dark"]{--hv-bg:color-mix(in srgb,var(--brand) 12%,var(--surface));--hv-bg2:color-mix(in srgb,var(--brand) 20%,var(--surface))}
+  html[data-skin="blue"]{--hv-bg:color-mix(in srgb,var(--brand) 14%,var(--surface));--hv-bg2:color-mix(in srgb,var(--brand) 24%,var(--surface))}
+}
+html[data-hc="1"]{--hv-bg:var(--sel);--hv-bg2:var(--sel);--hv-line:var(--text)}
+
+@media (hover:hover) and (pointer:fine){
+  /* --- Hàng bảng (Theo dõi, Thị trường, Dashboard…): tô nền ô, GIỮ NGUYÊN màu chữ tăng/giảm --- */
+  html[data-skin] .tbl tr.go,html[data-skin] .tbl tbody tr{transition:none}
+  html[data-skin] .tbl tr.go:hover,html[data-skin] .tbl tbody tr:hover{background:transparent}
+  html[data-skin] .tbl td,html[data-skin] .db-table td{transition:background-color .14s ease}
+  html[data-skin] .tbl tr.go{cursor:pointer}
+  html[data-skin] .tbl tr.go:hover>td,
+  html[data-skin] .tbl tbody tr:has(>td):not(.tw-dr):hover>td,
+  html[data-skin] .db-table tbody tr:hover>td{background:var(--hv-bg)}
+  html[data-skin] .tw-tbl tr.tw-open>td{background:var(--hv-bg2)}
+  html[data-skin] .tw-tbl tr.tw-open:hover>td{background:var(--hv-bg2)}
+  html[data-skin] .tw-tbl tr.tw-dr:hover>td{background:transparent}
+  html[data-skin] .tbl tr.go:hover>td:first-child,html[data-skin] .db-table tbody tr:hover>td:first-child{box-shadow:inset 3px 0 0 var(--brand)}
+
+  /* --- Thanh bên: hover nhạt hơn mục đang chọn để phân biệt được 2 trạng thái --- */
+  html[data-skin] .sidebar .nav:hover:not(.active){background:var(--hv-bg)!important;color:var(--text)!important}
+  html[data-skin] .sidebar .nav.active:hover{background:var(--hv-bg2)!important;color:var(--brand-ink)!important}
+
+  /* --- Thẻ / mục bấm được --- */
+  html[data-skin] .newsitem:hover,html[data-skin] .nw-card:hover,html[data-skin] .focus-card:hover{
+    background:var(--hv-bg)!important;border-color:var(--hv-line)!important}
+  html[data-skin] .wl-row:hover,html[data-skin] .sg-row:hover{background:var(--hv-bg)}
+
+  /* --- Nút nhỏ: khung giờ, công cụ biểu đồ, chip --- */
+  html[data-skin] .cx-btn:hover:not(.on),html[data-skin] .tf button:hover:not(.on),html[data-skin] .chips button:hover:not(.on),
+  html[data-skin] .cx-quick button:hover,html[data-skin] .cx-seg button:hover:not(.on){background:var(--hv-bg)!important;border-color:var(--hv-line)!important;color:var(--text)!important}
+  html[data-skin] .cx-opt:hover,html[data-skin] .cx-add:hover,html[data-skin] .cx-rail button:hover{background:var(--hv-bg2)}
+  html[data-skin] .nx-sg .nx-it:hover,html[data-skin] .nx-sg .nx-it.on{background:var(--hv-bg2);color:var(--text)}
+  html[data-skin] .btn.pale:hover,html[data-skin] .btn.secondary:hover{background:var(--hv-bg2)!important;color:var(--brand-ink)!important;filter:none}
+}
+
+
+/* ===== (5) PC v1.14 — sửa bố cục khi cửa sổ trình duyệt thu nhỏ (KHÔNG full màn hình) =====
+   Mọi quy tắc nằm trong (hover:hover) and (pointer:fine) nên điện thoại/máy tính bảng cảm ứng KHÔNG bị ảnh hưởng.
+   Nguyên nhân: mobile.css (≤900px) và extra.css (≤1100px/≤800px) dành cho điện thoại nhưng cũng trúng cửa sổ PC hẹp. */
+
+/* (5a) Khoảng cách giữa hàng ô nhập (khung đỏ) và hàng nút/chip (khung vàng) — mọi độ rộng PC */
+@media (hover:hover) and (pointer:fine){
+  .panel .row,.panel form.row{gap:10px 10px}
+  .panel :is(.row,form.row)+:is(.chips,.tf,.chips.tf){margin-top:16px}
+  .panel :is(.row,form.row)+:is(.row,form.row){margin-top:12px}
+  .panel :is(.chips,.tf)+:is(.eyebrow,.sec-label,.chips,.tf){margin-top:16px}
+  .panel .chips,.panel .chips.tf{row-gap:8px}
+  .panel .eyebrow+:is(.row,form.row,.chips,.tf){margin-top:10px}
+
+  /* Form "Ghi giao dịch": nhãn dài không làm lệch hàng; ô dài chiếm 2 cột */
+  .fl-grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));grid-auto-flow:dense;align-items:end;gap:12px 12px}
+  .fl-grid .fld2>span{min-height:1.3em;line-height:1.3}
+  .fl-grid .fld2:has(#tx-a){grid-column:span 2}
+  /* Ô lọc ở trang Theo dõi: đủ rộng để đọc hết gợi ý, tự xuống dòng khi hẹp */
+  #tw-form #tw-q{flex:1 1 260px!important}
+}
+
+/* (5b) Cửa sổ ≤900px: trả lại bố cục ngang của PC cho các form mà mobile.css dồn thành lưới điện thoại */
+@media (max-width:900px) and (hover:hover) and (pointer:fine){
+  .panel form.row{display:flex!important;flex-wrap:wrap;align-items:center}
+  .panel form.row>select{grid-column:auto;order:0}
+  .panel form.row>input{flex:1 1 180px;min-width:0}
+  .panel form.row .btn{padding:0 18px}
+  /* Dãy chip/nút: xuống dòng thay vì cuộn ngang, bỏ lớp mờ cuối dòng */
+  .chips.tf{-webkit-mask-image:none;mask-image:none}
+  .panel .chips.tf,.panel .tf.tabs{flex-wrap:wrap!important;overflow:visible!important}
+  .tf button{min-height:36px}
+  .panel{padding:16px!important}
+  .main{overflow-x:visible}
+}
+@media (max-width:700px) and (hover:hover) and (pointer:fine){
+  .panelhead{flex-direction:row;align-items:center;flex-wrap:wrap;gap:8px 12px}
+  .panelhead>.row{display:flex;grid-template-columns:none}
+  .panelhead>.row .btn{width:auto;min-height:36px}
+  .panel>.row:has(#hx-q){display:flex;flex-wrap:wrap}
+  #hx-q{grid-column:auto;grid-row:auto;flex:1 1 180px}
+  input,select,textarea{font-size:14px}
+}
+
+/* (5c) TIN TỨC: bộ lọc luôn hiện, không bị ẩn, không dính/cắt khi kéo, không tạo vùng trống */
+@media (max-width:1100px) and (hover:hover) and (pointer:fine){
+  .nw-grid{grid-template-columns:minmax(0,1fr)!important;gap:14px;align-items:start}
+  .nw-grid>.nw-feed,.nw-grid>.nw-r{grid-column:1/-1;min-width:0;width:100%}
+  .nw-f{position:static!important;top:auto!important;max-height:none!important;overflow:visible!important;
+    display:grid!important;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))!important;gap:10px 12px;align-items:end;padding:14px 16px!important}
+  .nw-f>.eyebrow,.nw-f>.nw-how{grid-column:1/-1}
+  .nw-f>#nf-r{grid-column:auto;align-self:end}
+  .nw-f .fld2{min-width:0}
+  .nw-f .fld2 input,.nw-f .fld2 select{width:100%;min-height:38px}
+  .nw-ft{display:none!important}   /* nút "Bộ lọc" không cần nữa vì bộ lọc luôn hiện */
+}
+/* PC rộng (>1100px): bộ lọc ghim bên trái, cuộn riêng bên trong để không bị cắt phần dưới */
+@media (min-width:1101px) and (hover:hover) and (pointer:fine){
+  .nw-f{align-self:start;max-height:calc(100vh - 100px)!important;overflow-y:auto!important}
+  .nw-grid>.nw-feed{min-width:0}
+  /* Bộ lọc chiếm cả 2 hàng của cột trái; tin + các khối phụ (Nguồn và bản quyền…) nằm hết ở cột phải
+     → bộ lọc ghim không bao giờ đè lên thanh/khối nào bên dưới khi kéo trang */
+  .nw-grid>.nw-f{grid-column:1;grid-row:1 / span 2}
+  .nw-grid>.nw-feed{grid-column:2;grid-row:1}
+  .nw-grid>.nw-r{grid-column:2!important;grid-row:2;min-width:0}
+  .nw-grid{align-items:start}
+}
+
+
+/* ===== (6) TIN TỨC v1.15 — vị trí 3 khối "Tin theo mã đang theo dõi / Tin đã lưu / Nguồn và bản quyền" =====
+   Phần này CỐ Ý áp dụng cho cả điện thoại (không bọc hover/pointer).
+   Cấu trúc mới: .nw-grid > .nw-side (gồm bộ lọc .nw-f + 3 khối .nw-r) + .nw-feed (danh sách tin). */
+
+/* Điện thoại + cửa sổ hẹp (≤1100px): 1 cột. Thứ tự: Tin theo mã → Tin đã lưu → Nguồn → (Bộ lọc nếu đang hiện) → Danh sách tin.
+   Ba khối gọn, nằm ngay đầu trang nên thấy ngay khi mở, không phải kéo hết danh sách tin. */
+@media (max-width:1100px){
+  .nw-grid{display:grid;grid-template-columns:minmax(0,1fr)!important;gap:10px;align-items:start}
+  .nw-side,.nw-r{display:contents}
+  .nw-r>.panel:nth-child(1){order:1}
+  .nw-r>.panel:nth-child(2){order:2}
+  .nw-r>.panel:nth-child(3){order:3}
+  .nw-f{order:4}
+  .nw-f.open{order:0}   /* bấm "Bộ lọc" trên điện thoại → bung ngay đầu trang */
+  .nw-grid>.nw-feed{order:5;grid-column:1/-1;min-width:0}
+  .nw-r>.panel{margin:0!important;padding:10px 12px!important;border-radius:14px}
+  .nw-r .eyebrow{margin:0 0 6px;font-size:11px}
+  .nw-r .nw-tags{margin:0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .nw-r .nw-tags::-webkit-scrollbar{display:none}
+  .nw-r .nw-sym{flex:0 0 auto;white-space:nowrap}
+  .nw-r .wl-row{padding:6px 2px}
+  .nw-r p.muted{margin:0;font-size:12.5px}
+  .nw-r .source-note{margin:0;font-size:11px;line-height:1.45}
+}
+
+/* PC rộng (>1100px): cột trái ghim = Tin theo mã → Tin đã lưu → Nguồn → Bộ lọc; danh sách tin ở cột phải.
+   Không còn khối nào nằm dưới bộ lọc nên không thể bị che; cả cột cuộn riêng khi màn hình thấp. */
+@media (min-width:1101px){
+  .nw-grid{display:grid;grid-template-columns:320px minmax(0,1fr)!important;gap:16px;align-items:start}
+  .nw-grid>.nw-side{grid-column:1;grid-row:1;position:sticky;top:76px;max-height:calc(100vh - 92px);overflow-y:auto;overscroll-behavior:contain;
+    scrollbar-width:thin;display:flex;flex-direction:column;gap:10px;min-width:0}
+  .nw-side>.nw-r{display:contents}
+  .nw-r>.panel:nth-child(1){order:1}
+  .nw-r>.panel:nth-child(2){order:2}
+  .nw-r>.panel:nth-child(3){order:3}
+  .nw-side>.nw-f{order:4}
+  .nw-grid>.nw-feed{grid-column:2;grid-row:1;min-width:0}
+  .nw-side .nw-f{position:static!important;top:auto!important;max-height:none!important;overflow:visible!important;margin:0!important;padding:12px 14px!important;gap:6px 10px}
+  .nw-side .nw-r>.panel{margin:0!important;padding:10px 14px!important}
+  .nw-side .eyebrow{margin:0 0 6px}
+  .nw-side .nw-tags{margin:0}
+  .nw-side .nw-r .wl-row{padding:5px 2px}
+  .nw-side .nw-r p.muted{margin:0;font-size:12.5px}
+  .nw-side .source-note{margin:0;font-size:11px;line-height:1.45}
+}

@@ -1,0 +1,208 @@
+/* NHIP · Biểu đồ v26 — toolbar gọn theo nhóm, thanh vẽ, popover chỉ báo/so sánh, fullscreen, mobile.
+   Dùng biến theme sẵn có (--surface, --line, --text2, --sel, --brand…) nên theo mọi skin sáng/tối. */
+.cp-main{position:relative}
+.cx-sub{font-size:12.5px;margin:-2px 0 4px}
+.cx-bar{display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none;padding:0 0 8px;-webkit-overflow-scrolling:touch}
+.cx-bar::-webkit-scrollbar{display:none}
+.cx-bar .tf{overflow:visible;flex:0 0 auto}
+.cx-sep{flex:0 0 1px;width:1px;height:22px;background:var(--line);margin:0 4px}
+.cx-btn{flex:0 0 auto;min-height:36px;min-width:40px;border:1px solid var(--line);background:var(--surface);color:var(--text2);border-radius:10px;padding:6px 12px;font:600 12.5px inherit;cursor:pointer;white-space:nowrap}
+.cx-btn.on{background:var(--sel);color:var(--brand-ink,var(--text));border-color:var(--brand-line,var(--line))}
+.cx-btn:focus-visible,.cx-rail button:focus-visible,.cx-opt:focus-visible,.cx-add:focus-visible,.cx-seg button:focus-visible{outline:2px solid var(--brand,#2563eb);outline-offset:2px}
+
+.cx-pop{position:absolute;z-index:40;background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 44px rgba(20,40,60,.18);padding:10px;max-height:min(440px,62vh);overflow:auto}
+.cx-pop[hidden]{display:none}
+.cx-sec{font-size:11.5px;font-weight:700;color:var(--muted);margin:10px 2px 4px}
+.cx-sec:first-child{margin-top:2px}
+.cx-list{display:flex;flex-direction:column;gap:2px}
+.cx-opt,.cx-add{display:flex;width:100%;align-items:center;gap:8px;text-align:left;border:0;background:none;color:var(--text);font:600 13px inherit;padding:9px 10px;border-radius:9px;cursor:pointer;min-height:40px}
+.cx-add{flex-direction:column;align-items:flex-start;gap:1px}.cx-add small{color:var(--muted);font-weight:500;font-size:11.5px}
+.cx-opt:hover,.cx-add:hover,.cx-opt.on{background:var(--sel)}
+.cx-seg{display:flex;gap:6px}.cx-seg button{flex:1;min-height:38px;border:1px solid var(--line);background:var(--surface);color:var(--text2);border-radius:9px;font:600 12.5px inherit;cursor:pointer}
+.cx-seg button.on{background:var(--sel);color:var(--brand-ink,var(--text));border-color:var(--brand-line,var(--line))}
+.cx-search,.cx-cf input{width:100%;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:10px;padding:10px;font:14px inherit;min-height:42px}
+.cx-cf{display:flex;gap:6px}.cx-cf .btn{flex:0 0 auto}
+.cx-cf input{text-transform:uppercase}
+.cx-ib{margin-top:4px}
+.cx-ir{display:flex;align-items:center;gap:6px;padding:5px 2px;border-bottom:1px solid var(--line)}
+.cx-ir b{flex:0 0 auto;min-width:64px;font-size:13px}.cx-ir .grow{flex:1}
+.cx-ir.off b{opacity:.5;text-decoration:line-through}
+.cx-ir .cx-p{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:8px;padding:7px 8px;font:13px inherit;min-height:36px}
+.cx-ir button{flex:0 0 auto;min-height:34px;min-width:40px;border:1px solid var(--line);background:var(--surface);color:var(--text2);border-radius:8px;font:600 12px inherit;cursor:pointer}
+.cx-quick{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.cx-quick button{min-height:34px;border:1px solid var(--line);background:var(--chip);color:var(--text2);border-radius:99px;padding:4px 12px;font:600 12px inherit;cursor:pointer}
+.cx-hint{font-size:11.5px;line-height:1.5;color:var(--muted);margin:8px 2px 0}
+
+.cx-legend{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:12.5px;margin:0 0 6px}
+.cx-legend[hidden]{display:none}
+.cx-lg-h{color:var(--muted);font-weight:600}
+.cx-chip{display:inline-flex;align-items:center;gap:5px;background:var(--chip);border-radius:99px;padding:3px 10px}
+.cx-chip i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.cx-chip button{border:0;background:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0 0 0 2px;min-width:24px;min-height:24px}
+.cx-ro{display:flex;flex-wrap:wrap;gap:2px 14px;font-size:12.5px;color:var(--text2);margin:0 0 6px;min-height:20px;font-variant-numeric:tabular-nums}
+.cx-ro b{color:var(--text)}.cx-ro-d{font-weight:700;color:var(--text)}
+
+.cx-stage{display:flex;gap:6px;align-items:stretch}
+.cx-rail{display:none;flex:0 0 auto;flex-direction:column;gap:3px;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--surface);align-self:flex-start}
+.cx-rail.open{display:flex;max-height:min(560px,70vh);overflow-y:auto;scrollbar-width:thin}
+.cx-rail button{width:36px;height:36px;border:0;border-radius:8px;background:none;color:var(--text2);cursor:pointer;display:grid;place-items:center;padding:0}
+.cx-rail button:hover,.cx-rail button.on{background:var(--sel);color:var(--brand-ink,var(--text))}
+.cx-rsep{display:block;height:1px;background:var(--line);margin:3px 4px}
+.cp .cx-stage .cx-chart.kline-chart.kc-pro{flex:1;min-width:0;height:clamp(440px,calc(100dvh - 310px),800px)}
+.cx-tech{margin-top:12px}.cx-tech summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(--brand-ink,var(--text));padding:6px 0}
+.cx-note{margin-top:2px}
+
+/* Phóng to */
+.cp-main.is-full{position:fixed!important;inset:0;z-index:70;margin:0!important;border-radius:0!important;padding:calc(10px + env(safe-area-inset-top)) 10px calc(10px + env(safe-area-inset-bottom))!important;overflow:auto;background:var(--surface,#fff);display:flex;flex-direction:column}
+.is-full .cx-stage{flex:1;min-height:0}
+.cp .cp-main.is-full .cx-stage .cx-chart.kline-chart.kc-pro{height:auto;min-height:300px}
+
+@media(max-width:700px){
+  .cx-pop{position:fixed;left:8px!important;right:8px;width:auto!important;top:auto!important;bottom:calc(var(--navh,60px) + env(safe-area-inset-bottom) + 8px);max-height:62dvh;z-index:80}
+  .cx-stage{flex-direction:column}
+  .cx-rail,.cx-rail.open{flex-direction:row;overflow-x:auto;align-self:stretch;scrollbar-width:none}
+  .cx-rail:not(.open){display:none}
+  .cx-rail button{flex:0 0 auto;width:40px;height:40px}
+  .cx-rsep{width:1px;height:22px;margin:0 3px;align-self:center}
+  .cp .cx-stage .cx-chart.kline-chart.kc-pro{height:clamp(360px,64dvh,640px)}
+  .cx-ro{font-size:12px;gap:2px 10px}
+}
+@media(prefers-reduced-motion:reduce){.cx-pop{transition:none}}
+
+/* v28 · Phân tích dùng chung giao diện biểu đồ */
+.cx-colors{display:flex;gap:16px;flex-wrap:wrap;padding:4px 2px 8px}.cx-colors label{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600}.cx-colors input{width:34px;height:28px;padding:0;border:1px solid var(--line);border-radius:6px;background:none}
+.an-sidex .tabs button{flex:1}.an-sec{margin-top:16px}
+
+/* v29 · Chỉ báo từ nến hiện tại: nhóm gọn, trạng thái so với giá, thanh đo RSI/Bollinger */
+.an-ind{padding:12px!important;margin:0!important}
+.an-sum{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}.an-sum .sg{font-size:12px}
+.an-gs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.an-g{border:1px solid var(--line);border-radius:12px;padding:8px 12px 6px;min-width:0}
+.an-gh{font:700 11px/1 inherit;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);margin:2px 0 4px}
+.an-r{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)}.an-gh+.an-r{border-top:0}
+.an-l{flex:1;min-width:0;font-size:12.5px;color:var(--text2);white-space:nowrap}
+.an-v{font-size:14px;font-variant-numeric:tabular-nums}
+.an-r .sg{font-size:11.5px;padding:2px 8px;white-space:nowrap}.an-sub{font-size:11.5px;color:var(--text2);white-space:nowrap}
+.an-gauge{position:relative;height:6px;border-radius:3px;margin:4px 2px 2px}.an-gauge i{position:absolute;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:var(--text);border:2px solid var(--surface)}
+.an-rsi{background:linear-gradient(90deg,rgba(47,123,217,.4) 0 30%,rgba(148,163,184,.25) 30% 70%,rgba(238,117,128,.4) 70% 100%)}
+.an-bb{background:linear-gradient(90deg,rgba(47,123,217,.35),rgba(148,163,184,.2) 50%,rgba(238,117,128,.35))}
+.an-gl{display:flex;justify-content:space-between;font-size:10.5px;color:var(--text2);padding:0 2px 4px}
+.an-rsi+.an-gl{padding:0 26% 4px 28%}
+@media(max-width:1000px){.an-gs{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.an-gs{grid-template-columns:1fr}.an-ind{padding:10px!important}}
+
+/* ===== v1.66 · Thanh khung thời gian + công cụ: gọn, dùng được cả điện thoại lẫn máy tính =====
+   Hàng khung:  [Phút ▾] | Ngày  Tuần  Tháng | 3T  6T  1N  3N  5N      Hàng công cụ: Nến ▾ · Chỉ báo · So sánh · Vẽ · ⋯ · ⛶
+   PC: cùng một hàng (khung bên trái, công cụ bên phải), tự xuống dòng khi cửa sổ hẹp.
+   Điện thoại: hai hàng, hàng khung cuộn ngang nhẹ nếu màn quá hẹp và tự đưa khung đang chọn vào giữa. */
+.cx-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px;overflow:visible;padding:0 0 8px}
+.cx-tfs{flex:1 1 auto;min-width:0}
+.cx-bar .tf{display:flex;align-items:center;gap:4px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.cx-bar .tf::-webkit-scrollbar{display:none}
+.cx-bar .tf button{flex:0 0 auto;min-width:40px;padding:6px 11px}
+.cx-tsep{flex:0 0 1px;width:1px;height:20px;background:var(--line);margin:0 5px;align-self:center}
+.cx-tools{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.cx-tools .cx-ico{min-width:38px;padding:6px 9px;font-size:15px;line-height:1}
+.cx-bar .tf .tf-min{min-width:56px}
+
+@media(max-width:700px){
+  .cp .cx-bar{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;padding-bottom:6px}
+  .cp .cx-bar .tf{flex-wrap:nowrap!important;overflow-x:auto!important;gap:3px;padding:2px;margin:0}
+  .cp .cx-bar .tf button{flex:1 0 auto;min-width:34px;min-height:36px;padding:5px 6px;font-size:12px}
+  .cp .cx-bar .tf .tf-min{min-width:50px;padding:5px 8px}
+  .cx-tsep{margin:0 2px}
+  .cx-tools{width:100%;gap:5px}
+  .cx-tools .cx-btn{flex:1 1 auto;min-width:0;min-height:36px;padding:6px 6px;font-size:12px}
+  .cx-tools .cx-ico{flex:0 0 38px;min-width:38px;padding:6px 0}
+}
+
+/* ===== v1.67 · ĐA KHUNG THỜI GIAN — nhiều khung của cùng một mã trên một bảng =====
+   Điện thoại (<720px): một biểu đồ mỗi lần + thanh tab, bảng xu hướng ngay dưới.
+   Máy tính bảng / PC: lưới 2×2 (3 khung: 1 lớn + 2 nhỏ); ≥1000px: bảng xu hướng nằm cột bên phải. */
+.cx-multi-btn{font-weight:700}
+.cp-main.is-multi .cx-bar,.cp-main.is-multi .cx-stage,.cp-main.is-multi .cx-legend,.cp-main.is-multi .cx-ro{display:none!important}
+.mc-host[hidden]{display:none}
+.mc{display:flex;flex-direction:column;gap:8px;min-width:0}
+.mc-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.mc-presets{display:flex;gap:4px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;min-width:0;flex:1 1 auto;padding:2px}
+.mc-presets::-webkit-scrollbar,.mc-tabs::-webkit-scrollbar{display:none}
+.mc-presets button{flex:0 0 auto;min-height:36px;padding:5px 11px;font-size:12.5px}
+.mc-acts{display:flex;gap:6px;flex:0 0 auto}
+.mc-acts .cx-btn{min-height:36px}
+.mc-tabs{display:none;gap:4px;flex-wrap:nowrap;padding:2px;overflow-x:auto;scrollbar-width:none}
+.mc.is-m .mc-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
+.mc-tabs button{display:flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:6px 4px;font-size:13px;font-weight:700}
+.mc-dot{width:8px;height:8px;border-radius:50%;background:#8a97a6;flex:0 0 8px}
+.mc-dot.upb{background:var(--up,#16bd8c)}.mc-dot.dnb{background:var(--down,#ee7580)}
+.mc-main{display:grid;gap:10px;grid-template-columns:minmax(0,1fr);align-items:start}
+.mc.is-w .mc-main{grid-template-columns:minmax(0,1fr) 340px}
+.mc-side{display:flex;flex-direction:column;gap:10px;min-width:0}
+.mc-trade:empty{display:none}
+.mc-grid{display:grid;gap:8px;grid-template-columns:repeat(2,minmax(0,1fr));min-width:0}
+.mc.is-m .mc-grid{grid-template-columns:minmax(0,1fr)}
+.mc-p{--mch:260px;border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden;min-width:0}
+.mc-p[hidden]{display:none!important}
+.mc.is-w .mc-p{--mch:290px}
+.mc.is-m .mc-p{--mch:clamp(300px,50dvh,470px)}
+.mc-grid[data-n="3"] .mc-p:first-child{grid-row:span 2}
+.mc.is-m .mc-grid[data-n="3"] .mc-p:first-child{grid-row:auto}
+.mc-ph{display:flex;align-items:center;gap:8px;height:38px;padding:0 8px;border-bottom:1px solid var(--line);min-width:0}
+.mc-sel{flex:0 0 auto;max-width:112px;min-height:30px;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:8px;padding:2px 6px;font:700 12.5px inherit}
+.mc-px{flex:1 1 auto;min-width:0;display:flex;align-items:baseline;gap:6px;white-space:nowrap;overflow:hidden;font-size:12.5px}
+.mc-px b{font-size:13.5px}.mc-px i{font-style:normal;font-weight:600}
+.mc-dt{margin-left:auto;color:var(--text2);font-size:11px;overflow:hidden;text-overflow:ellipsis}
+.mc-dt.sync{color:var(--brand-ink,var(--text));font-weight:700}
+.mc-open{flex:0 0 auto;width:30px;height:30px;border:1px solid var(--line);background:var(--surface);color:var(--text2);border-radius:8px;cursor:pointer;font-size:14px;line-height:1}
+.mc-ch{height:var(--mch);min-width:0}
+.mc-grid[data-n="3"] .mc-p:first-child .mc-ch{height:calc(var(--mch)*2 + 48px)}
+.mc.is-m .mc-grid[data-n="3"] .mc-p:first-child .mc-ch{height:var(--mch)}
+.mc-ch .placeholder{display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;text-align:center;padding:12px;font-size:13px}
+.mc-flash{animation:mcflash 1s ease-out}
+@keyframes mcflash{0%{box-shadow:0 0 0 3px var(--brand,#14c29a)}100%{box-shadow:0 0 0 0 transparent}}
+.mc-sum{min-width:0;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:10px 12px}
+.mc-ov{display:flex;flex-direction:column;gap:2px;margin-bottom:8px}
+.mc-ov b{font-size:14.5px}.mc-ov small{color:var(--text2);font-size:11.5px}
+.mc-tw{overflow-x:auto}
+.mc-tb{width:100%;border-collapse:collapse;font-size:12.5px}
+.mc-tb th,.mc-tb td{padding:7px 6px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+.mc-tb thead th{font-size:11px;font-weight:700;color:var(--text2);text-transform:none}
+.mc-tb tbody th{font-weight:700}
+.mc-tb tbody tr{cursor:pointer}.mc-tb tbody tr:hover,.mc-tb tbody tr:focus-visible{background:var(--sel,rgba(20,194,154,.08));outline:none}
+.mc-tb td:nth-child(3),.mc-tb td:nth-child(4),.mc-tb thead th:nth-child(3),.mc-tb thead th:nth-child(4){text-align:right}
+.mc-top{margin:8px 0 0;font-size:12px;color:var(--text2);line-height:1.45}
+.mc-sum .source-note{margin-top:8px}
+.is-full .mc{flex:1;min-height:0;overflow:auto}
+.is-full .mc.is-d .mc-p,.is-full .mc.is-w .mc-p{--mch:calc((100dvh - 260px)/2)}
+.mc.is-m .mc-acts .mc-full{display:none}
+@media(max-width:700px){
+  .cx-multi-btn{min-width:0}
+  .cx-tools .cx-btn{padding:6px 4px;overflow:hidden;text-overflow:ellipsis}
+  .mc-presets button{padding:5px 9px;font-size:12px}
+  .mc-ph{height:40px}
+  .mc-sel{max-width:96px}
+}
+@media(prefers-reduced-motion:reduce){.mc-flash{animation:none}}
+
+/* v2.7.18 — đầu Biểu đồ/Phân tích: mã to đứng riêng, tên sàn dưới mã, tên ngành dưới tên sàn */
+html body .cp-id h1#cp-sym{font-size:34px!important;line-height:1.05;font-weight:800;letter-spacing:-.8px;margin:0 0 6px!important}
+html body .cp-id .cx-sub{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:0 0 4px;font-size:13px}
+html body .cp-id .cx-sub .cx-ex{display:block;line-height:1}
+html body .cp-id .cx-sub .ex-tag{margin:0!important}
+html body .cp-id .cx-sub .cx-sector{line-height:1.25}
+
+/* v2.7.19 — thanh công cụ biểu đồ: thon gọn, phẳng, dễ nhìn hơn */
+/* 1) Khung thời gian + mốc thu phóng (Phút/Ngày/Tuần/Tháng | 3T 6T 1N…) = 1 thanh phân đoạn mảnh */
+html[data-skin] .cp .cx-bar .tf{display:flex!important;align-items:center;gap:1px!important;padding:2px!important;margin:0!important;background:var(--surface2,rgba(127,127,127,.08));border:1px solid var(--line2,var(--line));border-radius:11px}
+html[data-skin] .cp .cx-bar .tf button{flex:0 0 auto!important;min-width:0!important;min-height:28px!important;height:28px;padding:0 10px!important;border:0!important;border-radius:9px!important;background:transparent!important;box-shadow:none;color:var(--text2)!important;font:600 12px/1 inherit;letter-spacing:0}
+html[data-skin] .cp .cx-bar .tf button.on{background:var(--surface,#fff)!important;color:var(--brand-ink,var(--text))!important;box-shadow:0 1px 3px rgba(20,40,60,.16)}
+html[data-skin] .cp .cx-bar .tf .tf-min{min-width:0!important;padding:0 9px!important}
+html[data-skin] .cp .cx-bar .tf .cx-tsep{height:14px;margin:0 3px;background:var(--line2,var(--line))}
+/* 2) Hàng nút Nến / Chỉ báo / So sánh / Đa khung / Vẽ: viên thuốc mảnh, không giãn to */
+html[data-skin] .cp .cx-tools{display:flex!important;flex-wrap:wrap;align-items:center;gap:6px!important}
+html[data-skin] .cp .cx-tools .cx-btn{flex:0 0 auto!important;min-width:0!important;min-height:30px!important;height:30px;padding:0 12px!important;border-radius:999px;font:600 12px/1 inherit;border:1px solid var(--line2,var(--line));background:var(--surface);color:var(--text2)}
+html[data-skin] .cp .cx-tools .cx-btn.on,html[data-skin] .cp .cx-tools .cx-btn[aria-pressed="true"]{background:var(--brand-soft,var(--sel));color:var(--brand-ink,var(--text));border-color:var(--brand-line,var(--line))}
+html[data-skin] .cp .cx-tools .cx-ico{flex:0 0 30px!important;width:30px;min-width:30px!important;padding:0!important;border-radius:50%;font-size:14px;display:inline-grid;place-items:center}
+/* 3) Thanh công cụ vẽ */
+html[data-skin] .cp .cx-rail{padding:2px;gap:2px;border-radius:12px}
+html[data-skin] .cp .cx-rail button,html[data-skin] .cp .cx-rail.open button{width:32px;height:32px;border-radius:8px}
+html[data-skin] .cp .cx-rail svg{width:17px;height:17px}

@@ -1,0 +1,157 @@
+/* ============================================================
+   NHIP · Giao diện điện thoại (màn hình đứng) — nạp SAU theme.css
+   Chỉ thay bố cục/độ gọn; không đổi dữ liệu hay logic.
+   ============================================================ */
+#mnav,#msheet{display:none}
+
+@media(max-width:900px){
+  :root{--navh:62px;--safeb:env(safe-area-inset-bottom,0px)}
+
+  /* ---- Thanh trên gọn ---- */
+  html[data-skin] .topbar{height:54px;padding:0 12px;gap:8px}
+  .logo{width:32px;height:32px}.brandname{font-size:21px}
+  .top-actions{gap:8px}
+  .top-actions .btn{min-height:36px;padding:6px 12px;font-size:12.5px;border-radius:10px}
+
+  /* ---- Thanh điều hướng dưới: 4 mục + Thêm ---- */
+  .sidebar{display:none!important}
+  #mnav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:55;
+    height:calc(var(--navh) + var(--safeb));padding:6px 6px var(--safeb);gap:2px;
+    background:var(--bar);border-top:1px solid var(--line);box-shadow:0 -6px 20px #0000001f}
+  #mnav a,#mnav button{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    border:0;background:none;color:var(--text3);font:600 11.5px/1.1 inherit;text-decoration:none;border-radius:12px;cursor:pointer;min-width:0;padding:0}
+  #mnav .ni{width:23px;height:23px}
+  #mnav span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #mnav a.on,#mnav button.on{background:var(--brand-soft);color:var(--brand-ink)}
+  #mnav .mdot{position:absolute;top:7px;right:calc(50% - 20px);width:9px;height:9px;border-radius:50%;background:var(--dn);border:2px solid var(--bar)}
+  #mnav .mdot[hidden]{display:none}
+
+  /* ---- Bảng "Thêm" ---- */
+  #msheet{display:block;position:fixed;inset:0;z-index:90}
+  #msheet[hidden]{display:none}
+  #msheet{width:auto;max-width:none;max-height:none} /* chặn quy tắc [role=dialog]{max-width:calc(100vw - 24px)} của nhip-responsive.css làm hở mép phải */
+  .ms-bg{position:absolute;inset:0;background:transparent}
+  .ms-box{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line2);border-radius:22px 22px 0 0;
+    padding:8px 14px calc(16px + var(--safeb));box-shadow:0 -12px 40px #0006;animation:msup .18s ease-out}
+  @keyframes msup{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
+  .ms-grip{width:42px;height:4px;border-radius:4px;background:var(--line2);margin:2px auto 10px}
+  .ms-title{font-size:12px;letter-spacing:.08em;font-weight:800;color:var(--muted);margin:0 4px 10px}
+  .ms-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .ms-grid a{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:84px;padding:10px 6px;
+    border-radius:16px;background:var(--surface2);border:1px solid var(--line);color:var(--text);text-decoration:none;font-size:13px;font-weight:700;text-align:center}
+  .ms-grid .ni{width:26px;height:26px;color:var(--brand-ink)}
+  .ms-grid a.on{background:var(--brand-soft);border-color:var(--brand-line);color:var(--brand-ink)}
+  .ms-badge{position:absolute;top:8px;right:10px;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--dn);color:#fff;font-size:11px;line-height:20px;text-align:center}
+  .ms-badge[hidden]{display:none}
+  html.ms-open,html.ms-open body{overflow:hidden}
+
+  /* ---- Nội dung: gọn, chừa chỗ cho thanh dưới ---- */
+  .main{padding:12px 10px calc(var(--navh) + var(--safeb) + 22px)!important}
+  footer{padding-bottom:12px!important}
+  .view-h{margin:2px 0 12px;gap:8px}.view-h h1{font-size:21px}
+  .hico{width:30px;height:30px;margin-right:6px;vertical-align:-7px}
+  .panel{padding:12px!important;margin-bottom:10px;border-radius:14px}
+  html[data-den] .panel{padding:12px!important}
+  .sec-label{margin:16px 0 8px}
+  #toast{bottom:calc(var(--navh) + var(--safeb) + 14px)}
+
+  /* ---- Nút AI nổi: nằm trên thanh dưới, không đè mục nào ---- */
+  .ai-widget{right:12px;bottom:calc(var(--navh) + var(--safeb) + 12px);z-index:60}
+  .ai-launcher{width:48px;height:48px;border-width:2px}
+  .ai-launcher .ni{width:24px;height:24px}
+  .ai-launcher i{width:9px;height:9px;right:0;top:0}
+
+  /* ---- Mọi dãy nút/tab: 1 hàng, vuốt ngang, không rớt dòng ---- */
+  .tf,.chips.tf,.st-nav{flex-wrap:nowrap!important;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-left:-2px;padding:2px}
+  .tf::-webkit-scrollbar{display:none}
+  .tf button{white-space:nowrap;min-height:38px;padding:6px 13px}
+  .tf#tabs,.tf#an-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(max-content,1fr);overflow:visible;gap:6px;padding:0;background:none;border:0}
+  .tf#tabs button,.tf#an-tabs button{border:1px solid var(--line2)!important;background:var(--surface2)!important;color:var(--text2)!important;min-width:0;padding:8px 6px;border-radius:11px;font-weight:700;font-size:13px}
+  .tf#tabs button.on,.tf#an-tabs button.on{background:var(--brand-soft)!important;color:var(--brand-ink)!important;border-color:var(--brand)!important}
+  .mk-tabs,.nw-tabs,.pf-tabs{margin-bottom:10px}
+}
+
+@media(max-width:700px){
+  /* ---- Trang Biểu đồ: giá trên cùng → mã/nút → khung giờ → biểu đồ lớn → tab dưới ---- */
+  .cp-top{display:grid;grid-template-columns:1fr auto;gap:8px 10px;align-items:center;margin-bottom:10px}
+  .cp-id{grid-column:1;min-width:0}.cp-id .eyebrow{display:none}
+  .cp-id h1{font-size:24px;margin:0}
+  .cp-px{gap:4px 10px}.cp-px .big{font-size:26px}
+  .cp-px small{font-size:12.5px;line-height:1.5;color:var(--text2)!important;font-weight:600}
+  .cp-actions{grid-column:2;grid-row:1;width:auto;flex-direction:column;gap:6px}
+  .cp-actions .btn{min-height:38px;padding:6px 12px;font-size:12.5px;flex:none}
+  .cp-search{grid-column:1/-1}.cp-search input{min-height:42px;font-size:16px}.cp-search .btn{min-height:42px;padding:0 20px}
+  .cp-main,.cp-side{padding:8px!important}
+  .cp-tool{flex-direction:column;flex-wrap:nowrap;gap:6px;margin-bottom:8px}
+  .cp-tool .tf button{min-height:36px;padding:5px 12px;font-size:13px}
+  .kline-chart.kc-pro,.kline-chart,.chart.pro{height:clamp(380px,64dvh,640px)}
+  .source-strip{font-size:11px;line-height:1.5;color:var(--muted)!important}
+
+  /* ---- Trang Phân tích ---- */
+  .analysis-form{grid-template-columns:1fr 1fr!important;gap:8px}
+  .analysis-form label{font-size:12px}.analysis-form input,.analysis-form select{min-height:42px;font-size:16px}
+  .analysis-tools{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:8px;padding-top:10px}
+  .analysis-tools::-webkit-scrollbar{display:none}.analysis-tools>*{flex:none}.analysis-tools .muted{display:none}
+  .analysis-price-head h2{font-size:24px}
+
+  /* ---- Lịch sử: đầu khối gọn, bộ lọc xếp 2 hàng, nút không rớt dòng ---- */
+  .panelhead{flex-direction:column;align-items:stretch;gap:8px}
+  .panelhead>.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .panelhead>.row .btn{width:100%;min-height:40px;font-size:12.5px;padding:6px 8px}
+  .panel>.row:has(#hx-q){display:grid;grid-template-columns:1fr auto;gap:8px}
+  #hx-range{min-height:42px;font-size:14px}#hx-q{grid-column:1/-1;grid-row:2;min-height:42px;font-size:16px}
+  #hx-reset{min-height:42px}
+  .hx-ev>summary{padding:10px;gap:9px}.hx-t b{font-size:13.5px}.hx-t small{font-size:12px}
+  .hx-ev time{font-size:11px;max-width:70px;line-height:1.35}
+  #hx-kpi,.dashboard-kpis{gap:8px}
+
+  /* Ô nhập đủ lớn, iOS không tự phóng to */
+  input,select,textarea{font-size:16px}
+}
+
+/* ---- Lịch sử & mọi tab khác: nằm gọn trong khung, không tràn ---- */
+@media(max-width:900px){
+  .main,#view{min-width:0;max-width:100%}.main{overflow-x:hidden}
+  .tf.tabs:not(#tabs):not(#an-tabs) button,.mk-tabs button,.nw-tabs button,.pf-tabs button{flex:0 0 auto}
+  .chips.tf{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent)}
+  .panel-sub,.source-note,.hx-t,.hx-b{overflow-wrap:anywhere}
+  .tw{max-width:100%;-webkit-overflow-scrolling:touch}
+  #hx-kpi{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+  #hx-kpi .index-card{padding:10px 12px!important;min-height:0}
+  #hx-kpi .index-card small{display:none}
+  #hx-kpi .index-card>strong{font-size:22px!important;margin:2px 0 0}
+  /* Dòng thời gian: chấm mốc nằm trong khung, nội dung xuống dòng gọn */
+  .hx-tl{margin:10px 0 8px 18px;padding-left:20px;gap:12px}
+  .hx-dot{left:-36px;width:28px;height:28px}
+  .hx-tli{min-width:0}.hx-tli>div:last-child{min-width:0;flex:1}
+  .hx-tli small{display:block;margin-top:1px}
+  .hx-px{line-height:1.5}
+  .panel form.row{display:grid;grid-template-columns:1fr auto;gap:8px}
+  .panel form.row>select{grid-column:1/-1;order:3}
+  .panel form.row input{min-height:42px}.panel form.row .btn{min-height:42px;padding:0 18px}
+}
+
+/* Bảng trong câu trả lời AI + khối báo cáo ở trang Phân tích */
+.aix-t{font-size:13px;min-width:100%}
+.aix-t th,.aix-t td{text-align:left!important;padding:7px 8px!important;border:1px solid var(--line)!important;vertical-align:top;white-space:normal}
+.aix-t th{background:var(--surface2);font-weight:700;color:var(--text)!important}
+.aix .bubble hr{border:0;border-top:1px solid var(--line);margin:8px 0}
+.aix .bubble ol{margin:4px 0 6px;padding-left:20px}
+.aix .bubble h4{line-height:1.35}
+.analysis-ai-result .aix .bubble{max-width:100%;padding:12px 14px;font-size:14px}
+.analysis-ai-result .aix-acts{margin-top:10px}
+
+/* ---- Cài đặt: khung 1 cột đúng bề rộng màn hình, tab vuốt ngang được ---- */
+@media(max-width:800px){
+  .st-grid{grid-template-columns:minmax(0,1fr)!important;gap:10px}
+  .st-grid>*,.st-c,.st-c .panel,.st-c .panel>*{min-width:0;max-width:100%}
+  .st-nav{width:100%;position:static;flex-direction:row!important}
+  .st-nav button{width:auto!important;flex:0 0 auto;min-height:42px}
+  .st-c .panel{overflow:hidden}
+  .st-c .fld,.st-c .fl-grid{grid-template-columns:minmax(0,1fr)}
+  .st-c .row{flex-wrap:wrap}
+  .st-c .panel-sub,.st-c .source-note,.st-c p,.st-c label{overflow-wrap:anywhere}
+  .pv-rows div{flex-wrap:wrap;gap:6px 10px}
+  .pv-card .index-card>strong{overflow-wrap:anywhere}
+  .st-c input,.st-c select,.st-c textarea{max-width:100%;min-width:0}
+}

@@ -1,0 +1,65 @@
+/* NHIP v2.12 — Hộp "Điều hướng biểu đồ" cạnh nút Vẽ */
+html body .cp .cx-tools .cx-btn.cn-btn{display:inline-grid;place-items:center;flex:0 0 30px!important;width:30px;min-width:30px!important;padding:0!important}
+html body .cp .cx-tools .cx-btn.cn-btn svg{display:block}
+.cn-pop{position:fixed;z-index:45;width:270px;box-sizing:border-box;background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 44px rgba(20,40,60,.18);padding:10px;display:flex;flex-direction:column;gap:8px}
+.cn-pop[hidden]{display:none}
+.cn-hd{font:700 11px/1 inherit;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);padding:2px 2px 0}
+.cn-pop button{font:inherit;color:inherit;cursor:pointer}
+.cn-pop button:focus-visible{outline:2px solid var(--brand,#2563eb);outline-offset:2px}
+.cn-hand-b,.cn-fit-b{display:flex;align-items:center;gap:10px;text-align:left;width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.cn-hand-b span,.cn-fit-b span{flex:1;display:flex;flex-direction:column;gap:2px;font-size:13px}
+.cn-hand-b i,.cn-fit-b i{font-style:normal;font-size:11px;color:var(--text2)}
+.cn-sw{width:34px;height:20px;border-radius:999px;background:color-mix(in srgb,var(--text2,#5f6f82) 35%,transparent);position:relative;flex:0 0 auto;transition:background .15s}
+.cn-sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s}
+.cn-hand-b.on,.cn-fit-b.on{border-color:var(--brand-line,var(--brand,#14c29a));background:var(--brand-soft,var(--sel))}
+.cn-hand-b.on .cn-sw,.cn-fit-b.on .cn-sw{background:var(--brand,#14c29a)}
+.cn-hand-b.on .cn-sw::after,.cn-fit-b.on .cn-sw::after{transform:translateX(14px)}
+.cn-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cn-lb{font-size:12.5px;font-weight:600;color:var(--text2)}
+.cn-st{display:flex;align-items:center;gap:4px}
+.cn-st button{width:34px;height:34px;display:grid;place-items:center;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.cn-st button:hover,.cn-reset:hover{background:var(--sel)}
+.cn-st output{min-width:84px;text-align:center;font:600 12.5px inherit;font-variant-numeric:tabular-nums}
+.cn-reset{display:flex;align-items:center;justify-content:center;gap:8px;height:38px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-weight:600;font-size:13px}
+/* chế độ bàn tay: con trỏ bàn tay trên toàn biểu đồ */
+.cn-hand,.cn-hand *{cursor:grab!important}
+.cn-hand:active,.cn-hand:active *{cursor:grabbing!important}
+.cn-toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 72px);transform:translateX(-50%) translateY(10px);background:rgba(20,30,40,.92);color:#fff;font-size:13px;padding:8px 14px;border-radius:999px;opacity:0;pointer-events:none;transition:.2s;z-index:120;max-width:90vw}
+.cn-toast.show{opacity:1;transform:translateX(-50%)}
+/* điện thoại: hộp thành bảng trượt từ dưới, giống các popover khác */
+@media (max-width:700px){
+  .cn-pop{position:fixed;left:8px!important;right:8px;top:auto!important;width:auto;bottom:calc(var(--navh,60px) + env(safe-area-inset-bottom,0px) + 8px);z-index:80}
+}
+
+/* ---- Đa khung: nút ✥ từng khung, nút "xem riêng", dòng giá Mở/Cao/Thấp/Đóng/KL ---- */
+.mc-nav,.mc-solo{flex:0 0 auto;width:30px;height:30px;display:grid;place-items:center;padding:0;border:1px solid var(--line);background:var(--surface);color:var(--text2);border-radius:8px;cursor:pointer}
+.mc-nav:hover,.mc-solo:hover{background:var(--sel)}
+.mc-nav.on,.mc-solo.on{background:var(--sel);color:var(--brand-ink,var(--text));border-color:var(--brand-line,var(--line))}
+.mc.is-m .mc-solo{display:none}
+.mc-ro{display:flex;flex-wrap:wrap;gap:1px 10px;font-size:11.5px;color:var(--text2);padding:4px 10px;min-height:20px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.mc-ro b{color:var(--text)}
+/* xem riêng 1 khung: các khung khác ẩn, khung này chiếm cả vùng biểu đồ */
+.mc .mc-grid.is-solo{display:block}
+.mc .mc-grid.is-solo .mc-p{grid-row:auto;--mch:clamp(420px,calc(100dvh - 380px),900px)}
+.mc .mc-grid.is-solo .mc-p .mc-ch{height:var(--mch)}
+.is-full .mc .mc-grid.is-solo .mc-p{--mch:calc(100dvh - 270px)}
+.mc-ro:empty{display:none}
+
+/* ---- Đa khung · mục Giao dịch: giá đang giao dịch (chỉ đọc) ---- */
+.ol-layer.ol-ro,.ol-layer.ol-ro *{pointer-events:none!important}
+.ol-layer.ol-ro .ol-tag{height:20px;gap:4px;font-size:10.5px;cursor:default;touch-action:auto;box-shadow:0 1px 3px rgba(0,0,0,.16)}
+.mc-ch{position:relative}
+
+/* ---- Đa khung · mục Giao dịch: bảng "Lệnh" nằm ngay trên từng khung (góc dưới trái vùng nến), cùng kiểu biểu đồ chính ---- */
+html body .ol-lg.ol-mc-lg{position:absolute;left:6px;top:auto;z-index:7;width:auto;max-width:min(360px,94%);box-sizing:border-box;margin:0;font-size:10.5px;pointer-events:auto}
+html body .ol-lg.ol-mc-lg[hidden]{display:none}
+html body .ol-mc-lg .ol-lg-b{max-height:120px}
+html body .ol-mc-lg .ol-lg-h{min-height:30px}
+
+.cn-fit-b[hidden]{display:none}
+.cn-st output{min-width:84px}
+/* v2.20: bàn tay kéo — chặn trang cuộn khi kéo trên biểu đồ (điện thoại); hàng nút tiện ích */
+.cn-hand{touch-action:none}
+.cn-quick{display:flex;gap:6px}
+.cn-quick button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:36px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-size:12.5px;font-weight:600}
+.cn-quick button:hover{background:var(--sel)}

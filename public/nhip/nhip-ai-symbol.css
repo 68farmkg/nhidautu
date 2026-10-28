@@ -1,0 +1,43 @@
+/* NHỊP · V2.31 — Ô mã của Nhịp AI theo sàn: danh sách gợi ý, thông báo, nhãn sàn */
+#aisg{position:fixed;z-index:200;display:flex;flex-direction:column;background:var(--surface,#fff);color:var(--text,#17212b);border:1px solid var(--line,#d9e2ec);border-radius:14px;box-shadow:0 14px 40px rgba(15,35,60,.28);overflow:hidden;font-size:14px;outline:0}
+#aisg[hidden]{display:none!important}
+.aisg-hd{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:8px 12px 6px;border-bottom:1px solid var(--line,#e5eaf0);flex:none}
+.aisg-hd b{font-size:13px}.aisg-hd span{font-size:11.5px;color:var(--muted,#64748b);white-space:nowrap}
+.aisg-ls{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;flex:1;min-height:0}
+.aisg-gh{position:sticky;top:0;z-index:1;background:var(--surface,#fff);font-size:11px;font-weight:700;color:var(--muted,#64748b);padding:5px 12px;letter-spacing:.04em;border-bottom:1px solid var(--line,#eef2f6)}
+.aisg-it{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:transparent;color:inherit;padding:8px 12px;min-height:44px;font:inherit;cursor:pointer}
+.aisg-it:hover,.aisg-it.act{background:rgba(15,123,95,.10)}
+.aisg-it.on{background:rgba(15,123,95,.14)}
+.aisg-it b{flex:0 0 auto;min-width:58px;white-space:nowrap;font-size:14px;letter-spacing:.02em}
+.aisg-it>span{display:flex;flex-direction:column;min-width:0;flex:1}
+.aisg-it em{font-style:normal;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.aisg-it small{font-size:11px;color:var(--muted,#64748b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.aisg-tag{flex:none;font-style:normal;font-size:11px;padding:2px 8px;border-radius:99px;border:1px solid #f0d28a;background:#fff6e0;color:#8a5a00;white-space:nowrap}
+.aisg-ck{flex:none;font-style:normal;color:var(--brand,#0f7b5f);font-weight:700}
+.aisg-empty{padding:14px 12px;font-size:13px;color:var(--muted,#64748b)}
+.aisg-oh{padding:6px 12px;font-size:11px;font-weight:700;color:#8a5a00;border-top:1px solid var(--line,#e5eaf0);background:rgba(240,210,138,.18)}
+.aix-note{flex:none;font-size:12px;line-height:1.45;border:1px solid;border-radius:10px;padding:7px 10px}
+.aix-note[hidden]{display:none!important}
+.aix-note.err{background:#fdecec;border-color:#f3b4b4;color:#8a1c1c}
+.aix-note.warn{background:#fff6e0;border-color:#f0d28a;color:#8a5a00}
+.aix-nc{margin-top:5px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.aix-note button{border:1px solid currentColor;background:transparent;color:inherit;border-radius:99px;padding:3px 10px;font:inherit;font-weight:600;cursor:pointer;min-height:28px}
+.aix-ns{margin-top:4px;opacity:.85}
+.aix-sym.bad{border-color:#d92d20!important;box-shadow:0 0 0 2px rgba(217,45,32,.15)}
+.aix-hs{font-weight:700;color:var(--brand,#0f7b5f)}
+html[data-theme="dark"] #aisg{box-shadow:0 14px 40px rgba(0,0,0,.6)}
+html[data-theme="dark"] .aix-note.err{background:#3a1e20;border-color:#7a3436;color:#ffb4b4}
+html[data-theme="dark"] .aix-note.warn,html[data-theme="dark"] .aisg-tag{background:#3a2f14;border-color:#7a6224;color:#f3d48a}
+html[data-theme="dark"] .aisg-oh{color:#f3d48a}
+@media (max-width:700px){
+  #aisg{border-radius:12px}
+  html body .aix .aix-sym{font-size:16px}
+  .aix-note{font-size:11.5px}
+}
+
+/* V2.82 — chip gợi ý dưới AI */
+.aix-fu{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center}.aix-fu span{font-size:11.5px;color:var(--muted)}
+.aix-fu button{border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:16px;padding:5px 10px;font-size:12px;cursor:pointer;text-align:left;max-width:100%}
+.aix-fu button:hover{border-color:var(--green);color:inherit}
+.an-sug{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center}.an-sug:empty{display:none}.an-sug .muted{font-size:12px}
+.an-sug button{font-size:12px;text-align:left;white-space:normal;height:auto;line-height:1.35;padding:6px 10px}
