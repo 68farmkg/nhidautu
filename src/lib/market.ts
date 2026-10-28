@@ -1,4 +1,5 @@
 import { all, run, first, nowIso } from './util';
+import { nhipFetch, nhipEnv } from './nhip-data';
 
 const UA = 'Mozilla/5.0 (compatible; NHIP/2.0)';
 
@@ -15,10 +16,17 @@ const fmtVol = (v: number) => (v >= 1e6 ? (v / 1e6).toLocaleString('vi-VN', { ma
 // Lấy giá đóng cửa gần nhất và % so với phiên trước từ nến ngày VNDirect DChart
 export async function fetchQuote(symbol: string) {
   const to = Math.floor(Date.now() / 1000);
-  const url = 'https://dchart-api.vndirect.com.vn/dchart/history?' + new URLSearchParams({ symbol: dsym(symbol), resolution: 'D', from: String(to - 12 * 86400), to: String(to + 60) });
-  const r = await fetch(url, { headers: { 'User-Agent': UA, Accept: 'application/json' }, signal: AbortSignal.timeout(12000) });
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  const j: any = await r.json();
+  const qs = new URLSearchParams({ symbol: dsym(symbol), resolution: 'D', from: String(to - 12 * 86400), to: String(to + 60) });
+  let j: any = null;
+  if (nhipEnv()) { // kho hub trước (giống nhip-19); không có thì xuống nguồn gốc
+    try { const h = await nhipFetch('/proxy/dchart?' + qs); if (h.ok) j = await h.json(); } catch { /* dùng nguồn gốc */ }
+    if (!(j && j.s === 'ok' && Array.isArray(j.c) && j.c.length)) j = null;
+  }
+  if (!j) {
+    const r = await fetch('https://dchart-api.vndirect.com.vn/dchart/history?' + qs, { headers: { 'User-Agent': UA, Accept: 'application/json' }, signal: AbortSignal.timeout(12000) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    j = await r.json();
+  }
   if (j.s !== 'ok' || !Array.isArray(j.c) || !j.c.length) throw new Error('không có dữ liệu');
   const n = j.c.length;
   const price = Number(j.c[n - 1]);

@@ -1,6 +1,5 @@
-// Gửi email từ nhiều "hộp thư gửi": qua API (Resend, Brevo...), Gmail/Apps Script, hoặc SMTP (TCP socket Cloudflare, cổng 465/587).
+// Gửi email từ nhiều "hộp thư gửi". Cloudflare không gửi được SMTP trực tiếp, nên dùng API của các dịch vụ gửi thư.
 import { all, first, run, nowIso } from './util';
-import { smtpSend } from './smtp';
 
 export const PROVIDERS: Record<string, { name: string; hint: string; free: string }> = {
   resend: { name: 'Resend', hint: 'Dán API key (re_...). Địa chỉ gửi phải thuộc tên miền đã xác minh ở Resend.', free: '3.000 thư/tháng miễn phí' },
@@ -8,7 +7,6 @@ export const PROVIDERS: Record<string, { name: string; hint: string; free: strin
   sendgrid: { name: 'SendGrid', hint: 'Dán API key (SG....). Người gửi cần được xác minh (Single Sender hoặc tên miền).', free: 'dùng thử có hạn' },
   mailgun: { name: 'Mailgun', hint: 'Dán Private API key và điền Tên miền gửi (ví dụ mg.tenmien.vn). Máy chủ EU: ghi "eu" ở ô Thông tin thêm.', free: 'gói thử có hạn' },
   webhook: { name: 'Gmail / Google Apps Script (không cần tên miền)', hint: 'Gửi bằng chính Gmail của bạn qua Google Apps Script. Dán địa chỉ Web app vào ô "Địa chỉ webhook", mã bí mật vào ô API key. Xem mẫu mã bên dưới.', free: 'miễn phí (giới hạn của Gmail)' },
-  smtp: { name: 'SMTP (Gmail, mail hosting...)', hint: 'Ô \"Máy chủ SMTP\": ví dụ smtp.gmail.com. Ô \"Cổng\": 465 (mặc định) hoặc 587; muốn dùng tên đăng nhập khác email gửi thì ghi 465|tendangnhap. Ô khóa: mật khẩu (Gmail: dùng Mật khẩu ứng dụng 16 ký tự). Cổng 25 không dùng được.', free: 'tùy nhà cung cấp (Gmail miễn phí, có giới hạn ngày)' },
 };
 
 export const APPS_SCRIPT = `function doPost(e) {
@@ -85,16 +83,6 @@ export async function sendMail(m: Mailbox, o: { to: string; subject: string; tex
       if (!/^https:\/\//i.test(m.extra)) return { ok: false, error: 'Thiếu địa chỉ webhook (https://script.google.com/...).' };
       r = await post(m.extra, { method: 'POST', headers: { 'content-type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ secret: m.api_key, to, subject, text, html, from_name: fromName, reply_to: reply }) });
       if (r.ok && /^no\b/i.test(r.text.trim())) return { ok: false, error: 'Webhook từ chối: mã bí mật (API key) không khớp với mã trong Apps Script.' };
-    } else if (m.provider === 'smtp') {
-      const host = clean(m.domain, 200).toLowerCase();
-      if (!host || /[\s/:]/.test(host)) return { ok: false, error: 'Thiếu hoặc sai Máy chủ SMTP (ví dụ smtp.gmail.com, không ghi https:// hay cổng).' };
-      const [pp, ...uu] = String(m.extra || '').split('|');
-      const port = Number(pp) || 465, user = clean(uu.join('|'), 200) || m.from_email;
-      if (![465, 587, 2465, 2587].includes(port)) return { ok: false, error: 'Cổng SMTP chỉ hỗ trợ 465 hoặc 587 (cổng 25 bị Cloudflare chặn).' };
-      if (!m.api_key) return { ok: false, error: 'Chưa nhập mật khẩu SMTP.' };
-      try { await smtpSend({ host, port, user, pass: m.api_key, fromEmail: m.from_email, fromName, to, replyTo: reply, subject, text, html }); }
-      catch (e: any) { return { ok: false, error: 'SMTP: ' + String(e?.message || e).split(m.api_key).join('***').slice(0, 220) }; }
-      return { ok: true };
     } else return { ok: false, error: 'Nhà cung cấp không hỗ trợ.' };
     if (!r.ok) {
       let msg = r.text; try { const j = JSON.parse(r.text); msg = j.message || j.error?.message || j.errors?.[0]?.message || r.text; } catch { /* giữ nguyên */ }
