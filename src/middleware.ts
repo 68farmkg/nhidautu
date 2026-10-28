@@ -5,6 +5,7 @@ import { capsOf } from './lib/roles';
 import { logAct } from './lib/activity';
 import { ensureChatSchema } from './lib/chatschema';
 import { pluginOn } from './lib/chatcfg';
+import { setNhipEnv } from './lib/nhip-data';
 
 const denied = '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Không đủ quyền</title><body style="font-family:system-ui;max-width:420px;margin:15vh auto;padding:0 16px"><h2>Bạn chưa có quyền vào mục này</h2><p>Tài khoản của bạn không được cấp quyền cho trang này. Hãy nhờ quản trị viên cấp thêm quyền.</p><p><a href="/admin">Về trang tổng quan</a></p></body>';
 
@@ -20,6 +21,7 @@ function crossSite(req: Request, origin: string) {
 }
 export const onRequest = defineMiddleware(async (context, next) => {
   const p = context.url.pathname;
+  setNhipEnv((context.locals as any).runtime?.env);
   if (p.startsWith('/admin') || p.startsWith('/api/chat')) { try { await ensureChatSchema((context.locals as any).runtime.env.DB); } catch { /* bỏ */ } }
   if ((p.startsWith('/admin') || p.startsWith('/api/px/')) && WRITE.has(context.request.method) && crossSite(context.request, context.url.origin)) {
     return new Response('Yêu cầu bị chặn (khác nguồn gốc)', { status: 403 });

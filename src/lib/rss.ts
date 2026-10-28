@@ -59,9 +59,18 @@ export function parseRss(xml: string, source: string, limit = 20): Item[] {
   return items;
 }
 
+import { nhipFetch, nhipEnv } from './nhip-data';
+
 export async function getFeed(key: string, limit = 20, timeout = 8000): Promise<Item[]> {
   const f = FEEDS[key];
   if (!f) return [];
+  // Ưu tiên kho dữ liệu hub (giống nhip-19); lỗi/trống thì rơi xuống gọi thẳng nguồn bên dưới
+  if (nhipEnv()) {
+    try {
+      const h = await nhipFetch('/proxy/rss?src=' + encodeURIComponent(key));
+      if (h.ok) { const items = parseRss(await h.text(), f.name, limit); if (items.length) return items; }
+    } catch { /* dùng nguồn gốc */ }
+  }
   const r = await fetch(f.url, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NHIP/2.0)', Accept: '*/*' }, signal: AbortSignal.timeout(timeout), cf: { cacheTtl: 300, cacheEverything: true } } as any);
   if (!r.ok) throw new Error('HTTP ' + r.status);
   return parseRss(await r.text(), f.name, limit);
